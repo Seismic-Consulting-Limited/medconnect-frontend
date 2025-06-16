@@ -53,25 +53,25 @@ const config = {
           300: "#FDBA74",
           400: "#FB923C",
           500: "#F97316",
-          600: "#FF6B35", // Secondary
+          600: "#FF6B35", // Secondary 
           700: "#C2410C",
           800: "#9A3412",
           900: "#7C2D12",
           950: "#431407",
         },
         accent: {
-          DEFAULT: "#0EA5E9", // Sky blue for tertiary accents
-          50: "#F0F9FF",
-          100: "#E0F2FE",
-          200: "#BAE6FD",
-          300: "#7DD3FC",
-          400: "#38BDF8",
-          500: "#0EA5E9",
-          600: "#0284C7",
-          700: "#0369A1",
-          800: "#075985",
-          900: "#0C4A6E",
-          950: "#082F49",
+          DEFAULT: "#9D5BD2", // Soft lavender that complements purple
+          50: "#F6F0FE",
+          100: "#EEE1FD",
+          200: "#DDC3FB",
+          300: "#CCA5F9",
+          400: "#BB87F7",
+          500: "#AA69F5",
+          600: "#9D5BD2", // Accent
+          700: "#8A4BBF",
+          800: "#773BAC",
+          900: "#642A99",
+          950: "#521A86",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

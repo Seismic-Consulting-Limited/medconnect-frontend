@@ -37,7 +37,7 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2 group">
           <HeartPulse className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
           <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-primary bg-clip-text text-transparent">
-            MedConnect
+            MedKonnect
           </span>
         </Link>
 
@@ -74,14 +74,14 @@ export function SiteHeader() {
             Telemedicine
           </Link>
           <Link
-            href="/#how-it-works"
+            href="/partners"
             className={cn(
               "text-base font-medium transition-all duration-300 relative py-2",
               "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-primary after:transition-all after:duration-300",
-              isHomePage ? "after:w-full text-primary font-semibold" : "after:w-0 hover:after:w-full",
+              isActive("/partners") ? "after:w-full text-primary font-semibold" : "after:w-0 hover:after:w-full",
             )}
           >
-            How It Works
+            For Partners
           </Link>
         </nav>
 
@@ -153,14 +153,14 @@ export function SiteHeader() {
             Telemedicine
           </Link>
           <Link
-            href="/#how-it-works"
+            href="/partners"
             className={cn(
               "text-sm font-medium p-2 rounded-md transition-all duration-300",
-              isHomePage ? "bg-primary-50 text-primary font-semibold" : "hover:bg-primary-50",
+              isActive("/partners") ? "bg-primary-50 text-primary font-semibold" : "hover:bg-primary-50",
             )}
             onClick={() => setMobileMenuOpen(false)}
           >
-            How It Works
+            For Partners
           </Link>
           <div className="flex flex-col gap-2 pt-2 border-t">
             <Button

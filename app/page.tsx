@@ -12,6 +12,9 @@ import {
   Video,
   CalendarClock,
   Stethoscope,
+  Search,
+  VideoIcon,
+  Activity,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -27,18 +30,15 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-1">
-        <section className="w-full bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-          {/* Reduced spacer div */}
+        {/* Hero section - unchanged */}
+        <section className="w-full bg-gradient-to-br from-primary-50 via-white to-primary-100">
           <div className="h-12 sm:h-16 md:h-24 lg:h-28"></div>
-
           <ResponsiveContainer>
+            {/* Hero content - unchanged */}
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center md:pt-8">
-              {/* Swapped order - Image first */}
               <div className="mx-auto lg:ml-0 w-full max-w-[90%] sm:max-w-[80%] lg:max-w-full order-2 lg:order-1">
                 <HeroCarousel />
               </div>
-
-              {/* Text content second */}
               <div className="flex flex-col justify-center space-y-6 order-1 lg:order-2">
                 <div className="space-y-4">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
@@ -50,7 +50,6 @@ export default function Home() {
                     worldwide.
                   </p>
                 </div>
-
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     size="lg"
@@ -60,7 +59,6 @@ export default function Home() {
                     Sign Up Now
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-
                   <Button
                     variant="outline"
                     size="lg"
@@ -73,121 +71,126 @@ export default function Home() {
               </div>
             </div>
           </ResponsiveContainer>
-
-          {/* Bottom padding for the section */}
           <div className="py-8 md:py-12 lg:py-16"></div>
         </section>
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
-          <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-10">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-primary-100 px-3 py-1 text-sm text-primary-700">
-                  Our Services
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter md:text-4xl">
-                  Your Complete Healthcare Journey
-                </h2>
-                <p className="text-sm sm:text-base text-gray-500 max-w-[100%] sm:max-w-[90%] md:max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  MedConnect provides everything you need for your medical travel experience
-                </p>
+        {/* REDESIGNED OUR SERVICES SECTION - SIMPLIFIED TO 4 CARDS */}
+        <section className="w-full py-16 md:py-24 lg:py-32 bg-white">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+              <div className="inline-block rounded-full bg-primary-100 px-3 py-1 text-sm text-primary-700 mb-2">
+                Our Services
               </div>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-gray-900">
+                Your Complete Healthcare Journey
+              </h2>
+              <p className="text-lg text-gray-600 max-w-[800px] mx-auto">
+                MedConnect provides everything you need for your medical travel experience, from finding the right
+                hospital to post-treatment care.
+              </p>
             </div>
 
-            {/* Row 1 */}
-            <div className="flex flex-wrap lg:flex-nowrap gap-8 mb-8">
-              {/* Box 1 - Explore Hospitals (Image and Text) */}
-              <div className="flex flex-col lg:flex-row border border-gray-200 shadow-md w-full lg:w-[713px] h-auto lg:h-[280px]">
-                <img
-                  src="/modern-hospital-exterior.png"
-                  alt="Modern hospital building"
-                  className="w-full lg:w-[50%] h-[200px] lg:h-full object-cover"
-                />
-                <div className="p-4 lg:p-6 flex flex-col justify-between w-full">
-                  <div>
-                    <h3 className="text-lg font-bold mb-2">Explore Hospitals</h3>
-                    <p className="text-gray-600 text-md leading-relaxed">
-                      Find the perfect hospital for your needs by searching our comprehensive database. Filter by
-                      treatment type, location, cost, and more to discover world-class healthcare facilities tailored to
-                      your specific requirements.
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+              {/* Service Card 1 */}
+              <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <Search className="w-7 h-7 text-primary group-hover:text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">Hospital Search</h3>
+                    <p className="text-gray-600 mb-4 text-sm">
+                      Find the perfect hospital for your needs with our comprehensive database of international
+                      healthcare facilities.
                     </p>
+                    <Link
+                      href="/hospitals"
+                      className="inline-flex items-center text-primary font-medium hover:text-primary-700 transition-colors text-sm"
+                    >
+                      Find Hospitals
+                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Link>
                   </div>
-                  <Link href="/hospitals" className="text-primary font-bold text-md flex items-center mt-2">
-                    Find Hospitals
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              {/* Box 2 - Pre-Consultation (Text Only) */}
-              <div className="border border-gray-200 p-4 lg:p-6 flex flex-col justify-between shadow-md w-full lg:w-[503px] h-auto lg:h-[280px]">
-                <div>
-                  <h3 className="text-lg font-bold mb-2">Pre-Consultation</h3>
-                  <p className="text-gray-600 text-md leading-relaxed">
-                    Connect with specialists for pre-consultation planning before your trip to discuss treatment options
-                    and prepare for your procedure. Our telemedicine platform ensures you receive expert guidance from
-                    the comfort of your home.
-                  </p>
-                </div>
-                <Link
-                  href="/telemedicine#pre-treatment"
-                  className="text-primary font-bold text-md flex items-center mt-2"
-                >
-                  Schedule Consultation
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Row 2 */}
-            <div className="flex flex-wrap lg:flex-nowrap gap-8">
-              {/* Box 3 - Travel Agents (Text Only) */}
-              <div className="border border-gray-200 p-4 lg:p-6 flex flex-col justify-between shadow-md w-full lg:w-[503px] h-auto lg:h-[280px]">
-                <div>
-                  <h3 className="text-lg font-bold mb-2">Travel Agents</h3>
-                  <p className="text-gray-600 text-md leading-relaxed">
-                    Our specialized travel agents handle all non-medical aspects of your journey, including flights,
-                    accommodation, and local support. Focus on your health while experienced professionals take care of
-                    the logistics and cultural navigation.
-                  </p>
-                </div>
-                <Link href="/travel-agents" className="text-primary font-bold text-md flex items-center mt-2">
-                  Find Travel Agents
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </div>
-
-              {/* Box 4 - Post-Care Rehab (Image and Text) */}
-              <div className="flex flex-col lg:flex-row border border-gray-200 shadow-md w-full lg:w-[713px] h-auto lg:h-[280px]">
-                <img
-                  src="/placeholder.svg?key=r3h4b"
-                  alt="Post-care rehabilitation session"
-                  className="w-full lg:w-[50%] h-[200px] lg:h-full object-cover"
-                />
-                <div className="p-4 lg:p-6 flex flex-col justify-between w-full">
-                  <div>
-                    <h3 className="text-lg font-bold mb-2">Post-Care Rehab</h3>
-                    <p className="text-gray-600 text-md leading-relaxed">
-                      Receive comprehensive rehabilitation and follow-up care after your procedure to ensure optimal
-                      recovery and long-term results. Our post-care programs are designed to support your healing
-                      journey every step of the way.
+              {/* Service Card 2 */}
+              <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <VideoIcon className="w-7 h-7 text-primary group-hover:text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">Telemedicine</h3>
+                    <p className="text-gray-600 mb-4 text-sm">
+                      Connect with specialists worldwide for consultations, second opinions, and follow-up care from
+                      anywhere.
                     </p>
+                    <Link
+                      href="/telemedicine"
+                      className="inline-flex items-center text-primary font-medium hover:text-primary-700 transition-colors text-sm"
+                    >
+                      Schedule Consultation
+                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Link>
                   </div>
-                  <Link
-                    href="/telemedicine#continuous-care"
-                    className="text-primary font-bold text-md flex items-center mt-2"
-                  >
-                    Explore Post-Care
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
+
+              {/* Service Card 3 */}
+              <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <Plane className="w-7 h-7 text-primary group-hover:text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">Travel Support</h3>
+                    <p className="text-gray-600 mb-4 text-sm">
+                      Our specialized travel agents handle all logistics including flights, accommodation, and local
+                      assistance.
+                    </p>
+                    <Link
+                      href="/travel-agents"
+                      className="inline-flex items-center text-primary font-medium hover:text-primary-700 transition-colors text-sm"
+                    >
+                      Find Travel Agents
+                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Service Card 4 */}
+              <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <Activity className="w-7 h-7 text-primary group-hover:text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">Post-Care Rehabilitation</h3>
+                    <p className="text-gray-600 mb-4 text-sm">
+                      Comprehensive rehabilitation and follow-up care to ensure optimal recovery after your procedure.
+                    </p>
+                    <Link
+                      href="/telemedicine#post-care"
+                      className="inline-flex items-center text-primary font-medium hover:text-primary-700 transition-colors text-sm"
+                    >
+                      Explore Post-Care
+                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
-        {/* New Telemedicine Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        {/* Rest of the page - unchanged except for CTA section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary-50 via-white to-primary-100">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
               <div className="order-2 lg:order-1">
@@ -363,7 +366,7 @@ export default function Home() {
 
         <FeaturedDestinations />
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary-50 via-white to-primary-100">
           <ResponsiveContainer>
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
               <div className="flex flex-col justify-center space-y-4">
@@ -414,7 +417,7 @@ export default function Home() {
                       alt="Medical travel agent assisting patient"
                       className="w-full object-cover"
                       height={400}
-                      src="/placeholder.svg?key=a7iim"
+                      src="/placeholder.svg?key=medical-travel-agent"
                       width={600}
                     />
                   </CardContent>
@@ -596,6 +599,7 @@ export default function Home() {
           </ResponsiveContainer>
         </section>
 
+        {/* FIXED CTA SECTION WITH PROPER BUTTON STYLING */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-primary">
           <ResponsiveContainer>
             <div className="mx-auto max-w-3xl space-y-4 text-center">
@@ -616,8 +620,7 @@ export default function Home() {
                 </Button>
                 <Button
                   size="default"
-                  variant="outline"
-                  className="text-white border-white hover:bg-primary-800 hover:text-white hover:border-transparent w-full sm:w-auto"
+                  className="bg-primary-700 text-white hover:bg-primary-600 border-primary-700 w-full sm:w-auto"
                   asChild
                 >
                   <Link href="/travel-agents">Find Travel Agents</Link>
