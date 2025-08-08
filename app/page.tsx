@@ -1,22 +1,6 @@
 "use client"
-
 import Link from "next/link"
-import {
-  ArrowRight,
-  Building2,
-  Globe,
-  MessageSquare,
-  Plane,
-  Shield,
-  Star,
-  Video,
-  CalendarClock,
-  Stethoscope,
-  Search,
-  VideoIcon,
-  Activity,
-} from "lucide-react"
-
+import { ArrowRight, Building2, Globe, MessageSquare, Plane, Shield, Star, Video, CalendarClock, Stethoscope, Search, VideoIcon, Activity } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SiteHeader } from "@/components/site-header"
@@ -30,11 +14,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-1">
-        {/* Hero section - unchanged */}
+        {/* Hero section - updated text */}
         <section className="w-full bg-gradient-to-br from-primary-50 via-white to-primary-100">
           <div className="h-12 sm:h-16 md:h-24 lg:h-28"></div>
           <ResponsiveContainer>
-            {/* Hero content - unchanged */}
+            {/* Hero content - updated text */}
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center md:pt-8">
               <div className="mx-auto lg:ml-0 w-full max-w-[90%] sm:max-w-[80%] lg:max-w-full order-2 lg:order-1">
                 <HeroCarousel />
@@ -42,12 +26,11 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-6 order-1 lg:order-2">
                 <div className="space-y-4">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
-                    Global Healthcare, <br />
-                    <span className="text-primary">Simplified</span>
+                    Nigerian Healthcare, <br /><span className="text-primary">Simplified</span>
                   </h1>
                   <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-[90%] sm:max-w-[600px]">
                     One platform connecting you to world-class hospitals, telemedicine specialists, and travel support
-                    worldwide.
+                    across Nigeria.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -74,7 +57,7 @@ export default function Home() {
           <div className="py-8 md:py-12 lg:py-16"></div>
         </section>
 
-        {/* REDESIGNED OUR SERVICES SECTION - SIMPLIFIED TO 4 CARDS */}
+        {/* REDESIGNED OUR SERVICES SECTION - SIMPLIFIED TO 4 CARDS - updated text */}
         <section className="w-full py-16 md:py-24 lg:py-32 bg-white">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
@@ -85,11 +68,10 @@ export default function Home() {
                 Your Complete Healthcare Journey
               </h2>
               <p className="text-lg text-gray-600 max-w-[800px] mx-auto">
-                MedConnect provides everything you need for your medical travel experience, from finding the right
+                MedConnect provides everything you need for your medical travel experience within Nigeria, from finding the right
                 hospital to post-treatment care.
               </p>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
               {/* Service Card 1 */}
               <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
@@ -101,7 +83,7 @@ export default function Home() {
                     </div>
                     <h3 className="text-lg font-bold mb-2 text-gray-900">Hospital Search</h3>
                     <p className="text-gray-600 mb-4 text-sm">
-                      Find the perfect hospital for your needs with our comprehensive database of international
+                      Find the perfect hospital for your needs with our comprehensive database of Nigerian
                       healthcare facilities.
                     </p>
                     <Link
@@ -114,7 +96,6 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-
               {/* Service Card 2 */}
               <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
@@ -125,7 +106,7 @@ export default function Home() {
                     </div>
                     <h3 className="text-lg font-bold mb-2 text-gray-900">Telemedicine</h3>
                     <p className="text-gray-600 mb-4 text-sm">
-                      Connect with specialists worldwide for consultations, second opinions, and follow-up care from
+                      Connect with specialists across Nigeria for consultations, second opinions, and follow-up care from
                       anywhere.
                     </p>
                     <Link
@@ -138,7 +119,6 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-
               {/* Service Card 3 */}
               <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
@@ -150,7 +130,7 @@ export default function Home() {
                     <h3 className="text-lg font-bold mb-2 text-gray-900">Travel Support</h3>
                     <p className="text-gray-600 mb-4 text-sm">
                       Our specialized travel agents handle all logistics including flights, accommodation, and local
-                      assistance.
+                      assistance within Nigeria.
                     </p>
                     <Link
                       href="/travel-agents"
@@ -162,7 +142,6 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-
               {/* Service Card 4 */}
               <Card className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
@@ -189,7 +168,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Rest of the page - unchanged except for CTA section */}
+        {/* Rest of the page - updated text */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary-50 via-white to-primary-100">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
@@ -203,13 +182,12 @@ export default function Home() {
                         </div>
                         <h3 className="text-lg font-bold">Virtual Consultations</h3>
                         <p className="text-sm text-gray-500">
-                          Speak with specialists worldwide to discuss your condition, treatment options, and get expert
+                          Speak with specialists across Nigeria to discuss your condition, treatment options, and get expert
                           opinions.
                         </p>
                       </div>
                     </CardContent>
                   </Card>
-
                   <Card className="overflow-hidden border-none shadow-md">
                     <CardContent className="p-6">
                       <div className="flex flex-col items-center text-center space-y-4">
@@ -224,7 +202,6 @@ export default function Home() {
                       </div>
                     </CardContent>
                   </Card>
-
                   <Card className="overflow-hidden border-none shadow-md">
                     <CardContent className="p-6">
                       <div className="flex flex-col items-center text-center space-y-4">
@@ -238,7 +215,6 @@ export default function Home() {
                       </div>
                     </CardContent>
                   </Card>
-
                   <Card className="overflow-hidden border-none shadow-md">
                     <CardContent className="p-6">
                       <div className="flex flex-col items-center text-center space-y-4">
@@ -255,17 +231,16 @@ export default function Home() {
                   </Card>
                 </div>
               </div>
-
               <div className="flex flex-col justify-center space-y-4 order-1 lg:order-2">
                 <div className="space-y-2">
                   <div className="inline-block rounded-lg bg-primary-100 px-3 py-1 text-sm text-primary-700">
                     Virtual Healthcare
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter md:text-4xl">
-                    Expert Care From Anywhere
+                    Expert Care From Anywhere in Nigeria
                   </h2>
                   <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-[90%] sm:max-w-[600px]">
-                    Our telemedicine platform connects you with specialists worldwide for consultations and therapy
+                    Our telemedicine platform connects you with specialists across Nigeria for consultations and therapy
                     sessions, no matter where you are.
                   </p>
                 </div>
@@ -378,7 +353,7 @@ export default function Home() {
                     Travel Logistics Experts
                   </h2>
                   <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 max-w-[90%] sm:max-w-[600px]">
-                    Our travel agents handle all non-medical aspects of your journey, so you can focus on your health.
+                    Our travel agents handle all non-medical aspects of your journey within Nigeria, so you can focus on your health.
                   </p>
                 </div>
                 <ul className="grid gap-2">
@@ -438,7 +413,7 @@ export default function Home() {
                   Everything Handled For You
                 </h2>
                 <p className="text-sm sm:text-base text-gray-500 max-w-[100%] sm:max-w-[90%] md:max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Focus on your health while your travel agent takes care of all the details.
+                  Focus on your health while your travel agent takes care of all the details for your medical trip within Nigeria.
                 </p>
               </div>
             </div>
@@ -526,8 +501,8 @@ export default function Home() {
                     </div>
                     <p className="text-sm text-gray-500">
                       "MedConnect connected me with an amazing travel agent who handled everything for my knee
-                      replacement in Thailand. From hospital selection to my return home, everything was seamless. I
-                      saved over 60% compared to US costs."
+                      replacement in Lagos. From hospital selection to my return home, everything was seamless. I
+                      found excellent care right here in Nigeria."
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
@@ -552,9 +527,9 @@ export default function Home() {
                       <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                     </div>
                     <p className="text-sm text-gray-500">
-                      "I was hesitant about dental work abroad, but my travel agent through MedConnect made it so easy.
-                      They arranged everything with a top clinic in Mexico, handled my accommodations, and even planned
-                      some sightseeing. I saved thousands!"
+                      "I was hesitant about dental work, but my travel agent through MedConnect made it so easy.
+                      They arranged everything with a top clinic in Abuja, handled my accommodations, and even planned
+                      some local activities. I'm so glad I chose Nigeria for my treatment!"
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
@@ -579,7 +554,7 @@ export default function Home() {
                       <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                     </div>
                     <p className="text-gray-500">
-                      "My travel agent arranged everything for my heart procedure in India. They coordinated with the
+                      "My travel agent arranged everything for my heart procedure in Ibadan. They coordinated with the
                       hospital, arranged comfortable accommodations, and even provided a local guide. The telemedicine
                       follow-ups they arranged were invaluable."
                     </p>
@@ -599,7 +574,7 @@ export default function Home() {
           </ResponsiveContainer>
         </section>
 
-        {/* FIXED CTA SECTION WITH PROPER BUTTON STYLING */}
+        {/* FIXED CTA SECTION WITH PROPER BUTTON STYLING - updated text */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-primary">
           <ResponsiveContainer>
             <div className="mx-auto max-w-3xl space-y-4 text-center">
@@ -607,7 +582,7 @@ export default function Home() {
                 Ready to Start Your Healthcare Journey?
               </h2>
               <p className="text-white/80 text-sm sm:text-base md:text-lg lg:text-xl">
-                Let our specialized travel agents handle everything for your medical trip abroad.
+                Let our specialized travel agents handle everything for your medical trip within Nigeria.
               </p>
               <div className="flex flex-col gap-2 sm:flex-row justify-center pt-4">
                 <Button

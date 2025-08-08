@@ -1,27 +1,8 @@
 "use client"
-
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
-import {
-  ArrowRight,
-  CheckCircle,
-  ChevronDown,
-  Globe,
-  Heart,
-  ImageIcon,
-  Languages,
-  MapPin,
-  Search,
-  Shield,
-  Sliders,
-  Star,
-  Stethoscope,
-  X,
-  BarChart2,
-} from "lucide-react"
-
+import { ArrowRight, CheckCircle, ChevronDown, Globe, Heart, ImageIcon, MapPin, Search, Shield, Sliders, Star, Stethoscope, X, BarChart2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -38,101 +19,101 @@ import { useViewTracker } from "@/hooks/use-view-tracker"
 import { HospitalComparison } from "@/components/hospital-comparison"
 import { InsuranceCoverageChecker } from "@/components/insurance-coverage-checker"
 
-// Sample hospital data
+// Consistent Sample hospital data for Nigeria with original images
 const hospitals = [
   {
     id: "1",
-    name: "Bangkok International Hospital",
-    location: "Bangkok, Thailand",
-    specialties: ["Cardiology", "Orthopedics", "Neurology"],
-    rating: 4.8,
-    reviews: 245,
-    image: "/bangkok-hospital-exterior.png",
+    name: "Lagos University Teaching Hospital (LUTH)",
+    location: "Lagos, Nigeria",
+    specialties: ["Cardiology", "Orthopedics", "Oncology", "Neurology"],
+    rating: 4.5,
+    reviews: 320,
+    image: "/bangkok-hospital-exterior.png", // Original image path
     description:
-      "A leading medical facility in Southeast Asia offering comprehensive healthcare services with state-of-the-art technology and internationally trained physicians.",
+      "A premier federal teaching hospital in Nigeria, offering comprehensive medical services with a focus on advanced research and patient care.",
     price: "$$",
-    languages: ["English", "Thai", "Arabic", "Chinese"],
-    accreditations: ["JCI", "ISO 9001"],
+    languages: ["English", "Yoruba", "Hausa", "Igbo"],
+    accreditations: ["MDCN", "NHIS", "ISO 9001"],
     waitTime: "Low",
   },
   {
     id: "2",
-    name: "Indira Gandhi Memorial Hospital",
-    location: "New Delhi, India",
-    specialties: ["Oncology", "Cardiology", "Fertility"],
+    name: "Reddington Hospital",
+    location: "Lagos, Nigeria",
+    specialties: ["Cardiac Surgery", "Gastroenterology", "Fertility Treatment", "Cosmetic Surgery"],
     rating: 4.7,
-    reviews: 189,
-    image: "/indira-gandhi-hospital-exterior.png",
+    reviews: 210,
+    image: "/indira-gandhi-hospital-exterior.png", // Original image path
     description:
-      "Renowned for its advanced cancer treatments and cardiac care, this hospital provides high-quality healthcare at affordable prices.",
-    price: "$",
-    languages: ["English", "Hindi", "Bengali", "Arabic"],
-    accreditations: ["NABH", "ISO 9001"],
+      "A state-of-the-art private hospital in Lagos, known for its advanced cardiac care, minimally invasive surgeries, and personalized patient experience.",
+    price: "$$",
+    languages: ["English", "French", "Igbo"],
+    accreditations: ["MDCN", "NHIS", "COHSASA"],
     waitTime: "Medium",
   },
   {
     id: "3",
-    name: "Bumrungrad International Hospital",
-    location: "Bangkok, Thailand",
-    specialties: ["Plastic Surgery", "Orthopedics", "Gastroenterology"],
-    rating: 4.9,
-    reviews: 312,
-    image: "/modern-hospital-exterior.png",
-    description:
-      "One of Asia's premier medical facilities, serving over a million patients annually with cutting-edge treatments and multilingual staff.",
-    price: "$$$",
-    languages: ["English", "Thai", "Arabic", "Japanese", "Mandarin"],
-    accreditations: ["JCI", "GHA"],
-    waitTime: "Low",
-  },
-  {
-    id: "4",
-    name: "Apollo Hospitals",
-    location: "Chennai, India",
-    specialties: ["Cardiology", "Neurosurgery", "Transplants"],
+    name: "National Hospital Abuja",
+    location: "Abuja, Nigeria",
+    specialties: ["Pediatrics", "Obstetrics & Gynecology", "Neurosurgery", "Urology"],
     rating: 4.6,
-    reviews: 278,
-    image: "/modern-hospital.png",
+    reviews: 155,
+    image: "/modern-hospital-exterior.png", // Original image path
     description:
-      "A pioneer in private healthcare in India, known for complex cardiac surgeries and organ transplants with excellent success rates.",
-    price: "$$",
-    languages: ["English", "Hindi", "Tamil", "Telugu"],
-    accreditations: ["JCI", "NABH"],
+      "A leading federal hospital in Nigeria's capital, providing specialized medical services and a strong focus on maternal and child health.",
+    price: "$",
+    languages: ["English", "Hausa", "Yoruba", "French"],
+    accreditations: ["MDCN", "NHIS", "NMA"],
     waitTime: "Medium",
   },
   {
-    id: "5",
-    name: "Gleneagles Hospital",
-    location: "Singapore",
-    specialties: ["Oncology", "Cardiology", "Neurology"],
-    rating: 4.9,
-    reviews: 203,
-    image: "/singapore-hospital-exterior.png",
+    id: "4",
+    name: "Ibadan University Teaching Hospital",
+    location: "Ibadan, Nigeria",
+    specialties: ["Fertility Treatment", "Ophthalmology", "ENT"],
+    rating: 4.5,
+    reviews: 210,
+    image: "/modern-hospital.png", // Original image path (from previous context)
     description:
-      "A world-class facility offering comprehensive healthcare services with cutting-edge technology and internationally accredited standards.",
-    price: "$$$",
-    languages: ["English", "Mandarin", "Malay", "Tamil"],
-    accreditations: ["JCI", "ISO 9001"],
+      "A renowned teaching hospital with a strong focus on research and advanced medical training, offering specialized treatments.",
+    price: "$",
+    languages: ["English", "Yoruba"],
+    accreditations: ["JCI"],
+    waitTime: "Low",
+  },
+  {
+    id: "5",
+    name: "Kano Medical City",
+    location: "Kano, Nigeria",
+    specialties: ["Orthopedics", "Plastic Surgery", "Urology"],
+    rating: 4.7,
+    reviews: 195,
+    image: "/singapore-hospital-exterior.png", // Original image path (from previous context)
+    description:
+      "A modern medical complex providing a wide range of surgical and non-surgical treatments with a commitment to patient safety and quality.",
+    price: "$$",
+    languages: ["English", "Hausa"],
+    accreditations: ["ISO 9001"],
     waitTime: "Low",
   },
   {
     id: "6",
-    name: "Anadolu Medical Center",
-    location: "Istanbul, Turkey",
-    specialties: ["Oncology", "Organ Transplantation", "Neurosurgery"],
-    rating: 4.7,
-    reviews: 167,
-    image: "/placeholder.svg?key=1lc0z",
+    name: "Enugu Health Centre",
+    location: "Enugu, Nigeria",
+    specialties: ["Pediatrics", "Dental Care", "General Practice"],
+    rating: 4.4,
+    reviews: 120,
+    image: "/placeholder.svg?key=1lc0z", // Original image path (from previous context)
     description:
-      "Affiliated with Johns Hopkins Medicine, this center combines advanced medical technology with experienced healthcare professionals.",
-    price: "$$",
-    languages: ["English", "Turkish", "Arabic", "Russian"],
+      "A community-focused health center offering primary and specialized care for families, with a friendly and experienced team.",
+    price: "$",
+    languages: ["English", "Igbo"],
     accreditations: ["JCI"],
     waitTime: "Medium",
   },
 ]
 
-// Sample specialty data
+// Sample specialty data - Updated for Nigerian context
 const specialties = [
   "Cardiology",
   "Orthopedics",
@@ -146,42 +127,23 @@ const specialties = [
   "Dermatology",
   "Urology",
   "Pediatrics",
+  "Cardiac Surgery",
+  "Obstetrics & Gynecology",
+  "Neurosurgery",
 ]
 
-// Sample locations
+// Sample locations - Updated for Nigerian context
 const locations = [
-  "Thailand",
-  "India",
-  "Singapore",
-  "Turkey",
-  "Malaysia",
-  "South Korea",
-  "UAE",
-  "Mexico",
-  "Costa Rica",
-  "Brazil",
-  "Hungary",
-  "Poland",
+  "Lagos, Nigeria",
+  "Abuja, Nigeria",
+  "Port Harcourt, Nigeria",
+  "Ibadan, Nigeria",
+  "Kano, Nigeria",
+  "Enugu, Nigeria",
 ]
 
-// Sample languages
-const languages = [
-  "English",
-  "Spanish",
-  "Arabic",
-  "Mandarin",
-  "Hindi",
-  "Thai",
-  "Turkish",
-  "Russian",
-  "Japanese",
-  "Korean",
-  "French",
-  "German",
-]
-
-// Sample accreditations
-const accreditations = ["JCI", "ISO 9001", "NABH", "GHA", "ACHSI", "CCHSA", "HAS", "QHA Trent"]
+// Sample accreditations - Updated for Nigerian context
+const accreditations = ["JCI", "ISO 9001", "MDCN", "NHIS", "COHSASA", "NMA", "Local Accreditation Body (LAB)"]
 
 const PremiumContentOverlay = ({ type, height }: { type: string; height: string }) => {
   return (
@@ -218,7 +180,7 @@ export default function HospitalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
+  // Removed selectedLanguages state
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState<number[]>([1, 3])
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -248,11 +210,7 @@ export default function HospitalsPage() {
     const matchesLocation =
       selectedLocations.length === 0 || selectedLocations.some((loc) => hospital.location.includes(loc))
 
-    // Language filter
-    const matchesLanguage =
-      selectedLanguages.length === 0 ||
-      (hospital.languages && hospital.languages.some((lang) => selectedLanguages.includes(lang)))
-
+    // Removed Language filter logic
     // Accreditation filter
     const matchesAccreditation =
       selectedAccreditations.length === 0 ||
@@ -264,7 +222,7 @@ export default function HospitalsPage() {
     const matchesPrice = hospitalPrice >= priceRange[0] && hospitalPrice <= priceRange[1]
 
     return (
-      matchesSearch && matchesSpecialty && matchesLocation && matchesLanguage && matchesAccreditation && matchesPrice
+      matchesSearch && matchesSpecialty && matchesLocation && matchesAccreditation && matchesPrice
     )
   })
 
@@ -303,11 +261,7 @@ export default function HospitalsPage() {
     setSelectedLocations((prev) => (prev.includes(location) ? prev.filter((l) => l !== location) : [...prev, location]))
   }
 
-  // Toggle language selection
-  const toggleLanguage = (language: string) => {
-    setSelectedLanguages((prev) => (prev.includes(language) ? prev.filter((l) => l !== language) : [...prev, language]))
-  }
-
+  // Removed toggleLanguage function
   // Toggle accreditation selection
   const toggleAccreditation = (accreditation: string) => {
     setSelectedAccreditations((prev) =>
@@ -320,7 +274,7 @@ export default function HospitalsPage() {
     setSearchQuery("")
     setSelectedSpecialties([])
     setSelectedLocations([])
-    setSelectedLanguages([])
+    // Reset selectedLanguages
     setSelectedAccreditations([])
     setPriceRange([1, 3])
     setImageSearchUrl("")
@@ -378,14 +332,13 @@ export default function HospitalsPage() {
             <div className="flex flex-col items-center justify-center space-y-6 text-center mb-8">
               <div className="space-y-3">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Find Your Ideal Hospital
+                  Find Your Ideal Hospital in Nigeria
                 </h1>
                 <p className="text-gray-600 md:text-xl max-w-[85%] mx-auto">
-                  Search our global network of accredited hospitals to find the perfect match for your healthcare needs.
+                  Search our network of accredited hospitals across Nigeria to find the perfect match for your healthcare needs.
                 </p>
               </div>
             </div>
-
             <div className="max-w-5xl mx-auto">
               <Card className="border-0 shadow-lg overflow-hidden">
                 <CardContent className="p-0">
@@ -425,7 +378,6 @@ export default function HospitalsPage() {
                       />
                     </Button>
                   </div>
-
                   <div className="p-6">
                     {/* Text Search */}
                     <div className={`${searchMode === "text" ? "block" : "hidden"}`}>
@@ -469,7 +421,6 @@ export default function HospitalsPage() {
                         </Button>
                       </div>
                     </div>
-
                     {/* Image Search */}
                     <div className={`${searchMode === "image" ? "block" : "hidden"}`}>
                       <div className="space-y-4">
@@ -481,12 +432,7 @@ export default function HospitalsPage() {
                                 alt="Uploaded image"
                                 className="w-full h-auto rounded-lg"
                               />
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2"
-                                onClick={() => setImageSearchUrl("")}
-                              >
+                              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setImageSearchUrl("")}>
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
@@ -525,16 +471,14 @@ export default function HospitalsPage() {
                           </Button>
                         )}
                         <p className="text-xs text-gray-500 text-center">
-                          Our AI will analyze your image to find relevant hospitals and treatments.
-                          <br />
+                          Our AI will analyze your image to find relevant hospitals and treatments.<br />
                           Supported: Medical conditions, hospital facilities, medical equipment
                         </p>
                       </div>
                     </div>
-
                     {showAdvancedFilters && (
                       <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Adjusted grid columns */}
                           <div>
                             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                               <Stethoscope className="h-4 w-4 mr-2 text-purple-600" />
@@ -559,7 +503,6 @@ export default function HospitalsPage() {
                               ))}
                             </div>
                           </div>
-
                           <div>
                             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                               <MapPin className="h-4 w-4 mr-2 text-purple-600" />
@@ -584,32 +527,7 @@ export default function HospitalsPage() {
                               ))}
                             </div>
                           </div>
-
-                          <div>
-                            <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                              <Languages className="h-4 w-4 mr-2 text-purple-600" />
-                              Languages
-                            </h3>
-                            <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                              {languages.slice(0, 8).map((language) => (
-                                <div key={language} className="flex items-center">
-                                  <Checkbox
-                                    id={`language-${language}`}
-                                    checked={selectedLanguages.includes(language)}
-                                    onCheckedChange={() => toggleLanguage(language)}
-                                    className="border-gray-300 text-purple-600 focus:ring-purple-500"
-                                  />
-                                  <label
-                                    htmlFor={`language-${language}`}
-                                    className="ml-2 text-sm text-gray-700 cursor-pointer"
-                                  >
-                                    {language}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
+                          {/* Removed Languages filter section */}
                           <div className="space-y-6">
                             <div>
                               <h3 className="font-medium text-gray-900 mb-3 flex items-center">
@@ -633,7 +551,6 @@ export default function HospitalsPage() {
                                 ))}
                               </div>
                             </div>
-
                             <div>
                               <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                                 <span className="h-4 w-4 mr-2 text-purple-600 flex items-center justify-center">$</span>
@@ -658,7 +575,6 @@ export default function HospitalsPage() {
                             </div>
                           </div>
                         </div>
-
                         <div className="flex flex-col sm:flex-row sm:justify-between mt-6 pt-4 border-t border-gray-200 gap-4">
                           <div className="flex flex-wrap gap-1">
                             {selectedSpecialties.length > 0 && (
@@ -673,12 +589,7 @@ export default function HospitalsPage() {
                                 <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedLocations([])} />
                               </Badge>
                             )}
-                            {selectedLanguages.length > 0 && (
-                              <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
-                                Languages: {selectedLanguages.length}
-                                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedLanguages([])} />
-                              </Badge>
-                            )}
+                            {/* Removed Languages badge */}
                             {selectedAccreditations.length > 0 && (
                               <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
                                 Accreditations: {selectedAccreditations.length}
@@ -709,7 +620,6 @@ export default function HospitalsPage() {
                   </div>
                 </CardContent>
               </Card>
-
               {/* Search tips */}
               <div className="mt-4 flex flex-wrap gap-4 justify-center text-sm text-gray-600">
                 <div className="flex items-center">
@@ -717,11 +627,7 @@ export default function HospitalsPage() {
                   <span>Popular: </span>
                   <div className="flex gap-2 ml-1">
                     {["Cardiology", "Orthopedics", "Dental"].map((term) => (
-                      <button
-                        key={term}
-                        className="underline hover:text-purple-600"
-                        onClick={() => setSearchQuery(term)}
-                      >
+                      <button key={term} className="underline hover:text-purple-600" onClick={() => setSearchQuery(term)}>
                         {term}
                       </button>
                     ))}
@@ -731,12 +637,8 @@ export default function HospitalsPage() {
                   <Globe className="h-4 w-4 text-purple-600 mr-1" />
                   <span>Top destinations: </span>
                   <div className="flex gap-2 ml-1">
-                    {["Thailand", "India", "Turkey"].map((term) => (
-                      <button
-                        key={term}
-                        className="underline hover:text-purple-600"
-                        onClick={() => setSearchQuery(term)}
-                      >
+                    {["Lagos", "Abuja", "Ibadan"].map((term) => (
+                      <button key={term} className="underline hover:text-purple-600" onClick={() => setSearchQuery(term)}>
                         {term}
                       </button>
                     ))}
@@ -755,7 +657,7 @@ export default function HospitalsPage() {
                 {searchQuery ||
                 selectedSpecialties.length > 0 ||
                 selectedLocations.length > 0 ||
-                selectedLanguages.length > 0 ||
+                // Removed selectedLanguages check
                 selectedAccreditations.length > 0 ||
                 priceRange[0] !== 1 ||
                 priceRange[1] !== 3 ? (
@@ -780,7 +682,6 @@ export default function HospitalsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <Button
                   variant={hospitalsToCompare.length > 0 ? "default" : "outline"}
                   className={
@@ -796,7 +697,6 @@ export default function HospitalsPage() {
                 </Button>
               </div>
             </div>
-
             {filteredHospitals.length === 0 ? (
               <div className="text-center py-16">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
@@ -859,7 +759,6 @@ export default function HospitalsPage() {
                       <div className="mt-3">
                         <p className="text-sm text-gray-500 line-clamp-3">{hospital.description}</p>
                       </div>
-
                       {/* Accreditations */}
                       {hospital.accreditations && hospital.accreditations.length > 0 && (
                         <div className="mt-3 flex items-center gap-1">
@@ -873,7 +772,6 @@ export default function HospitalsPage() {
                           </div>
                         </div>
                       )}
-
                       <div className="mt-4 flex flex-wrap gap-2">
                         {hospital.specialties.map((specialty) => (
                           <span
@@ -884,15 +782,11 @@ export default function HospitalsPage() {
                           </span>
                         ))}
                       </div>
-
-                      {/* Languages */}
-                      {hospital.languages && hospital.languages.length > 0 && (
+                      {/* Languages - simplified to just show English if present */}
+                      {hospital.languages && hospital.languages.includes("English") && (
                         <div className="mt-3 flex items-center gap-1">
                           <Globe className="h-4 w-4 text-purple-600" />
-                          <span className="text-xs text-gray-500">
-                            {hospital.languages.slice(0, 3).join(", ")}
-                            {hospital.languages.length > 3 && ` +${hospital.languages.length - 3} more`}
-                          </span>
+                          <span className="text-xs text-gray-500">English</span>
                         </div>
                       )}
                     </CardContent>
@@ -905,7 +799,6 @@ export default function HospitalsPage() {
                 ))}
               </div>
             )}
-
             {visibleHospitals < filteredHospitals.length && (
               <div className="mt-12 text-center">
                 <Button
@@ -931,14 +824,10 @@ export default function HospitalsPage() {
                 Check Your Insurance Coverage
               </h2>
               <p className="text-gray-600 mb-8 text-lg">
-                Find out if your insurance covers treatment at international hospitals before you travel. Our insurance
+                Find out if your insurance covers treatment at hospitals in Nigeria before you travel. Our insurance
                 checker helps you understand your coverage options.
               </p>
-              <Button
-                size="lg"
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-                onClick={() => setShowInsuranceChecker(true)}
-              >
+              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowInsuranceChecker(true)}>
                 Check Insurance Coverage
                 <Shield className="ml-2 h-5 w-5" />
               </Button>
@@ -946,24 +835,23 @@ export default function HospitalsPage() {
           </ResponsiveContainer>
         </section>
 
-{/* CTA Section */}
-<section className="py-16 md:py-24 bg-primary text-white">
-  <ResponsiveContainer>
-    <div className="text-center max-w-3xl mx-auto">
-      <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Hospital or Medical Practitioner?</h2>
-      <p className="text-white/80 text-lg mb-8">
-        Join our platform to connect with international patients and expand your reach in the medical tourism market.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
-          Apply to Become a Partner
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  </ResponsiveContainer>
-</section>
-
+        {/* CTA Section */}
+        <section className="py-16 md:py-24 bg-primary text-white">
+          <ResponsiveContainer>
+            <div className="text-center max-w-3xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Hospital or Medical Practitioner in Nigeria?</h2>
+              <p className="text-white/80 text-lg mb-8">
+                Join our platform to connect with patients seeking care in Nigeria and expand your reach in the medical tourism market.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
+                  Apply to Become a Partner
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </ResponsiveContainer>
+        </section>
 
         {/* Hospital Comparison Modal */}
         {showComparison && (
@@ -975,12 +863,8 @@ export default function HospitalsPage() {
             onAddHospital={handleAddHospital}
           />
         )}
-
         {/* Insurance Coverage Checker Modal */}
-        {showInsuranceChecker && (
-          <InsuranceCoverageChecker hospitalIds={hospitalsToCompare} onClose={() => setShowInsuranceChecker(false)} />
-        )}
-
+        {showInsuranceChecker && (<InsuranceCoverageChecker hospitalIds={hospitalsToCompare} onClose={() => setShowInsuranceChecker(false)} />)}
         {hospitalsToCompare.length > 0 && (
           <div className="fixed bottom-4 right-4 z-40">
             <Button
@@ -992,11 +876,9 @@ export default function HospitalsPage() {
             </Button>
           </div>
         )}
-
         {showGate && <SoftGate type="hospital" onClose={() => setShowGate(false)} />}
       </main>
       <SiteFooter />
     </div>
   )
 }
-

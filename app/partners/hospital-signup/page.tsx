@@ -1,11 +1,8 @@
 "use client"
-
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, CheckCircle, Info, Upload } from "lucide-react"
-
+import { ArrowLeft, ArrowRight, CheckCircle, Info, Upload } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -37,14 +34,13 @@ export default function HospitalSignupPage() {
     hospitalName: "",
     address: "",
     city: "",
-    country: "",
+    country: "Nigeria", // Default to Nigeria
     postalCode: "",
     phone: "",
     email: "",
     website: "",
     yearEstablished: "",
     description: "",
-
     // Facilities & Services
     totalBeds: "",
     privateRooms: false,
@@ -58,32 +54,26 @@ export default function HospitalSignupPage() {
     wifi: false,
     translation: false,
     internationalDesk: false,
-
     // Specialties & Treatments
     specialties: [] as string[],
     featuredTreatments: [] as string[],
-
     // Accreditations
     accreditations: [] as string[],
     certifications: [] as string[],
-
     // Staff & Doctors
     doctorsCount: "",
     nursesCount: "",
     featuredDoctors: [] as any[],
-
     // Media & Photos
     logo: null as File | null,
     photos: [] as File[],
     videos: [] as File[],
     virtualTour: "",
-
     // Pricing & Packages
-    currency: "USD",
+    currency: "NGN", // Default to Nigerian Naira
     paymentMethods: [] as string[],
     insuranceAccepted: false,
     featuredPackages: [] as any[],
-
     // Terms & Agreements
     termsAgreed: false,
     dataPrivacyAgreed: false,
@@ -139,11 +129,10 @@ export default function HospitalSignupPage() {
                 Hospital Partner Application
               </h1>
               <p className="text-gray-600 max-w-[800px]">
-                Complete the following steps to join MedConnect as a hospital partner. Our team will review your
+                Complete the following steps to join MedConnect as a hospital partner, connecting with international patients seeking quality healthcare in Nigeria. Our team will review your
                 application and get back to you within 3-5 business days.
               </p>
             </div>
-
             <div className="mb-8">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">
@@ -152,7 +141,6 @@ export default function HospitalSignupPage() {
                 <span className="text-sm font-medium">{Math.round(progress)}% Complete</span>
               </div>
               <Progress value={progress} className="h-2" />
-
               <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
                 {steps.map((step, index) => (
                   <div
@@ -172,18 +160,17 @@ export default function HospitalSignupPage() {
                 ))}
               </div>
             </div>
-
             <Card className="border-2 border-gray-100 shadow-md">
               <CardHeader>
                 <CardTitle>{steps[currentStep]}</CardTitle>
                 <CardDescription>
                   {currentStep === 0 && "Provide basic information about your hospital."}
-                  {currentStep === 1 && "Tell us about your facilities and services."}
+                  {currentStep === 1 && "Tell us about your facilities and services for international patients."}
                   {currentStep === 2 && "List your medical specialties and featured treatments."}
-                  {currentStep === 3 && "Share your accreditations and certifications."}
+                  {currentStep === 3 && "Share your accreditations and certifications relevant to international standards and Nigerian regulations."}
                   {currentStep === 4 && "Provide information about your medical staff."}
                   {currentStep === 5 && "Upload photos and videos of your facility."}
-                  {currentStep === 6 && "Share information about your pricing and packages."}
+                  {currentStep === 6 && "Share information about your pricing and packages for medical tourists."}
                   {currentStep === 7 && "Review your information and submit your application."}
                 </CardDescription>
               </CardHeader>
@@ -206,7 +193,6 @@ export default function HospitalSignupPage() {
                             required
                           />
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="yearEstablished">Year Established</Label>
                           <Input
@@ -218,7 +204,6 @@ export default function HospitalSignupPage() {
                           />
                         </div>
                       </div>
-
                       <div className="space-y-2">
                         <Label htmlFor="address">
                           Address <span className="text-red-500">*</span>
@@ -232,7 +217,6 @@ export default function HospitalSignupPage() {
                           required
                         />
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="city">
@@ -247,7 +231,6 @@ export default function HospitalSignupPage() {
                             required
                           />
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="country">
                             Country <span className="text-red-500">*</span>
@@ -260,21 +243,11 @@ export default function HospitalSignupPage() {
                               <SelectValue placeholder="Select country" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Thailand">Thailand</SelectItem>
-                              <SelectItem value="India">India</SelectItem>
-                              <SelectItem value="Singapore">Singapore</SelectItem>
-                              <SelectItem value="Malaysia">Malaysia</SelectItem>
-                              <SelectItem value="Turkey">Turkey</SelectItem>
-                              <SelectItem value="Mexico">Mexico</SelectItem>
-                              <SelectItem value="Costa Rica">Costa Rica</SelectItem>
-                              <SelectItem value="Brazil">Brazil</SelectItem>
-                              <SelectItem value="South Korea">South Korea</SelectItem>
-                              <SelectItem value="UAE">UAE</SelectItem>
-                              {/* Add more countries as needed */}
+                              <SelectItem value="Nigeria">Nigeria</SelectItem>
+                              {/* Only Nigeria is listed as the hospital is located in Nigeria */}
                             </SelectContent>
                           </Select>
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="postalCode">Postal Code</Label>
                           <Input
@@ -286,7 +259,6 @@ export default function HospitalSignupPage() {
                           />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="phone">
@@ -301,7 +273,6 @@ export default function HospitalSignupPage() {
                             required
                           />
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="email">
                             Email Address <span className="text-red-500">*</span>
@@ -317,7 +288,6 @@ export default function HospitalSignupPage() {
                           />
                         </div>
                       </div>
-
                       <div className="space-y-2">
                         <Label htmlFor="website">Website</Label>
                         <Input
@@ -328,7 +298,6 @@ export default function HospitalSignupPage() {
                           placeholder="https://www.yourhospital.com"
                         />
                       </div>
-
                       <div className="space-y-2">
                         <Label htmlFor="description">
                           Hospital Description <span className="text-red-500">*</span>
@@ -338,14 +307,13 @@ export default function HospitalSignupPage() {
                           name="description"
                           value={formData.description}
                           onChange={handleInputChange}
-                          placeholder="Provide a detailed description of your hospital, its history, mission, and what makes it unique."
+                          placeholder="Provide a detailed description of your hospital, its history, mission, and what makes it unique for international patients seeking care in Nigeria."
                           className="min-h-[150px]"
                           required
                         />
                       </div>
                     </div>
                   )}
-
                   {/* Step 2: Facilities & Services */}
                   {currentStep === 1 && (
                     <div className="space-y-6">
@@ -362,7 +330,6 @@ export default function HospitalSignupPage() {
                           />
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">Facilities Available</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -374,7 +341,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="privateRooms">Private Rooms</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="icu"
@@ -383,7 +349,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="icu">Intensive Care Unit (ICU)</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="emergencyServices"
@@ -394,7 +359,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="emergencyServices">Emergency Services</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="pharmacy"
@@ -403,7 +367,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="pharmacy">Pharmacy</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="laboratory"
@@ -412,7 +375,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="laboratory">Laboratory</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="imaging"
@@ -421,7 +383,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="imaging">Imaging Services</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="ambulance"
@@ -430,7 +391,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="ambulance">Ambulance Services</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="cafeteria"
@@ -439,7 +399,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="cafeteria">Cafeteria</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="wifi"
@@ -450,7 +409,6 @@ export default function HospitalSignupPage() {
                           </div>
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">International Patient Services</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -462,7 +420,6 @@ export default function HospitalSignupPage() {
                             />
                             <Label htmlFor="translation">Translation Services</Label>
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="internationalDesk"
@@ -475,11 +432,9 @@ export default function HospitalSignupPage() {
                           </div>
                         </div>
                       </div>
-
                       {/* Additional services section would go here */}
                     </div>
                   )}
-
                   {/* Step 3: Specialties & Treatments */}
                   {currentStep === 2 && (
                     <div className="space-y-6">
@@ -538,28 +493,27 @@ export default function HospitalSignupPage() {
                           ))}
                         </div>
                       </div>
-
                       {/* Featured treatments section would go here */}
                       {/* This would be a more complex form with the ability to add multiple treatments */}
                     </div>
                   )}
-
                   {/* Step 4: Accreditations */}
                   {currentStep === 3 && (
                     <div className="space-y-6">
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">Accreditations</h3>
-                        <p className="text-sm text-gray-500">Select all accreditations your hospital has received.</p>
+                        <p className="text-sm text-gray-500">Select all accreditations your hospital has received, including national and international certifications.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {[
                             "JCI (Joint Commission International)",
                             "ISO 9001",
-                            "NABH (National Accreditation Board for Hospitals)",
+                            "Medical and Dental Council of Nigeria (MDCN)", // Added Nigerian accreditation
+                            "NABH (National Accreditation Board for Hospitals & Healthcare Providers, India)",
                             "GHA (Global Healthcare Accreditation)",
                             "ACHSI (Australian Council on Healthcare Standards International)",
                             "CCHSA (Canadian Council on Health Services Accreditation)",
-                            "HAS (Haute Autorité de Santé)",
-                            "QHA Trent Accreditation",
+                            "HAS (Haute Autorité de Santé, France)",
+                            "QHA Trent Accreditation (UK)",
                             "MTQUA (Medical Travel Quality Alliance)",
                           ].map((accreditation) => (
                             <div key={accreditation} className="flex items-center space-x-2">
@@ -585,12 +539,10 @@ export default function HospitalSignupPage() {
                           ))}
                         </div>
                       </div>
-
                       {/* Certifications section would go here */}
                       {/* File upload for accreditation documents would go here */}
                     </div>
                   )}
-
                   {/* Step 5: Staff & Doctors */}
                   {currentStep === 4 && (
                     <div className="space-y-6">
@@ -606,7 +558,6 @@ export default function HospitalSignupPage() {
                             placeholder="e.g., 120"
                           />
                         </div>
-
                         <div className="space-y-2">
                           <Label htmlFor="nursesCount">Number of Nurses</Label>
                           <Input
@@ -619,12 +570,10 @@ export default function HospitalSignupPage() {
                           />
                         </div>
                       </div>
-
                       {/* Featured doctors section would go here */}
                       {/* This would be a more complex form with the ability to add multiple doctors */}
                     </div>
                   )}
-
                   {/* Step 6: Media & Photos */}
                   {currentStep === 5 && (
                     <div className="space-y-6">
@@ -662,13 +611,11 @@ export default function HospitalSignupPage() {
                           </Button>
                         </div>
                       </div>
-
                       {/* Hospital photos section would go here */}
                       {/* Videos section would go here */}
                       {/* Virtual tour link would go here */}
                     </div>
                   )}
-
                   {/* Step 7: Pricing & Packages */}
                   {currentStep === 6 && (
                     <div className="space-y-6">
@@ -682,19 +629,16 @@ export default function HospitalSignupPage() {
                             <SelectValue placeholder="Select currency" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="NGN">Nigerian Naira (NGN)</SelectItem> {/* Added NGN */}
                             <SelectItem value="USD">US Dollar (USD)</SelectItem>
                             <SelectItem value="EUR">Euro (EUR)</SelectItem>
                             <SelectItem value="GBP">British Pound (GBP)</SelectItem>
-                            <SelectItem value="THB">Thai Baht (THB)</SelectItem>
-                            <SelectItem value="INR">Indian Rupee (INR)</SelectItem>
-                            <SelectItem value="SGD">Singapore Dollar (SGD)</SelectItem>
-                            <SelectItem value="MYR">Malaysian Ringgit (MYR)</SelectItem>
-                            <SelectItem value="TRY">Turkish Lira (TRY)</SelectItem>
+                            <SelectItem value="CAD">Canadian Dollar (CAD)</SelectItem>
+                            <SelectItem value="AUD">Australian Dollar (AUD)</SelectItem>
                             {/* Add more currencies as needed */}
                           </SelectContent>
                         </Select>
                       </div>
-
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">Payment Methods Accepted</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -730,7 +674,6 @@ export default function HospitalSignupPage() {
                           ))}
                         </div>
                       </div>
-
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="insuranceAccepted"
@@ -739,12 +682,10 @@ export default function HospitalSignupPage() {
                         />
                         <Label htmlFor="insuranceAccepted">We accept international insurance</Label>
                       </div>
-
                       {/* Featured packages section would go here */}
                       {/* This would be a more complex form with the ability to add multiple packages */}
                     </div>
                   )}
-
                   {/* Step 8: Review & Submit */}
                   {currentStep === 7 && (
                     <div className="space-y-6">
@@ -754,17 +695,14 @@ export default function HospitalSignupPage() {
                           <h3 className="font-medium text-primary">Almost Done!</h3>
                           <p className="text-sm text-gray-600">
                             Please review all your information before submitting. Once submitted, our team will review
-                            your application and get back to you within 3-5 business days.
+                            your application to partner with MedConnect for medical tourism in Nigeria and get back to you within 3-5 business days.
                           </p>
                         </div>
                       </div>
-
                       {/* Summary of all entered information would go here */}
                       {/* This would be a read-only display of all the information entered */}
-
                       <div className="space-y-4 border-t pt-6">
                         <h3 className="text-lg font-medium">Terms and Agreements</h3>
-
                         <div className="flex items-start space-x-2">
                           <Checkbox
                             id="termsAgreed"
@@ -789,7 +727,6 @@ export default function HospitalSignupPage() {
                             <p className="text-sm text-muted-foreground">You must agree to our terms to continue.</p>
                           </div>
                         </div>
-
                         <div className="flex items-start space-x-2">
                           <Checkbox
                             id="dataPrivacyAgreed"
@@ -805,11 +742,11 @@ export default function HospitalSignupPage() {
                               I consent to MedConnect processing my data as described in the{" "}
                               <Link href="/privacy" className="text-primary hover:underline">
                                 Privacy Policy
-                              </Link>
+                              </Link>{" "}
+                              and in compliance with the Nigeria Data Protection Act (NDPA) 2023.
                             </Label>
                           </div>
                         </div>
-
                         <div className="flex items-start space-x-2">
                           <Checkbox
                             id="marketingAgreed"
@@ -838,7 +775,6 @@ export default function HospitalSignupPage() {
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Previous
                 </Button>
-
                 {currentStep < steps.length - 1 ? (
                   <Button onClick={nextStep}>
                     Next

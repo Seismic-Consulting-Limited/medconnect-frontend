@@ -139,7 +139,6 @@ const coverageData: HospitalCoverage = {
     },
   },
   "2": {
-    // Indira Gandhi Memorial Hospital
     aetna: {
       "Aetna International": {
         covered: true,
@@ -169,7 +168,6 @@ const coverageData: HospitalCoverage = {
     },
   },
   "3": {
-    // Bumrungrad International Hospital
     aetna: {
       "Aetna International": {
         covered: true,
@@ -447,7 +445,7 @@ export function InsuranceCoverageChecker({
                 <Button type="button" variant="outline" onClick={handleReset}>
                   Reset
                 </Button>
-                <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={!provider || !plan}>
+                <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white" disabled={!provider || !plan}>
                   {isChecking ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
@@ -455,7 +453,7 @@ export function InsuranceCoverageChecker({
                     </>
                   ) : (
                     <>
-                      <Search className="mr-2 h-4 w-4" />
+                      <Search className="mr-2 h-4 w-4 text-white" />
                       Check Coverage
                     </>
                   )}
@@ -788,7 +786,7 @@ export function InsuranceCoverageChecker({
                 <Button variant="outline" onClick={handleReset}>
                   Check Another Plan
                 </Button>
-                {!standalone && onClose && <Button onClick={onClose}>Close</Button>}
+                {!standalone && onClose && <Button className="text-white" onClick={onClose}>Close</Button>}
               </div>
             </>
           ) : (

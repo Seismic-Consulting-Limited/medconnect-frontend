@@ -1,20 +1,7 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import {
-  ArrowLeft,
-  ArrowRight,
-  Award,
-  Building2,
-  DollarSign,
-  Globe,
-  MapPin,
-  MessageSquare,
-  Star,
-  Video,
-} from "lucide-react"
-
+import { ArrowLeft, ArrowRight, Award, Building2, DollarSign, Globe, MapPin, MessageSquare, Star, Video } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,68 +9,68 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ResponsiveContainer } from "@/components/responsive-container"
 
-// Sample hospital data
+// Consistent Sample hospital data for Nigeria with original images
 const hospitals = [
   {
     id: "1",
-    name: "Bangkok International Hospital",
-    location: "Bangkok, Thailand",
-    specialties: ["Cardiology", "Orthopedics", "Neurology"],
-    rating: 4.8,
-    reviews: 245,
-    image: "/bangkok-hospital-exterior.png",
+    name: "Lagos University Teaching Hospital (LUTH)",
+    location: "Lagos, Nigeria",
+    specialties: ["Cardiology", "Orthopedics", "Oncology", "Neurology"],
+    rating: 4.5,
+    reviews: 320,
+    image: "/bangkok-hospital-exterior.png", // Original image path
     description:
-      "A leading medical facility in Southeast Asia offering comprehensive healthcare services with state-of-the-art technology and internationally trained physicians.",
+      "A premier federal teaching hospital in Nigeria, offering comprehensive medical services with a focus on advanced research and patient care.",
     fullDescription:
-      "Bangkok International Hospital is a premier healthcare provider in Thailand, offering world-class medical services to both local and international patients. With a team of internationally trained physicians and cutting-edge medical technology, the hospital provides comprehensive healthcare services across various specialties. The hospital's commitment to excellence has earned it numerous accreditations and a reputation for high-quality patient care.",
-    accreditations: ["JCI", "ISO 9001", "HA"],
-    founded: 1995,
-    beds: 580,
-    doctors: 200,
-    internationalPatients: "15,000+ annually",
-    languages: ["English", "Thai", "Arabic", "Chinese", "Japanese"],
+      "Lagos University Teaching Hospital (LUTH) is a leading tertiary healthcare institution in Nigeria, renowned for its extensive range of medical services, cutting-edge research, and commitment to training future medical professionals. It serves as a major referral center for complex cases across West Africa, providing high-quality care with a dedicated team of specialists.",
+    accreditations: ["MDCN", "NHIS", "ISO 9001"],
+    founded: 1962,
+    beds: 760,
+    doctors: 450,
+    internationalPatients: "500+ annually (from West Africa & beyond)",
+    languages: ["English", "Yoruba", "Hausa", "Igbo"],
   },
   {
     id: "2",
-    name: "Indira Gandhi Memorial Hospital",
-    location: "New Delhi, India",
-    specialties: ["Oncology", "Cardiology", "Fertility"],
+    name: "Reddington Hospital",
+    location: "Lagos, Nigeria",
+    specialties: ["Cardiac Surgery", "Gastroenterology", "Fertility Treatment", "Cosmetic Surgery"],
     rating: 4.7,
-    reviews: 189,
-    image: "/indira-gandhi-hospital-exterior.png",
+    reviews: 210,
+    image: "/indira-gandhi-hospital-exterior.png", // Original image path
     description:
-      "Renowned for its advanced cancer treatments and cardiac care, this hospital provides high-quality healthcare at affordable prices.",
+      "A state-of-the-art private hospital in Lagos, known for its advanced cardiac care, minimally invasive surgeries, and personalized patient experience.",
     fullDescription:
-      "Indira Gandhi Memorial Hospital is one of India's leading medical institutions, known for its excellence in oncology, cardiology, and fertility treatments. The hospital combines cutting-edge technology with compassionate care to deliver exceptional medical services. With a focus on affordable healthcare, the hospital has become a popular destination for medical tourists seeking quality treatment at competitive prices.",
-    accreditations: ["NABH", "ISO 9001", "NABL"],
-    founded: 1984,
-    beds: 650,
-    doctors: 250,
-    internationalPatients: "12,000+ annually",
-    languages: ["English", "Hindi", "Bengali", "Arabic"],
+      "Reddington Hospital is a multi-specialist private hospital in Lagos, Nigeria, offering world-class healthcare services. It is particularly recognized for its excellence in cardiac surgery, gastroenterology, and fertility treatments, utilizing modern technology and a patient-centric approach to deliver superior outcomes. The hospital caters to both local and international patients seeking premium medical care.",
+    accreditations: ["MDCN", "NHIS", "COHSASA"],
+    founded: 2006,
+    beds: 120,
+    doctors: 80,
+    internationalPatients: "300+ annually (from West Africa & Europe)",
+    languages: ["English", "French", "Igbo"],
   },
   {
     id: "3",
-    name: "Bumrungrad International Hospital",
-    location: "Bangkok, Thailand",
-    specialties: ["Plastic Surgery", "Orthopedics", "Gastroenterology"],
-    rating: 4.9,
-    reviews: 312,
-    image: "/modern-hospital-exterior.png",
+    name: "National Hospital Abuja",
+    location: "Abuja, Nigeria",
+    specialties: ["Pediatrics", "Obstetrics & Gynecology", "Neurosurgery", "Urology"],
+    rating: 4.6,
+    reviews: 155,
+    image: "/modern-hospital-exterior.png", // Original image path
     description:
-      "One of Asia's premier medical facilities, serving over a million patients annually with cutting-edge treatments and multilingual staff.",
+      "A leading federal hospital in Nigeria's capital, providing specialized medical services and a strong focus on maternal and child health.",
     fullDescription:
-      "Bumrungrad International Hospital is one of the largest private hospitals in Southeast Asia, treating over a million patients annually from over 190 countries. The hospital is known for its world-class healthcare services, state-of-the-art facilities, and multilingual staff. With a focus on patient-centered care, Bumrungrad has become a global leader in medical tourism, offering a wide range of medical services from routine check-ups to complex surgeries.",
-    accreditations: ["JCI", "ISO 9001", "HA", "GHA"],
-    founded: 1980,
-    beds: 580,
-    doctors: 380,
-    internationalPatients: "520,000+ annually",
-    languages: ["English", "Thai", "Arabic", "Japanese", "Mandarin", "Cantonese", "Bengali"],
+      "The National Hospital Abuja is a prominent federal government hospital in Nigeria, offering a wide array of specialized medical services. It is particularly known for its robust departments in pediatrics, obstetrics & gynecology, and neurosurgery. The hospital is committed to providing high-quality, accessible healthcare to all Nigerians and international visitors, leveraging modern medical practices and a compassionate approach.",
+    accreditations: ["MDCN", "NHIS", "NMA"],
+    founded: 1999,
+    beds: 200,
+    doctors: 150,
+    internationalPatients: "200+ annually (from West Africa)",
+    languages: ["English", "Hausa", "Yoruba", "French"],
   },
 ]
 
-// Sample treatments data
+// Sample treatments data - Adjusted for Nigerian context
 const treatments = [
   {
     id: "cardio-1",
@@ -94,8 +81,8 @@ const treatments = [
     hospitalStay: "5-7 days",
     recovery: "6-12 weeks",
     success: "95-98%",
-    priceRange: "$12,000 - $15,000",
-    comparisonPrice: "$70,000 - $200,000 in US",
+    priceRange: "₦2,500,000 - ₦4,000,000", // ~ $3,000 - $5,000 USD
+    comparisonPrice: "($70,000 - $200,000 in US)",
   },
   {
     id: "cardio-2",
@@ -105,8 +92,8 @@ const treatments = [
     hospitalStay: "1-2 days",
     recovery: "1-2 weeks",
     success: "90-95%",
-    priceRange: "$5,000 - $7,000",
-    comparisonPrice: "$28,000 - $60,000 in US",
+    priceRange: "₦1,500,000 - ₦2,500,000", // ~ $1,800 - $3,000 USD
+    comparisonPrice: "($28,000 - $60,000 in US)",
   },
   {
     id: "ortho-1",
@@ -116,39 +103,39 @@ const treatments = [
     hospitalStay: "3-5 days",
     recovery: "6-12 weeks",
     success: "90-95%",
-    priceRange: "$8,000 - $12,000",
-    comparisonPrice: "$35,000 - $60,000 in US",
+    priceRange: "₦3,000,000 - ₦5,000,000", // ~ $3,700 - $6,200 USD
+    comparisonPrice: "($35,000 - $60,000 in US)",
   },
 ]
 
-// Sample doctors data
+// Sample doctors data - Updated for Nigeria with original images
 const doctors = [
   {
     id: "doc-1",
-    name: "Dr. Somchai Panyasiri",
+    name: "Dr. Ngozi Okoro",
     specialty: "Cardiology",
-    education: "Harvard Medical School",
-    experience: "25+ years",
-    languages: ["English", "Thai"],
-    image: "/caring-doctor.png",
+    education: "University of Ibadan, Nigeria",
+    experience: "20+ years",
+    languages: ["English", "Igbo"],
+    image: "/caring-doctor.png", // Original image path
   },
   {
     id: "doc-2",
-    name: "Dr. Priya Sharma",
+    name: "Dr. Adebayo Oladele",
     specialty: "Orthopedic Surgery",
-    education: "Johns Hopkins University",
-    experience: "18+ years",
-    languages: ["English", "Hindi", "Thai"],
-    image: "/female-doctor.png",
+    education: "University of Lagos, Nigeria",
+    experience: "15+ years",
+    languages: ["English", "Yoruba"],
+    image: "/female-doctor.png", // Original image path
   },
   {
     id: "doc-3",
-    name: "Dr. Michael Chen",
+    name: "Dr. Fatima Abubakar",
     specialty: "Neurology",
-    education: "Stanford University",
-    experience: "20+ years",
-    languages: ["English", "Mandarin", "Thai"],
-    image: "/asian-doctor.png",
+    education: "Ahmadu Bello University, Nigeria",
+    experience: "18+ years",
+    languages: ["English", "Hausa"],
+    image: "/asian-doctor.png", // Original image path
   },
 ]
 
@@ -184,7 +171,7 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                   className="inline-flex items-center text-sm text-gray-500 hover:text-primary transition-colors"
                 >
                   <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back to Hospitals
+                  Back to Hospitals in Nigeria
                 </Link>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:gap-12 items-start">
@@ -310,7 +297,6 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                       View All Treatments
                     </Button>
                   </div>
-
                   <div className="space-y-6">
                     {treatments.map((treatment, index) => (
                       <div key={treatment.id} className="border rounded-lg p-4">
@@ -361,7 +347,6 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                       View All Doctors
                     </Button>
                   </div>
-
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {doctors.map((doctor) => (
                       <Card key={doctor.id}>
@@ -381,11 +366,11 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                                 <span className="text-sm text-gray-500">Education:</span>
                                 <span className="text-sm font-medium">{doctor.education}</span>
                               </div>
-                              <div className="flex justify-between">
+                              <div>
                                 <span className="text-sm text-gray-500">Experience:</span>
                                 <span className="text-sm font-medium">{doctor.experience}</span>
                               </div>
-                              <div className="flex justify-between">
+                              <div>
                                 <span className="text-sm text-gray-500">Languages:</span>
                                 <span className="text-sm font-medium">{doctor.languages.join(", ")}</span>
                               </div>
@@ -433,7 +418,7 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                 <h2 className="text-2xl md:text-3xl font-bold">Contact This Hospital</h2>
                 <p className="text-gray-500">
                   Get in touch with {hospital.name} to discuss your treatment options, schedule a consultation, or
-                  request a personalized quote.
+                  request a personalized quote for medical tourism in Nigeria.
                 </p>
                 <div className="space-y-4 pt-2">
                   <div className="flex items-start gap-4">
@@ -516,7 +501,7 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                         <input
                           type="tel"
                           className="w-full p-2 border border-gray-300 rounded-md"
-                          placeholder="+1 (555) 123-4567"
+                          placeholder="+234 (XXX) XXX-XXXX"
                         />
                       </div>
                       <div>
@@ -545,12 +530,12 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
         <section className="w-full py-8 md:py-12 lg:py-16 bg-gray-50">
           <ResponsiveContainer>
             <div className="text-center space-y-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold">Similar Hospitals</h2>
+              <h2 className="text-2xl md:text-3xl font-bold">Similar Hospitals in Nigeria</h2>
               <p className="text-gray-500 max-w-2xl mx-auto">
-                Compare other hospitals that offer similar treatments and specialties.
+                Compare other hospitals in Nigeria that offer similar treatments and specialties for international
+                patients.
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hospitals
                 .filter((h) => h.id !== hospitalId)
@@ -603,10 +588,9 @@ export function HospitalDetailClient({ hospitalId }: { hospitalId: string }) {
                   </Card>
                 ))}
             </div>
-
             <div className="mt-8 text-center">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary-50">
-                Compare Hospitals
+                Compare Hospitals in Nigeria
               </Button>
             </div>
           </ResponsiveContainer>

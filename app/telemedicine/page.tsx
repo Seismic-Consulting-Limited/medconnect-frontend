@@ -1,30 +1,18 @@
+"use client"
 import Link from "next/link"
-import {
-  ArrowRight,
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Globe,
-  MessageSquare,
-  ShieldCheck,
-  Stethoscope,
-  Video,
-  Users,
-  MapPin,
-} from "lucide-react"
-
+import { ArrowRight, Calendar, CheckCircle, Clock, FileText, Globe, MessageSquare, ShieldCheck, Stethoscope, Video, Users, MapPin } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
+import { ResponsiveContainer } from "@/components/responsive-container"
 
 export default function TelemedicinePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-1">
-        {/* Redesigned Hero Section with Neutral Colors */}
+        {/* Redesigned Hero Section with Neutral Colors - UPDATED TEXT */}
         <section className="w-full py-12 md:py-24 bg-white overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('/placeholder.svg?key=medical-pattern')] opacity-5 z-0"></div>
           <div className="container px-4 md:px-6 relative z-10">
@@ -36,22 +24,18 @@ export default function TelemedicinePage() {
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-gray-900">
-                    Connect With Specialists <span className="text-purple-600">Worldwide</span>
+                    Connect With Specialists <span className="text-purple-600">in Nigeria</span>
                   </h1>
                   <p className="max-w-[600px] text-gray-600 md:text-xl">
-                    Our telemedicine platform bridges borders, connecting you with top international healthcare
-                    providers before, during, and after your medical journey.
+                    Our telemedicine platform connects you with top Nigerian healthcare providers before, during, and after your medical journey to Nigeria.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row pt-2">
-                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700" asChild>
+                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white" asChild>
                     <Link href="/telemedicine/schedule">
                       Schedule Consultation
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
-                  </Button>
-                  <Button size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
-                    How It Works
                   </Button>
                 </div>
               </div>
@@ -77,7 +61,7 @@ export default function TelemedicinePage() {
                           <p className="text-sm font-medium">Dr. Sarah Johnson</p>
                           <p className="text-xs text-gray-500">Cardiology Specialist • Available Now</p>
                         </div>
-                        <Button size="sm" className="ml-auto bg-purple-600 hover:bg-purple-700">
+                        <Button size="sm" className="ml-auto bg-purple-600 hover:bg-purple-700 text-white">
                           Connect
                         </Button>
                       </div>
@@ -86,15 +70,14 @@ export default function TelemedicinePage() {
                 </div>
               </div>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-12 pt-6 border-t border-gray-100">
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <Globe className="h-5 w-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-medium">Global Network</p>
-                  <p className="text-sm text-gray-500">50+ countries</p>
+                  <p className="font-medium">Across Nigeria</p> {/* Changed from Global Network */}
+                  <p className="text-sm text-gray-500">All major cities</p> {/* Changed from 50+ countries */}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -102,8 +85,8 @@ export default function TelemedicinePage() {
                   <Users className="h-5 w-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-medium">Specialists</p>
-                  <p className="text-sm text-gray-500">2,000+ doctors</p>
+                  <p className="font-medium">Leading Specialists</p> {/* Changed from Specialists */}
+                  <p className="text-sm text-gray-500">Expert doctors</p> {/* Changed from 2,000+ doctors */}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -111,8 +94,8 @@ export default function TelemedicinePage() {
                   <MapPin className="h-5 w-5 text-gray-600" />
                 </div>
                 <div>
-                  <p className="font-medium">Hospitals</p>
-                  <p className="text-sm text-gray-500">300+ facilities</p>
+                  <p className="font-medium">Top Facilities</p> {/* Changed from Hospitals */}
+                  <p className="text-sm text-gray-500">Accredited hospitals</p> {/* Changed from 300+ facilities */}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -128,26 +111,25 @@ export default function TelemedicinePage() {
           </div>
         </section>
 
-        {/* Mindiser Section - Moved up after hero */}
+        {/* Mindviza Section - Moved up after hero - UPDATED TEXT */}
         <section className="w-full py-16 md:py-24 bg-gray-50">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <div className="inline-block rounded-lg bg-purple-100 px-3 py-1 text-sm text-purple-700 mb-2">
                 Mental Health Support
               </div>
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">Introducing Mindiser</h2>
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">Introducing Mindviza</h2>
               <p className="text-gray-500 md:text-lg max-w-3xl mx-auto">
                 Our specialized mental health platform connecting you with therapists and psychiatrists to support your
-                emotional wellbeing throughout your medical journey.
+                emotional wellbeing throughout your medical journey to Nigeria.
               </p>
             </div>
-
             <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
               <div className="space-y-4">
                 <h3 className="text-2xl font-bold">Comprehensive Mental Health Support</h3>
                 <p className="text-gray-500">
-                  Medical journeys can be emotionally challenging. Mindiser provides specialized support to help you
-                  navigate anxiety, stress, and adjustment throughout your treatment process.
+                  Medical journeys can be emotionally challenging. Mindviza provides specialized support to help you
+                  navigate anxiety, stress, and adjustment throughout your treatment process in Nigeria.
                 </p>
                 <ul className="space-y-3 mt-6">
                   <li className="flex items-start gap-2">
@@ -167,9 +149,9 @@ export default function TelemedicinePage() {
                     <span>Secure, HIPAA-compliant platform for complete privacy</span>
                   </li>
                 </ul>
-                <Button className="mt-4 bg-purple-600 hover:bg-purple-700" asChild>
+                <Button className="mt-4 bg-purple-600 hover:bg-purple-700 text-white" asChild>
                   <Link href="/telemedicine/schedule">
-                    Explore Mindiser
+                    Explore Mindviza
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -178,7 +160,7 @@ export default function TelemedicinePage() {
                 <div className="absolute -top-6 -right-6 w-24 h-24 bg-purple-100 rounded-full opacity-50"></div>
                 <img
                   src="/placeholder.svg?key=u0pch"
-                  alt="Mindiser therapy session"
+                  alt="Mindviza therapy session"
                   className="rounded-xl shadow-lg relative z-10"
                   width={600}
                   height={500}
@@ -186,7 +168,6 @@ export default function TelemedicinePage() {
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gray-100 rounded-full opacity-50"></div>
               </div>
             </div>
-
             <div className="pt-8">
               <h3 className="text-2xl font-bold text-center mb-12">Our Mental Health Services</h3>
               <div className="grid md:grid-cols-3 gap-8">
@@ -199,7 +180,7 @@ export default function TelemedicinePage() {
                       <h4 className="text-xl font-bold">AI Mental Health Assistant</h4>
                       <p className="text-gray-500">
                         Our 24/7 AI chatbot provides immediate support, coping strategies, and resources for managing
-                        stress, anxiety, and other concerns during your medical journey.
+                        stress, anxiety, and other concerns during your medical journey in Nigeria.
                       </p>
                       <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                         Chat Now
@@ -216,7 +197,7 @@ export default function TelemedicinePage() {
                       <h4 className="text-xl font-bold">Mental Health Assessment</h4>
                       <p className="text-gray-500">
                         Take our comprehensive assessment to identify potential mental health concerns related to your
-                        medical treatment and receive personalized recommendations.
+                        medical treatment in Nigeria and receive personalized recommendations.
                       </p>
                       <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                         Start Assessment
@@ -233,7 +214,7 @@ export default function TelemedicinePage() {
                       <h4 className="text-xl font-bold">Therapist Matching</h4>
                       <p className="text-gray-500">
                         Get matched with specialized therapists and access curated mental health resources tailored to
-                        your specific medical journey and cultural background.
+                        your specific medical journey and cultural background in Nigeria.
                       </p>
                       <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                         Find Resources
@@ -246,7 +227,7 @@ export default function TelemedicinePage() {
           </div>
         </section>
 
-        {/* Pre-Treatment Consultation Section */}
+        {/* Pre-Treatment Consultation Section - UPDATED TEXT */}
         <section id="pre-treatment" className="w-full py-16 md:py-24 bg-white scroll-mt-20">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
@@ -254,24 +235,23 @@ export default function TelemedicinePage() {
                 Pre-Treatment
               </div>
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">
-                Expert Consultation Before You Travel
+                Expert Consultation for Your Trip to Nigeria
               </h2>
               <p className="text-gray-500 md:text-lg max-w-3xl mx-auto">
-                Connect with international specialists to discuss your condition, treatment options, and travel
+                Connect with Nigerian specialists to discuss your condition, treatment options, and travel
                 preparations before making any commitments.
               </p>
             </div>
-
             <div className="grid gap-12 md:grid-cols-2 lg:gap-16 items-center py-8">
               <div className="space-y-4">
                 <h3 className="text-2xl font-bold">Plan Your Medical Journey</h3>
                 <p className="text-gray-500 md:text-lg">
-                  Our pre-treatment consultations help you make informed decisions about your care abroad.
+                  Our pre-treatment consultations help you make informed decisions about your care in Nigeria.
                 </p>
                 <ul className="space-y-3 mt-6">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Secure video consultations with specialists from top international hospitals</span>
+                    <span>Secure video consultations with specialists from top Nigerian hospitals</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
@@ -286,7 +266,7 @@ export default function TelemedicinePage() {
                     <span>Get a second opinion before making your final decision</span>
                   </li>
                 </ul>
-                <Button className="mt-4 bg-purple-600 hover:bg-purple-700" asChild>
+                <Button className="mt-4 bg-purple-600 hover:bg-purple-700 text-white" asChild>
                   <Link href="/telemedicine/schedule">
                     Schedule a Consultation
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -305,7 +285,6 @@ export default function TelemedicinePage() {
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-gray-100 rounded-full opacity-50"></div>
               </div>
             </div>
-
             <div className="py-12 mt-8">
               <h3 className="text-2xl font-bold text-center mb-12">How Pre-Treatment Consultation Works</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -324,7 +303,7 @@ export default function TelemedicinePage() {
                   </div>
                   <h4 className="font-bold mb-2">Match with Specialists</h4>
                   <p className="text-gray-500 text-sm">
-                    We'll match you with the best specialists for your condition from our global network.
+                    We'll match you with the best specialists for your condition from our network in Nigeria.
                   </p>
                 </div>
                 <div className="flex flex-col items-center text-center">
@@ -342,7 +321,7 @@ export default function TelemedicinePage() {
                   </div>
                   <h4 className="font-bold mb-2">Treatment Planning</h4>
                   <p className="text-gray-500 text-sm">
-                    Receive a detailed treatment plan and travel recommendations for your medical journey.
+                    Receive a detailed treatment plan and travel recommendations for your medical journey to Nigeria.
                   </p>
                 </div>
               </div>
@@ -350,7 +329,7 @@ export default function TelemedicinePage() {
           </div>
         </section>
 
-        {/* Post-Care Section */}
+        {/* Post-Care Section - UPDATED TEXT */}
         <section id="continuous-care" className="w-full py-16 md:py-24 bg-gray-50 scroll-mt-20">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
@@ -360,10 +339,9 @@ export default function TelemedicinePage() {
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl mb-4">Post-Treatment Follow-Up Care</h2>
               <p className="text-gray-500 md:text-lg max-w-3xl mx-auto">
                 Your healing journey continues after you return home. Our post-care telemedicine services ensure
-                seamless continuity with your international healthcare providers.
+                seamless continuity with your Nigerian healthcare providers.
               </p>
             </div>
-
             <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
               <div className="relative order-2 md:order-1">
                 <div className="absolute -top-6 -left-6 w-24 h-24 bg-gray-200 rounded-full opacity-50"></div>
@@ -380,12 +358,12 @@ export default function TelemedicinePage() {
                 <h3 className="text-2xl font-bold">Stay Connected with Your Care Team</h3>
                 <p className="text-gray-500">
                   Our platform enables you to maintain regular contact with the same specialists who performed your
-                  treatment, ensuring consistent care and monitoring of your recovery progress.
+                  treatment in Nigeria, ensuring consistent care and monitoring of your recovery progress.
                 </p>
                 <ul className="space-y-3 mt-6">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Regular video check-ups with your international specialists</span>
+                    <span>Regular video check-ups with your Nigerian specialists</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
@@ -400,15 +378,9 @@ export default function TelemedicinePage() {
                     <span>Coordination with local healthcare providers when needed</span>
                   </li>
                 </ul>
-                <Button className="mt-4 bg-purple-600 hover:bg-purple-700" asChild>
-                  <Link href="/telemedicine/schedule">
-                    Schedule Follow-Up
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+          
               </div>
             </div>
-
             <div className="pt-8">
               <h3 className="text-2xl font-bold text-center mb-12">Comprehensive Recovery Support</h3>
               <div className="grid md:grid-cols-3 gap-8">
@@ -487,9 +459,9 @@ export default function TelemedicinePage() {
                     <div className="p-2 bg-gray-100 rounded-full">
                       <ShieldCheck className="h-6 w-6 text-gray-600" />
                     </div>
-                    <h3 className="text-xl font-bold">HIPAA Compliant</h3>
+                    <h3 className="text-xl font-bold">NDPA & HIPAA Compliant</h3>
                     <p className="text-gray-500">
-                      Our platform meets all healthcare privacy standards to protect your sensitive medical information.
+                      Our platform adheres to the Nigeria Data Protection Act (NDPA) 2023 and HIPAA standards, ensuring robust protection for your sensitive medical information.
                     </p>
                   </div>
                 </CardContent>
@@ -500,9 +472,9 @@ export default function TelemedicinePage() {
                     <div className="p-2 bg-gray-100 rounded-full">
                       <Globe className="h-6 w-6 text-gray-600" />
                     </div>
-                    <h3 className="text-xl font-bold">Global Standards</h3>
+                    <h3 className="text-xl font-bold">Data Residency & Transfers</h3>
                     <p className="text-gray-500">
-                      We comply with international data protection regulations including GDPR for European patients.
+                      We prioritize data residency within Nigeria and ensure all cross-border transfers comply with NDPA's strict adequacy and safeguard requirements.
                     </p>
                   </div>
                 </CardContent>
@@ -515,7 +487,7 @@ export default function TelemedicinePage() {
                     </div>
                     <h3 className="text-xl font-bold">End-to-End Encryption</h3>
                     <p className="text-gray-500">
-                      All video consultations and messages are encrypted to ensure your conversations remain private.
+                      All video consultations and messages are encrypted to ensure your conversations and data remain private and secure.
                     </p>
                   </div>
                 </CardContent>
@@ -524,12 +496,12 @@ export default function TelemedicinePage() {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* CTA Section - UPDATED TEXT */}
         <section className="w-full py-12 md:py-24 bg-purple-600">
           <div className="container px-4 md:px-6 text-center">
             <div className="mx-auto max-w-3xl space-y-4">
               <h2 className="text-3xl font-bold tracking-tighter text-white sm:text-4xl md:text-5xl">
-                Ready to Connect with Global Specialists?
+                Ready to Connect with Nigerian Specialists?
               </h2>
               <p className="text-white/80 md:text-xl">Schedule your first telemedicine consultation today.</p>
               <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center pt-4">
@@ -539,7 +511,7 @@ export default function TelemedicinePage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="text-white border-white hover:bg-purple-700">
+                <Button size="lg" variant="outline" className=" border-white hover:bg-purple-700">
                   Learn More
                 </Button>
               </div>
