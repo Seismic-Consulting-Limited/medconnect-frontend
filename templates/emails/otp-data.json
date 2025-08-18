@@ -1,0 +1,61 @@
+{
+  "templateName": "OTP Verification",
+  "description": "One-time password verification email for account security",
+  "variables": {
+    "firstName": {
+      "type": "string",
+      "required": true,
+      "description": "User's first name",
+      "example": "John"
+    },
+    "email": {
+      "type": "string",
+      "required": true,
+      "description": "User's email address",
+      "example": "john@example.com"
+    },
+    "otpCode": {
+      "type": "string",
+      "required": true,
+      "description": "6-digit verification code",
+      "example": "123456"
+    },
+    "action": {
+      "type": "string",
+      "required": true,
+      "description": "Action being verified (e.g., 'account verification', 'password reset', 'login attempt')",
+      "example": "account verification"
+    },
+    "expirationMinutes": {
+      "type": "number",
+      "required": true,
+      "description": "Number of minutes until code expires",
+      "example": 10
+    },
+    "supportUrl": {
+      "type": "string",
+      "required": false,
+      "description": "Link to support/contact page",
+      "example": "https://medconnect.com/support"
+    },
+    "unsubscribeUrl": {
+      "type": "string",
+      "required": false,
+      "description": "Unsubscribe link",
+      "example": "https://medconnect.com/unsubscribe?token=xyz"
+    },
+    "privacyUrl": {
+      "type": "string",
+      "required": false,
+      "description": "Privacy policy link",
+      "example": "https://medconnect.com/privacy"
+    }
+  },
+  "useCases": [
+    "Email verification during registration",
+    "Two-factor authentication",
+    "Password reset verification",
+    "Login verification from new device",
+    "Account security verification"
+  ]
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hospital Application Approved - MedConnect</title>
+    <style>
+        @media screen and (max-width: 600px) {
+            .mobile-padding { padding: 10px !important; }
+            .mobile-text { font-size: 14px !important; line-height: 20px !important; }
+            .mobile-title { font-size: 24px !important; line-height: 30px !important; }
+            .mobile-button { width: 100% !important; padding: 15px !important; font-size: 16px !important; }
+            .mobile-stack { display: block !important; width: 100% !important; }
+            .mobile-center { text-align: center !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #4A24C4 0%, #6B46C1 100%); padding: 40px 40px 30px 40px; text-align: center;" class="mobile-padding">
+                            <div style="background: rgba(255,255,255,0.15); width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;">
+                                <div style="color: #ffffff; font-size: 32px; font-weight: bold;">✓</div>
+                            </div>
+                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; line-height: 1.2;" class="mobile-title">Application Approved!</h1>
+                            <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin: 10px 0 0 0; line-height: 1.5;" class="mobile-text">Welcome to the MedConnect Partner Network</p>
+                        </td>
+                    </tr>
+
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;" class="mobile-padding">
+                            <p style="color: #1f2937; font-size: 18px; font-weight: 600; margin: 0 0 20px 0; line-height: 1.4;">Hello {{hospitalName}},</p>
+                            
+                            <p style="color: #4b5563; font-size: 16px; margin: 0 0 25px 0; line-height: 1.6;" class="mobile-text">
+                                Congratulations! Your hospital application has been <strong style="color: #4A24C4;">approved</strong> and you are now officially part of the MedConnect partner network.
+                            </p>
+
+                            <!-- Approval Details -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: #f8fafc; border-radius: 12px; margin: 25px 0;">
+                                <tr>
+                                    <td style="padding: 25px;">
+                                        <h3 style="color: #1f2937; font-size: 18px; font-weight: 600; margin: 0 0 15px 0;">Approval Details</h3>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td style="color: #6b7280; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Hospital Name:</td>
+                                                <td style="color: #1f2937; font-size: 14px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">{{hospitalName}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #6b7280; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Approval Date:</td>
+                                                <td style="color: #1f2937; font-size: 14px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">{{approvalDate}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Partner ID:</td>
+                                                <td style="color: #1f2937; font-size: 14px; font-weight: 600; padding: 8px 0; text-align: right;">{{partnerId}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Next Steps -->
+                            <div style="background: linear-gradient(135deg, #4A24C4 0%, #6B46C1 100%); border-radius: 12px; padding: 25px; margin: 25px 0;">
+                                <h3 style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 15px 0;">Next Steps</h3>
+                                <ul style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.6;">
+                                    <li style="margin-bottom: 8px;">Complete your hospital profile in the partner dashboard</li>
+                                    <li style="margin-bottom: 8px;">Upload required certifications and documents</li>
+                                    <li style="margin-bottom: 8px;">Set up your service offerings and availability</li>
+                                    <li>Start receiving patient inquiries from international clients</li>
+                                </ul>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="{{dashboardUrl}}" style="display: inline-block; background: linear-gradient(135deg, #4A24C4 0%, #6B46C1 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(74, 36, 196, 0.3); transition: all 0.3s ease;" class="mobile-button">
+                                            Access Partner Dashboard
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color: #6b7280; font-size: 14px; margin: 25px 0 0 0; line-height: 1.5;" class="mobile-text">
+                                If you have any questions or need assistance, our support team is here to help at <a href="mailto:{{supportEmail}}" style="color: #4A24C4; text-decoration: none;">{{supportEmail}}</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background: #f8fafc; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;" class="mobile-padding">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">
+                                <strong style="color: #1f2937;">MedConnect</strong> - Connecting Healthcare Globally
+                            </p>
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                                This email was sent to {{email}}. 
+                                <a href="{{unsubscribeUrl}}" style="color: #4A24C4; text-decoration: none;">Unsubscribe</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

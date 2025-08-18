@@ -1,0 +1,87 @@
+{
+  "templateName": "Appointment Confirmation Email",
+  "description": "Email sent when an appointment is confirmed",
+  "variables": {
+    "patientName": {
+      "type": "string",
+      "description": "Patient's full name",
+      "example": "Sarah Johnson"
+    },
+    "appointmentDate": {
+      "type": "string",
+      "description": "Date of the appointment",
+      "example": "February 20, 2024"
+    },
+    "appointmentTime": {
+      "type": "string",
+      "description": "Time of the appointment",
+      "example": "10:30 AM"
+    },
+    "doctorName": {
+      "type": "string",
+      "description": "Name of the attending doctor",
+      "example": "Dr. Michael Adebayo"
+    },
+    "specialty": {
+      "type": "string",
+      "description": "Doctor's medical specialty",
+      "example": "Cardiology"
+    },
+    "hospitalName": {
+      "type": "string",
+      "description": "Name of the hospital",
+      "example": "Lagos General Hospital"
+    },
+    "hospitalAddress": {
+      "type": "string",
+      "description": "Hospital address",
+      "example": "123 Medical Center Drive, Lagos, Nigeria"
+    },
+    "hospitalPhone": {
+      "type": "string",
+      "description": "Hospital contact phone",
+      "example": "+234 1 234 5678"
+    },
+    "hospitalEmail": {
+      "type": "string",
+      "description": "Hospital contact email",
+      "example": "appointments@lagosgeneral.com"
+    },
+    "confirmationNumber": {
+      "type": "string",
+      "description": "Unique appointment confirmation number",
+      "example": "APT-2024-001234"
+    },
+    "additionalInstructions": {
+      "type": "string",
+      "description": "Any special instructions for the patient",
+      "example": "Please fast for 12 hours before your appointment"
+    },
+    "calendarUrl": {
+      "type": "string",
+      "description": "URL to add appointment to calendar",
+      "example": "https://medconnect.com/calendar/add?id=123"
+    },
+    "rescheduleUrl": {
+      "type": "string",
+      "description": "URL to reschedule the appointment",
+      "example": "https://medconnect.com/appointments/reschedule/123"
+    },
+    "email": {
+      "type": "string",
+      "description": "Patient's email address",
+      "example": "sarah@example.com"
+    },
+    "supportEmail": {
+      "type": "string",
+      "description": "MedConnect support email",
+      "example": "support@medconnect.com"
+    },
+    "unsubscribeUrl": {
+      "type": "string",
+      "description": "URL to unsubscribe from emails",
+      "example": "https://medconnect.com/unsubscribe"
+    }
+  },
+  "usage": "Send this email when an appointment is successfully booked and confirmed"
+}

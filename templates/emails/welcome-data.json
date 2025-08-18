@@ -1,0 +1,13 @@
+{
+  "templateName": "welcome",
+  "subject": "Welcome to MedConnect - Your Healthcare Journey Starts Here!",
+  "variables": {
+    "firstName": "User's first name",
+    "email": "User's email address",
+    "accountType": "Client/Hospital Partner/Travel Agent Partner",
+    "dashboardUrl": "Link to user's dashboard",
+    "unsubscribeUrl": "Unsubscribe link"
+  },
+  "description": "Welcome email sent to new users after successful registration",
+  "usage": "Triggered automatically after user completes signup process"
+}

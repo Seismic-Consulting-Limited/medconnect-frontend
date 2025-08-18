@@ -1,0 +1,42 @@
+{
+  "templateName": "Hospital Approval Email",
+  "description": "Email sent when a hospital's application is approved",
+  "variables": {
+    "hospitalName": {
+      "type": "string",
+      "description": "Name of the approved hospital",
+      "example": "Lagos General Hospital"
+    },
+    "approvalDate": {
+      "type": "string",
+      "description": "Date when the application was approved",
+      "example": "January 15, 2024"
+    },
+    "partnerId": {
+      "type": "string",
+      "description": "Unique partner identification number",
+      "example": "HP-2024-001"
+    },
+    "dashboardUrl": {
+      "type": "string",
+      "description": "URL to the hospital partner dashboard",
+      "example": "https://medconnect.com/hospital/dashboard"
+    },
+    "email": {
+      "type": "string",
+      "description": "Hospital contact email address",
+      "example": "admin@lagosgeneral.com"
+    },
+    "supportEmail": {
+      "type": "string",
+      "description": "MedConnect support email",
+      "example": "support@medconnect.com"
+    },
+    "unsubscribeUrl": {
+      "type": "string",
+      "description": "URL to unsubscribe from emails",
+      "example": "https://medconnect.com/unsubscribe"
+    }
+  },
+  "usage": "Send this email when a hospital application is approved to welcome them to the partner network"
+}
