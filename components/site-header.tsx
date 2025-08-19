@@ -5,19 +5,13 @@ import Link from "next/link"
 import { HeartPulse, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { LoginModal } from "@/components/auth/login-modal"
-import { SignupModal } from "@/components/auth/signup-modal"
 import { usePathname } from "next/navigation"
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
-  const [signupModalOpen, setSignupModalOpen] = useState(false)
 
-  // Use Next.js's usePathname hook to get the current path
   const pathname = usePathname()
 
-  // Function to check if a path is active
   const isActive = (path: string) => {
     if (path === "/#how-it-works") {
       return pathname === "/"
@@ -27,9 +21,6 @@ export function SiteHeader() {
     }
     return pathname?.startsWith(path)
   }
-
-  // Check if we're on the homepage
-  const isHomePage = pathname === "/"
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm transition-all duration-300">
@@ -41,7 +32,6 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Desktop Navigation - only show on large screens */}
         <nav className="hidden lg:flex gap-8">
           <Link
             href="/hospitals"
@@ -85,25 +75,22 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        {/* Desktop Auth Buttons - only show on large screens */}
         <div className="hidden lg:flex items-center gap-4">
           <Button
             variant="ghost"
-            onClick={() => setLoginModalOpen(true)}
+            asChild
             className="hover:text-primary hover:bg-primary-50 text-base transition-all duration-300 hover:scale-105"
           >
-            Log In
+            <Link href="/user/auth/login">Log In</Link>
           </Button>
           <Button
-            id="signup-modal-trigger"
-            onClick={() => setSignupModalOpen(true)}
+            asChild
             className="bg-primary hover:bg-primary-700 text-white text-base px-6 py-2 transition-all duration-300 hover:scale-105 hover:shadow-md"
           >
-            Sign Up
+            <Link href="/user/auth/signup">Sign Up</Link>
           </Button>
         </div>
 
-        {/* Mobile Menu Button - show on all screens except large */}
         <Button
           variant="ghost"
           size="icon"
@@ -114,7 +101,6 @@ export function SiteHeader() {
         </Button>
       </div>
 
-      {/* Mobile Menu */}
       <div
         className={cn(
           "fixed inset-x-0 top-24 z-50 bg-white border-b lg:hidden transition-all duration-300 ease-in-out shadow-md",
@@ -165,45 +151,24 @@ export function SiteHeader() {
           <div className="flex flex-col gap-2 pt-2 border-t">
             <Button
               variant="outline"
-              onClick={() => {
-                setLoginModalOpen(true)
-                setMobileMenuOpen(false)
-              }}
-              className="w-full transition-all duration-300 hover:border-primary hover:text-primary"
+              asChild
+              className="w-full transition-all duration-300 hover:border-primary hover:text-primary bg-transparent"
             >
-              Log In
+              <Link href="/user/auth/login" onClick={() => setMobileMenuOpen(false)}>
+                Log In
+              </Link>
             </Button>
             <Button
-              id="signup-modal-trigger-mobile"
-              onClick={() => {
-                setSignupModalOpen(true)
-                setMobileMenuOpen(false)
-              }}
+              asChild
               className="w-full bg-primary hover:bg-primary-700 text-white transition-all duration-300 hover:shadow-md"
             >
-              Sign Up
+              <Link href="/user/auth/signup" onClick={() => setMobileMenuOpen(false)}>
+                Sign Up
+              </Link>
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Auth Modals */}
-      <LoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-        onOpenSignup={() => {
-          setLoginModalOpen(false)
-          setSignupModalOpen(true)
-        }}
-      />
-      <SignupModal
-        isOpen={signupModalOpen}
-        onClose={() => setSignupModalOpen(false)}
-        onOpenLogin={() => {
-          setSignupModalOpen(false)
-          setLoginModalOpen(true)
-        }}
-      />
     </header>
   )
 }

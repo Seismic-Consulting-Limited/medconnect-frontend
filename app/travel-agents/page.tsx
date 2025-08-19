@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { ArrowRight, Check, Globe, MapPin, MessageSquare, Plane, Star, Users } from 'lucide-react'
+import { ArrowRight, Check, Globe, MapPin, MessageSquare, Plane, Star, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SiteHeader } from "@/components/site-header"
@@ -23,7 +23,14 @@ const travelAgents = [
     reviewCount: 85,
     website: "https://naijamedtravels.com",
     featured: true,
-    services: ["International Flight Booking", "Airport Transfers (Nigeria)", "Accommodation in Nigeria", "Translation Services", "Local Transportation", "Visa Assistance"],
+    services: [
+      "International Flight Booking",
+      "Airport Transfers (Nigeria)",
+      "Accommodation in Nigeria",
+      "Translation Services",
+      "Local Transportation",
+      "Visa Assistance",
+    ],
     languages: ["English", "French", "Arabic"],
   },
   {
@@ -36,7 +43,14 @@ const travelAgents = [
     reviewCount: 72,
     website: "https://nigeriahealthconnect.com",
     featured: true,
-    services: ["International Flight Booking", "Luxury Accommodation", "Translation", "Local Sightseeing", "Visa Assistance", "Post-treatment Support"],
+    services: [
+      "International Flight Booking",
+      "Luxury Accommodation",
+      "Translation",
+      "Local Sightseeing",
+      "Visa Assistance",
+      "Post-treatment Support",
+    ],
     languages: ["English", "Spanish", "German"],
   },
   {
@@ -49,7 +63,13 @@ const travelAgents = [
     reviewCount: 60,
     website: "https://westafricamedlink.com",
     featured: false,
-    services: ["International Flight Booking", "Budget Accommodation", "Translation", "Medical Record Management", "24/7 Local Support"],
+    services: [
+      "International Flight Booking",
+      "Budget Accommodation",
+      "Translation",
+      "Medical Record Management",
+      "24/7 Local Support",
+    ],
     languages: ["English", "Hausa", "Yoruba"],
   },
   {
@@ -62,7 +82,13 @@ const travelAgents = [
     reviewCount: 55,
     website: "https://lagosmedicalconcierge.com",
     featured: false,
-    services: ["Airport Transfers (Nigeria)", "Accommodation in Lagos", "Personalized Itinerary", "Local Transportation", "Visa Assistance"],
+    services: [
+      "Airport Transfers (Nigeria)",
+      "Accommodation in Lagos",
+      "Personalized Itinerary",
+      "Local Transportation",
+      "Visa Assistance",
+    ],
     languages: ["English", "Igbo", "French"],
   },
   {
@@ -75,7 +101,13 @@ const travelAgents = [
     reviewCount: 48,
     website: "https://abujahealthtravel.com",
     featured: false,
-    services: ["Airport Transfers (Nigeria)", "Premium Accommodation", "Translation", "Concierge Service", "Post-treatment Follow-up Coordination"],
+    services: [
+      "Airport Transfers (Nigeria)",
+      "Premium Accommodation",
+      "Translation",
+      "Concierge Service",
+      "Post-treatment Follow-up Coordination",
+    ],
     languages: ["English", "Arabic", "Hausa"],
   },
 ]
@@ -185,7 +217,7 @@ export default function TravelAgentsPage() {
                           >
                             <Button className="w-full text-white">View Profile</Button>
                           </AffiliateLink>
-                          <Button variant="outline" className="flex-1">
+                          <Button variant="outline" className="flex-1 bg-transparent">
                             Contact
                           </Button>
                         </div>
@@ -224,7 +256,7 @@ export default function TravelAgentsPage() {
                             >
                               <Button className="w-full">View Profile</Button>
                             </AffiliateLink>
-                            <Button variant="outline" className="w-full">
+                            <Button variant="outline" className="w-full bg-transparent">
                               Contact
                             </Button>
                           </div>
@@ -296,8 +328,8 @@ export default function TravelAgentsPage() {
                 <Badge className="mb-4 bg-primary hover:bg-primary">How It Works</Badge>
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Travel Support System for Nigeria</h2>
                 <p className="text-gray-600 mb-8">
-                  Our travel agents work alongside your chosen hospital in Nigeria to ensure your medical journey is as smooth and
-                  stress-free as possible.
+                  Our travel agents work alongside your chosen hospital in Nigeria to ensure your medical journey is as
+                  smooth and stress-free as possible.
                 </p>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1">
@@ -310,8 +342,8 @@ export default function TravelAgentsPage() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pl-11">
-                      Begin by choosing your hospital and treatment in Nigeria. Our platform helps you find the best medical
-                      facilities for your needs.
+                      Begin by choosing your hospital and treatment in Nigeria. Our platform helps you find the best
+                      medical facilities for your needs.
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-2">
@@ -324,8 +356,8 @@ export default function TravelAgentsPage() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pl-11">
-                      Search for travel agents who specialize in facilitating medical travel to your chosen Nigerian city and can coordinate with your chosen
-                      hospital.
+                      Search for travel agents who specialize in facilitating medical travel to your chosen Nigerian
+                      city and can coordinate with your chosen hospital.
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-3">
@@ -338,8 +370,8 @@ export default function TravelAgentsPage() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pl-11">
-                      Compare packages from different agents that include international transportation, accommodation in Nigeria, and local
-                      support services.
+                      Compare packages from different agents that include international transportation, accommodation in
+                      Nigeria, and local support services.
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-4">
@@ -375,10 +407,12 @@ export default function TravelAgentsPage() {
           <ResponsiveContainer>
             <div className="text-center max-w-3xl mx-auto mb-12">
               <Badge className="mb-4 bg-primary hover:bg-primary">Travel Services</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">What Travel Agents Provide for Your Trip to Nigeria</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                What Travel Agents Provide for Your Trip to Nigeria
+              </h2>
               <p className="text-gray-600">
-                Our travel agents handle all non-medical aspects of your journey to Nigeria, allowing you to focus entirely on your
-                health and recovery.
+                Our travel agents handle all non-medical aspects of your journey to Nigeria, allowing you to focus
+                entirely on your health and recovery.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -470,8 +504,8 @@ export default function TravelAgentsPage() {
             <div className="text-center max-w-3xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Travel Agent in Nigeria?</h2>
               <p className="text-white/80 text-lg mb-8">
-                Join our platform to connect with international patients seeking medical care in Nigeria and grow your medical tourism
-                business.
+                Join our platform to connect with international patients seeking medical care in Nigeria and grow your
+                medical tourism business.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-white text-primary hover:bg-gray-100">

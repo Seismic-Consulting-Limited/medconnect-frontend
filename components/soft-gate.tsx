@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { LoginModal } from "@/components/auth/login-modal"
-import { SignupModal } from "@/components/auth/signup-modal"
 
 interface SoftGateProps {
   type: "hospital" | "treatment" | "pricing" | "contact"
@@ -13,8 +12,7 @@ interface SoftGateProps {
 }
 
 export function SoftGate({ type, onClose }: SoftGateProps) {
-  const [signupModalOpen, setSignupModalOpen] = useState(false)
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const router = useRouter()
 
   // Prevent scrolling when the gate is open
   useEffect(() => {
@@ -54,6 +52,14 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
     }
   }
 
+  const handleSignup = () => {
+    router.push("/user/auth/signup")
+  }
+
+  const handleLogin = () => {
+    router.push("/user/auth/login")
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md relative">
@@ -85,7 +91,7 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
             <p className="text-gray-500">{getDescription()}</p>
 
             <div className="pt-2 space-y-3">
-              <Button className="w-full bg-primary hover:bg-primary-700" onClick={() => setSignupModalOpen(true)}>
+              <Button className="w-full bg-primary hover:bg-primary-700" onClick={handleSignup}>
                 Create Free Account
               </Button>
               <div className="flex items-center gap-2">
@@ -93,7 +99,7 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
                 <span className="text-xs text-gray-500">or</span>
                 <div className="h-px bg-gray-200 flex-1"></div>
               </div>
-              <Button variant="outline" className="w-full" onClick={() => setLoginModalOpen(true)}>
+              <Button variant="outline" className="w-full bg-transparent" onClick={handleLogin}>
                 Log In
               </Button>
             </div>
@@ -112,23 +118,6 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
           </div>
         </CardContent>
       </Card>
-
-      <LoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-        onOpenSignup={() => {
-          setLoginModalOpen(false)
-          setSignupModalOpen(true)
-        }}
-      />
-      <SignupModal
-        isOpen={signupModalOpen}
-        onClose={() => setSignupModalOpen(false)}
-        onOpenLogin={() => {
-          setSignupModalOpen(false)
-          setLoginModalOpen(true)
-        }}
-      />
     </div>
   )
 }

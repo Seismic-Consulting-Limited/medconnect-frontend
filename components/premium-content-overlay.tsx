@@ -2,9 +2,7 @@
 
 import { LockIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { SignupModal } from "@/components/auth/signup-modal"
-import { LoginModal } from "@/components/auth/login-modal"
+import { useRouter } from "next/navigation"
 
 interface PremiumContentOverlayProps {
   type: "pricing" | "details" | "contact" | "comparison"
@@ -12,8 +10,7 @@ interface PremiumContentOverlayProps {
 }
 
 export function PremiumContentOverlay({ type, height = "h-60" }: PremiumContentOverlayProps) {
-  const [signupModalOpen, setSignupModalOpen] = useState(false)
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const router = useRouter()
 
   const getMessage = () => {
     switch (type) {
@@ -40,32 +37,19 @@ export function PremiumContentOverlay({ type, height = "h-60" }: PremiumContentO
         <p className="text-sm text-gray-500 mb-4 max-w-xs">
           Join thousands of patients who found quality healthcare through MedConnect.
         </p>
-        <div className="flex gap-3">
-          <Button size="sm" className="bg-primary hover:bg-primary-700" onClick={() => setSignupModalOpen(true)}>
+        <div className="flex gap-3">      
+          <Button
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-white"
+            onClick={() => router.push("/user/auth/signup")}
+          >
             Sign Up
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setLoginModalOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => router.push("/user/auth/login")}>
             Log In
           </Button>
         </div>
       </div>
-
-      <LoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-        onOpenSignup={() => {
-          setLoginModalOpen(false)
-          setSignupModalOpen(true)
-        }}
-      />
-      <SignupModal
-        isOpen={signupModalOpen}
-        onClose={() => setSignupModalOpen(false)}
-        onOpenLogin={() => {
-          setSignupModalOpen(false)
-          setLoginModalOpen(true)
-        }}
-      />
     </div>
   )
 }

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/hooks/use-auth"
 
-export default function SignupPage() {
+export default function ClientSignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -65,8 +65,8 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      await signup(name, email, password)
-      router.push("/dashboard") // Redirect after successful signup
+      await signup(name, email, password, "client")
+      router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
     } finally {
@@ -75,12 +75,10 @@ export default function SignupPage() {
   }
 
   const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth
     console.log("Google login clicked")
   }
 
   const handleAppleLogin = () => {
-    // TODO: Implement Apple OAuth
     console.log("Apple login clicked")
   }
 
@@ -89,7 +87,8 @@ export default function SignupPage() {
       <div className="w-full max-w-[480px]">
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-3 text-center">
-            <CardTitle className="text-3xl font-bold text-foreground">Sign Up</CardTitle>
+            <CardTitle className="text-3xl font-bold text-foreground">Client Sign Up</CardTitle>
+            <p className="text-muted-foreground">Create your patient account</p>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -270,7 +269,7 @@ export default function SignupPage() {
                   id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
-                  className="mt-0.5"
+                  className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-white"
                 />
                 <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
                   I agree to the{" "}
@@ -301,7 +300,7 @@ export default function SignupPage() {
 
               <div className="text-center text-sm text-muted-foreground pt-2">
                 Already have an account?{" "}
-                <Link href="/login" className="text-primary hover:underline font-medium">
+                <Link href="/user/auth/login" className="text-primary hover:underline font-medium">
                   Login
                 </Link>
               </div>

@@ -1,6 +1,20 @@
 "use client"
 import Link from "next/link"
-import { ArrowRight, Building2, Globe, MessageSquare, Plane, Shield, Star, Video, CalendarClock, Stethoscope, Search, VideoIcon, Activity } from 'lucide-react'
+import {
+  ArrowRight,
+  Building2,
+  Globe,
+  MessageSquare,
+  Plane,
+  Shield,
+  Star,
+  Video,
+  CalendarClock,
+  Stethoscope,
+  Search,
+  VideoIcon,
+  Activity,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SiteHeader } from "@/components/site-header"
@@ -26,7 +40,8 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-6 order-1 lg:order-2">
                 <div className="space-y-4">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
-                    Nigerian Healthcare, <br /><span className="text-primary">Simplified</span>
+                    Nigerian Healthcare, <br />
+                    <span className="text-primary">Simplified</span>
                   </h1>
                   <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-[90%] sm:max-w-[600px]">
                     One platform connecting you to world-class hospitals, telemedicine specialists, and travel support
@@ -37,15 +52,17 @@ export default function Home() {
                   <Button
                     size="lg"
                     className="bg-primary hover:bg-primary-700 text-white w-full sm:w-auto text-base"
-                    onClick={() => document.getElementById("signup-modal-trigger")?.click()}
+                    asChild
                   >
-                    Sign Up Now
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <Link href="/user/auth/signup">
+                      Sign Up Now
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-primary text-primary hover:bg-primary-50 w-full sm:w-auto text-base"
+                    className="border-primary text-primary hover:bg-primary-50 w-full sm:w-auto text-base bg-transparent"
                     asChild
                   >
                     <Link href="/hospitals">Explore Hospitals</Link>
@@ -68,8 +85,8 @@ export default function Home() {
                 Your Complete Healthcare Journey
               </h2>
               <p className="text-lg text-gray-600 max-w-[800px] mx-auto">
-                MedConnect provides everything you need for your medical travel experience within Nigeria, from finding the right
-                hospital to post-treatment care.
+                MedConnect provides everything you need for your medical travel experience within Nigeria, from finding
+                the right hospital to post-treatment care.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
@@ -83,8 +100,8 @@ export default function Home() {
                     </div>
                     <h3 className="text-lg font-bold mb-2 text-gray-900">Hospital Search</h3>
                     <p className="text-gray-600 mb-4 text-sm">
-                      Find the perfect hospital for your needs with our comprehensive database of Nigerian
-                      healthcare facilities.
+                      Find the perfect hospital for your needs with our comprehensive database of Nigerian healthcare
+                      facilities.
                     </p>
                     <Link
                       href="/hospitals"
@@ -106,8 +123,8 @@ export default function Home() {
                     </div>
                     <h3 className="text-lg font-bold mb-2 text-gray-900">Telemedicine</h3>
                     <p className="text-gray-600 mb-4 text-sm">
-                      Connect with specialists across Nigeria for consultations, second opinions, and follow-up care from
-                      anywhere.
+                      Connect with specialists across Nigeria for consultations, second opinions, and follow-up care
+                      from anywhere.
                     </p>
                     <Link
                       href="/telemedicine"
@@ -182,8 +199,8 @@ export default function Home() {
                         </div>
                         <h3 className="text-lg font-bold">Virtual Consultations</h3>
                         <p className="text-sm text-gray-500">
-                          Speak with specialists across Nigeria to discuss your condition, treatment options, and get expert
-                          opinions.
+                          Speak with specialists across Nigeria to discuss your condition, treatment options, and get
+                          expert opinions.
                         </p>
                       </div>
                     </CardContent>
@@ -328,7 +345,7 @@ export default function Home() {
                 </ul>
                 <div className="pt-4">
                   <Button className="bg-primary hover:bg-primary-700 text-white" asChild>
-                    <Link href="/telemedicine">
+                    <Link href="/user/auth/signup">
                       Schedule a Consultation
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -353,7 +370,8 @@ export default function Home() {
                     Travel Logistics Experts
                   </h2>
                   <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 max-w-[90%] sm:max-w-[600px]">
-                    Our travel agents handle all non-medical aspects of your journey within Nigeria, so you can focus on your health.
+                    Our travel agents handle all non-medical aspects of your journey within Nigeria, so you can focus on
+                    your health.
                   </p>
                 </div>
                 <ul className="grid gap-2">
@@ -413,7 +431,8 @@ export default function Home() {
                   Everything Handled For You
                 </h2>
                 <p className="text-sm sm:text-base text-gray-500 max-w-[100%] sm:max-w-[90%] md:max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Focus on your health while your travel agent takes care of all the details for your medical trip within Nigeria.
+                  Focus on your health while your travel agent takes care of all the details for your medical trip
+                  within Nigeria.
                 </p>
               </div>
             </div>
@@ -501,8 +520,8 @@ export default function Home() {
                     </div>
                     <p className="text-sm text-gray-500">
                       "MedConnect connected me with an amazing travel agent who handled everything for my knee
-                      replacement in Lagos. From hospital selection to my return home, everything was seamless. I
-                      found excellent care right here in Nigeria."
+                      replacement in Lagos. From hospital selection to my return home, everything was seamless. I found
+                      excellent care right here in Nigeria."
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
@@ -527,9 +546,9 @@ export default function Home() {
                       <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                     </div>
                     <p className="text-sm text-gray-500">
-                      "I was hesitant about dental work, but my travel agent through MedConnect made it so easy.
-                      They arranged everything with a top clinic in Abuja, handled my accommodations, and even planned
-                      some local activities. I'm so glad I chose Nigeria for my treatment!"
+                      "I was hesitant about dental work, but my travel agent through MedConnect made it so easy. They
+                      arranged everything with a top clinic in Abuja, handled my accommodations, and even planned some
+                      local activities. I'm so glad I chose Nigeria for my treatment!"
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
@@ -585,13 +604,11 @@ export default function Home() {
                 Let our specialized travel agents handle everything for your medical trip within Nigeria.
               </p>
               <div className="flex flex-col gap-2 sm:flex-row justify-center pt-4">
-                <Button
-                  size="default"
-                  className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto"
-                  onClick={() => document.getElementById("signup-modal-trigger")?.click()}
-                >
-                  Sign Up Now
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button size="default" className="bg-white text-primary hover:bg-gray-100 w-full sm:w-auto" asChild>
+                  <Link href="/user/auth/signup">
+                    Sign Up Now
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
                 <Button
                   size="default"
