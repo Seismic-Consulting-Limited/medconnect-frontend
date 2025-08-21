@@ -22,80 +22,97 @@ export default function LoginPage() {
   // Shared
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
 
   // Password flow
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
 
   // OTP flow
   const [otpRequested, setOtpRequested] = useState(false)
   const [otp, setOtp] = useState("")
   const [otpMessage, setOtpMessage] = useState("")
+  const [otpError, setOtpError] = useState("")
   const [isRequestingOtp, setIsRequestingOtp] = useState(false)
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
 
   const { login } = useAuth()
   const router = useRouter()
 
+  const switchTab = (next: Tab) => {
+    setTab(next)
+    // Clear cross-tab state so errors don't bleed between tabs
+    setPasswordError("")
+    setOtpError("")
+    setOtpMessage("")
+    setOtpRequested(false)
+    setOtp("")
+    setIsLoading(false)
+    setIsRequestingOtp(false)
+    setIsVerifyingOtp(false)
+    // Optionally clear password when moving away
+    if (next === "otp") setPassword("")
+  }
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setPasswordError("")
     if (!email || !password) {
-      setError("Please fill in all fields")
+      setPasswordError("Please fill in all fields")
       return
     }
     setIsLoading(true)
     try {
-      await login(email, password) // uses /v1/auth/signin/
+      await login(email, password) // POST /v1/auth/signin/
       router.push("/dashboard")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.")
+      // Show ONLY what we got (or "No response from server" from the service)
+      setPasswordError(err instanceof Error ? err.message : "")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleRequestOtp = async () => {
-    setError("")
+    setOtpError("")
     setOtpMessage("")
     if (!email) {
-      setError("Please enter your email")
+      setOtpError("Please enter your email")
       return
     }
     setIsRequestingOtp(true)
     try {
-      const res = await authService.signinOtpInit(email)
-      const msg = res?.message ?? res?.detail ?? "We sent a login code to your email."
+      const res = await authService.signinOtpInit(email) // POST /v1/auth/signin/otp/
+      const msg = res?.message ?? res?.detail ?? ""
       setOtpRequested(true)
       setOtpMessage(String(msg))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't send code. Please try again.")
+      setOtpError(err instanceof Error ? err.message : "")
     } finally {
       setIsRequestingOtp(false)
     }
   }
 
   const handleVerifyOtp = async () => {
-    setError("")
+    setOtpError("")
     setOtpMessage("")
     if (!email) {
-      setError("Missing email")
+      setOtpError("Missing email")
       return
     }
     if (!otp || otp.length < 4) {
-      setError("Enter the code sent to your email")
+      setOtpError("Enter the code sent to your email")
       return
     }
     setIsVerifyingOtp(true)
     try {
-      const res = await authService.signinOtpVerify(email, otp)
-      const msg = res?.message ?? res?.detail ?? "Logged in successfully."
+      const res = await authService.signinOtpVerify(email, otp) // POST /v1/auth/signin/otp/verify/
+      const msg = res?.message ?? res?.detail ?? ""
       setOtpMessage(String(msg))
       router.push("/dashboard")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid code. Please try again.")
+      setOtpError(err instanceof Error ? err.message : "")
     } finally {
       setIsVerifyingOtp(false)
     }
@@ -108,11 +125,11 @@ export default function LoginPage() {
           <CardHeader className="space-y-3 text-center">
             <CardTitle className="text-3xl font-bold text-foreground">Login</CardTitle>
 
-            {/* Simple tabs */}
+            {/* Tabs */}
             <div className="mx-auto mt-2 inline-flex rounded-lg border p-1 bg-muted/30">
               <button
                 className={`px-4 py-2 rounded-md text-sm ${tab === "password" ? "bg-background shadow" : "opacity-70"}`}
-                onClick={() => setTab("password")}
+                onClick={() => switchTab("password")}
                 type="button"
                 aria-pressed={tab === "password"}
               >
@@ -120,7 +137,7 @@ export default function LoginPage() {
               </button>
               <button
                 className={`px-4 py-2 rounded-md text-sm ${tab === "otp" ? "bg-background shadow" : "opacity-70"}`}
-                onClick={() => setTab("otp")}
+                onClick={() => switchTab("otp")}
                 type="button"
                 aria-pressed={tab === "otp"}
               >
@@ -131,10 +148,10 @@ export default function LoginPage() {
 
           <CardContent className="space-y-6">
             {tab === "password" ? (
-              <form onSubmit={handlePasswordLogin} className="space-y-4">
-                {error && (
+              <form key="password-form" onSubmit={handlePasswordLogin} className="space-y-4">
+                {passwordError && (
                   <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                    {error}
+                    {passwordError}
                   </div>
                 )}
 
@@ -201,7 +218,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium" disabled={isLoading}>
+                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -220,12 +237,13 @@ export default function LoginPage() {
                 </div>
               </form>
             ) : (
-              <div className="space-y-4">
-                {error && (
+              <div key="otp-form" className="space-y-4">
+                {otpError && (
                   <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                    {error}
+                    {otpError}
                   </div>
                 )}
+
                 <div className="space-y-2">
                   <Label htmlFor="email-otp" className="text-sm font-medium text-foreground">
                     Email
@@ -247,7 +265,7 @@ export default function LoginPage() {
                 {!otpRequested ? (
                   <Button
                     type="button"
-                    className="w-full h-12 text-white"
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-white"
                     onClick={handleRequestOtp}
                     disabled={isRequestingOtp || !email}
                   >
@@ -293,7 +311,7 @@ export default function LoginPage() {
 
                     <Button
                       type="button"
-                      className="w-full h-12 text-white"
+                      className="w-full h-12 bg-primary hover:bg-primary/90 text-white"
                       onClick={handleVerifyOtp}
                       disabled={isVerifyingOtp || otp.length < 4}
                     >
@@ -311,7 +329,7 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-muted-foreground pt-2">
                   Prefer password?{" "}
-                  <button onClick={() => setTab("password")} className="text-primary hover:underline font-medium">
+                  <button onClick={() => switchTab("password")} className="text-primary hover:underline font-medium">
                     Use password instead
                   </button>
                 </div>

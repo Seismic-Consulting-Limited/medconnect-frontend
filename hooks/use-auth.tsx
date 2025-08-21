@@ -15,8 +15,8 @@ interface AuthContextType {
     password: string,
     accountType?: string,
     metadata?: any,
-  ) => Promise<any>           // return backend payload
-  login: (email: string, password: string) => Promise<any> // return backend payload
+  ) => Promise<any>        
+  login: (email: string, password: string) => Promise<any> 
   logout: () => Promise<void>
   refreshAuth: () => Promise<void>
 }

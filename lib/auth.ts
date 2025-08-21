@@ -17,14 +17,46 @@ export interface AuthResponseMaybe {
   [key: string]: any
 }
 
+const SERVER_5XX_FALLBACK =
+  (typeof process !== "undefined" &&
+    typeof process.env !== "undefined" &&
+    process.env.NEXT_PUBLIC_SERVER_ERROR_MESSAGE) ||
+  "Something went wrong. Please try again."
+
 const parseError = async (response: Response) => {
+  const status = response.status
+  const isServerError = status >= 500
+
+  // Try JSON first
   try {
-    const err = await response.json()
-    return err?.message ?? err?.detail ?? `Request failed with status ${response.status}`
+    const data = await response.clone().json()
+    if (typeof data === "string") return data
+    if ((data as any)?.message) return String((data as any).message)
+    if ((data as any)?.detail) return String((data as any).detail)
+    if (Array.isArray((data as any)?.non_field_errors) && (data as any).non_field_errors.length)
+      return String((data as any).non_field_errors[0])
+    if (Array.isArray((data as any)?.errors) && (data as any).errors.length)
+      return String((data as any).errors[0])
+
+    const keys = Object.keys(data as any)
+    if (keys.length) {
+      const first = (data as any)[keys[0]]
+      if (Array.isArray(first) && first.length) return String(first[0])
+      if (typeof first === "string") return first
+    }
+    return JSON.stringify(data)
   } catch {
-    const text = await response.text().catch(() => "")
-    return text || `Request failed with status ${response.status}`
+    // not JSON
   }
+
+  // Then try raw text
+  try {
+    const text = (await response.text()).trim()
+    if (text) return isServerError ? SERVER_5XX_FALLBACK : text
+  } catch {}
+
+  // Clean fallback
+  return isServerError ? SERVER_5XX_FALLBACK : response.statusText || `HTTP ${status}`
 }
 
 const setTokens = (token?: string, refreshToken?: string) => {
@@ -92,7 +124,6 @@ export class AuthService {
     return !!this.getToken() && !!this.getCurrentUser()
   }
 
-  // ---------------- Signup ----------------
   public async signup(
     firstName: string,
     lastName: string,
@@ -116,26 +147,19 @@ export class AuthService {
     })
     if (!response.ok) throw new Error(await parseError(response))
     const data: AuthResponseMaybe = await response.json()
-
     if (data?.token || data?.refreshToken) setTokens(data.token, data.refreshToken)
     setUserLocal(data?.user)
     return data
   }
 
-  // ---------------- Login (password) ----------------
   public async login(email: string, password: string): Promise<AuthResponseMaybe> {
-    const url = buildApiUrl(API_ENDPOINTS.AUTH.LOGIN)
-    const response = await fetch(url, {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), {
       method: HTTP_METHODS.POST,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.toLowerCase(), password }),
     })
-    if (!response.ok) {
-      const text = await parseError(response)
-      throw new Error(`Login failed (${response.status}) at ${url}: ${text}`)
-    }
+    if (!response.ok) throw new Error(await parseError(response))
     const data: AuthResponseMaybe = await response.json()
-
     if (data?.token || data?.refreshToken) setTokens(data.token, data.refreshToken)
     setUserLocal(data?.user)
     return data
@@ -143,43 +167,37 @@ export class AuthService {
 
   public async logout(): Promise<void> {
     const token = this.getToken()
-    if (token) {
-      try {
+    try {
+      if (token) {
         await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGOUT), {
           method: HTTP_METHODS.POST,
           headers: { Authorization: `Bearer ${token}` },
         })
-      } catch (error) {
-        console.error("Logout request failed:", error)
       }
+    } catch {
+    } finally {
+      this.clearAuth()
     }
-    this.clearAuth()
   }
 
   public async refreshToken(): Promise<string | null> {
     const refreshToken = this.getRefreshToken()
     if (!refreshToken) return null
-    try {
-      const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH), {
-        method: HTTP_METHODS.POST,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      })
-      if (!response.ok) {
-        this.clearAuth()
-        return null
-      }
-      const data: AuthResponseMaybe = await response.json()
-      if (data?.token || data?.refreshToken) setTokens(data.token, data.refreshToken)
-      setUserLocal(data?.user)
-      return data?.token ?? null
-    } catch {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH), {
+      method: HTTP_METHODS.POST,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    })
+    if (!response.ok) {
       this.clearAuth()
       return null
     }
+    const data: AuthResponseMaybe = await response.json()
+    if (data?.token || data?.refreshToken) setTokens(data.token, data.refreshToken)
+    setUserLocal(data?.user)
+    return data?.token ?? null
   }
 
-  // ---------------- Signup OTP (existing) ----------------
   public async verifyEmail(email: string, otp: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.VERIFY_OTP), {
       method: HTTP_METHODS.POST,
@@ -203,8 +221,6 @@ export class AuthService {
     return response.json()
   }
 
-  // ---------------- Login OTP (new) ----------------
-  // Step 1: request OTP to be sent to user's email
   public async signinOtpInit(email: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.SIGNIN_OTP_INIT), {
       method: HTTP_METHODS.POST,
@@ -215,7 +231,6 @@ export class AuthService {
     return response.json()
   }
 
-  // Step 2: verify OTP to log the user in
   public async signinOtpVerify(email: string, otp: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.SIGNIN_OTP_VERIFY), {
       method: HTTP_METHODS.POST,

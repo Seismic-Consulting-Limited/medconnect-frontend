@@ -13,7 +13,8 @@ import { authService } from "@/lib/auth"
 function maskEmail(email: string) {
   const [user, domain] = email.split("@")
   if (!user || !domain) return email
-  const maskedUser = user.length <= 2 ? `${user[0] ?? ""}*` : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`
+  const maskedUser =
+    user.length <= 2 ? `${user[0] ?? ""}*` : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`
   const [name, tld] = domain.split(".")
   const maskedDomain = name ? `${name[0]}***.${tld ?? ""}` : domain
   return `${maskedUser}@${maskedDomain}`
@@ -32,7 +33,7 @@ export default function VerifyEmailPage() {
   const [resendMessage, setResendMessage] = useState<string>("")
   const [resendCooldown, setResendCooldown] = useState<number>(0)
 
-  // simple 30s cooldown (no timers here to keep it minimal; optional enhancement)
+  // simple 30s cooldown
   const canResend = useMemo(() => resendCooldown <= 0 && !isResending, [resendCooldown, isResending])
 
   const handleVerify = async () => {
@@ -50,14 +51,11 @@ export default function VerifyEmailPage() {
     try {
       const payload = await authService.verifyEmail(emailParam, otp)
       const msg = payload?.message ?? payload?.detail ?? "Email verified successfully."
-
       setVerifyMessage(String(msg))
 
-      // If backend returned tokens/user on verify, go to dashboard
       if (payload?.token || payload?.refreshToken || payload?.user) {
         router.push("/dashboard")
       } else {
-        // Otherwise send to login; keep the notice
         setTimeout(() => router.push("/user/auth/login"), 800)
       }
     } catch (err) {
@@ -80,11 +78,13 @@ export default function VerifyEmailPage() {
       const payload = await authService.resendEmailOtp(emailParam)
       const msg = payload?.message ?? payload?.detail ?? "A new code has been sent to your email."
       setResendMessage(String(msg))
-      setResendCooldown(30) // start cooldown
-      // Basic cooldown ticker (non-blocking)
+      setResendCooldown(30)
       const id = setInterval(() => {
         setResendCooldown((v) => {
-          if (v <= 1) { clearInterval(id as any); return 0 }
+          if (v <= 1) {
+            clearInterval(id as any)
+            return 0
+          }
           return v - 1
         })
       }, 1000)
@@ -103,7 +103,8 @@ export default function VerifyEmailPage() {
             <ShieldCheck className="mx-auto h-8 w-8 text-primary" />
             <CardTitle className="text-2xl font-bold text-foreground">Verify your email</CardTitle>
             <p className="text-sm text-muted-foreground">
-              We’ve sent a code to <span className="font-medium text-foreground">{emailParam ? maskEmail(emailParam) : "your email"}</span>
+              We’ve sent a code to{" "}
+              <span className="font-medium text-foreground">{emailParam ? maskEmail(emailParam) : "your email"}</span>
             </p>
           </CardHeader>
 
@@ -123,36 +124,41 @@ export default function VerifyEmailPage() {
             </div>
 
             {verifyMessage && (
-              <div className="p-2 text-sm rounded-md border border-border text-foreground/90">
-                {verifyMessage}
-              </div>
+              <div className="p-2 text-sm rounded-md border border-border text-foreground/90">{verifyMessage}</div>
             )}
 
-            <Button
-              onClick={handleVerify}
-              disabled={isVerifying || otp.length < 4 || !emailParam}
-              className="w-full h-12"
-            >
-              {isVerifying ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying...</>) : ("Verify")}
+            <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4 || !emailParam} className="w-full h-12 text-white">
+              {isVerifying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin " />
+                  Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
             </Button>
 
             <Button
               variant="outline"
               onClick={handleResend}
               disabled={!canResend || !emailParam}
-              className="w-full h-12"
+              className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white"
             >
               {isResending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Resending...</>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resending...
+                </>
               ) : (
-                <><RotateCcw className="mr-2 h-4 w-4" />Resend Code {resendCooldown > 0 ? `(${resendCooldown}s)` : ""}</>
+                <>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Resend Code {resendCooldown > 0 ? `(${resendCooldown}s)` : ""}
+                </>
               )}
             </Button>
 
             {resendMessage && (
-              <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">
-                {resendMessage}
-              </div>
+              <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">{resendMessage}</div>
             )}
 
             <div className="text-center text-sm">
