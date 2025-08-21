@@ -35,3 +35,15 @@ export const PASSWORD_REQUIREMENTS = {
   REQUIRE_NUMBERS: true,
   REQUIRE_SPECIAL_CHARS: false,
 } as const
+
+export const API_CONFIG = {
+  BASE_URL: process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' 
+    ? 'https://api.medconnect.com'  // Replace with your prod URL
+    : process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
+    ? 'https://dev.medkonent.com'     // Replace with your staging URL  
+    : 'http://localhost:3000',           // Development fallback
+} as const
+
+export const buildApiUrl = (endpoint: string): string => {
+  return `${API_CONFIG.BASE_URL}${endpoint}`
+}

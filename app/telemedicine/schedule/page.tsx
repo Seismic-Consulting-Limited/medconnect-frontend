@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { CalendarIcon, ChevronLeft, ChevronRight, Clock, Filter, Globe, Search, Star, User } from "lucide-react"
+import { CalendarIcon, ChevronLeft, Filter, Search, Star, User, MapPin, Clock } from "lucide-react"
 
 export default function ScheduleTelemedicinePage() {
   const [date, setDate] = useState<Date>()
@@ -23,71 +23,74 @@ export default function ScheduleTelemedicinePage() {
   const [language, setLanguage] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState<string>("")
 
-  // Mock data for doctors
   const doctors = [
     {
       id: "d1",
       name: "Dr. Sarah Johnson",
       specialty: "Cardiology",
-      hospital: "Bangkok International Hospital",
-      country: "Thailand",
-      languages: ["English", "Thai"],
-      availableSlots: [
-        { date: "2024-05-15", times: ["09:00", "10:30", "14:00", "16:30"] },
-        { date: "2024-05-16", times: ["08:30", "11:00", "13:30", "15:00"] },
-      ],
-      image: "/female-doctor.png",
+      hospital: "Lagos University Teaching Hospital",
+      hospitalLocation: "Lagos, Nigeria",
+      country: "Nigeria",
+      languages: ["English", "Yoruba"],
+      experience: "15 years",
+      education: "MD, University of Lagos; Fellowship in Interventional Cardiology",
+      image: "/placeholder.svg?height=96&width=96&text=SJ",
       rating: 4.9,
       reviewCount: 124,
-      consultationFee: 150,
+      consultationFee: 25000,
+      nextAvailable: "Today, 2:00 PM",
+      isAvailableToday: true,
     },
     {
       id: "d2",
       name: "Dr. Raj Patel",
       specialty: "Orthopedics",
-      hospital: "Apollo Hospitals",
-      country: "India",
-      languages: ["English", "Hindi", "Gujarati"],
-      availableSlots: [
-        { date: "2024-05-15", times: ["08:00", "11:30", "13:00", "15:30"] },
-        { date: "2024-05-16", times: ["09:30", "12:00", "14:30", "16:00"] },
-      ],
-      image: "/male-doctor.png",
+      hospital: "University College Hospital",
+      hospitalLocation: "Ibadan, Nigeria",
+      country: "Nigeria",
+      languages: ["English", "Hindi"],
+      experience: "12 years",
+      education: "MBBS, University of Ibadan; MS Orthopedics",
+      image: "/placeholder.svg?height=96&width=96&text=RP",
       rating: 4.7,
       reviewCount: 98,
-      consultationFee: 125,
+      consultationFee: 20000,
+      nextAvailable: "Tomorrow, 9:00 AM",
+      isAvailableToday: false,
     },
     {
       id: "d3",
       name: "Dr. Mei Wong",
       specialty: "Neurology",
-      hospital: "Bumrungrad International Hospital",
-      country: "Thailand",
-      languages: ["English", "Thai", "Mandarin"],
-      availableSlots: [
-        { date: "2024-05-15", times: ["10:00", "12:30", "15:00", "17:30"] },
-        { date: "2024-05-16", times: ["09:00", "11:30", "14:00", "16:30"] },
-      ],
-      image: "/placeholder.svg?key=gf0lm",
+      hospital: "National Hospital Abuja",
+      hospitalLocation: "Abuja, Nigeria",
+      country: "Nigeria",
+      languages: ["English", "Mandarin"],
+      experience: "18 years",
+      education: "MD, University of Abuja; Fellowship in Neurology",
+      image: "/placeholder.svg?height=96&width=96&text=MW",
       rating: 4.8,
       reviewCount: 112,
-      consultationFee: 175,
+      consultationFee: 30000,
+      nextAvailable: "Today, 4:30 PM",
+      isAvailableToday: true,
     },
     {
       id: "d4",
       name: "Dr. James Wilson",
       specialty: "Cardiology",
-      hospital: "Gleneagles Hospital",
-      country: "Singapore",
-      languages: ["English"],
-      availableSlots: [
-        { date: "2024-05-15", times: ["08:30", "11:00", "14:30", "16:00"] },
-        { date: "2024-05-16", times: ["09:00", "12:30", "15:00", "17:30"] },
-      ],
-      image: "/male-doctor.png",
+      hospital: "Federal Medical Centre",
+      hospitalLocation: "Kano, Nigeria",
+      country: "Nigeria",
+      languages: ["English", "Hausa"],
+      experience: "20 years",
+      education: "MBBS, Ahmadu Bello University; Fellowship in Cardiology",
+      image: "/placeholder.svg?height=96&width=96&text=JW",
       rating: 4.6,
       reviewCount: 87,
-      consultationFee: 200,
+      consultationFee: 22000,
+      nextAvailable: "Today, 6:00 PM",
+      isAvailableToday: true,
     },
   ]
 
@@ -120,7 +123,7 @@ export default function ScheduleTelemedicinePage() {
             </div>
             <h1 className="text-3xl font-bold mt-4">Schedule a Telemedicine Consultation</h1>
             <p className="text-gray-600 mt-2">
-              Connect with specialists from around the world from the comfort of your home
+              Connect with specialists from leading Nigerian hospitals from the comfort of your home
             </p>
           </ResponsiveContainer>
         </section>
@@ -167,10 +170,11 @@ export default function ScheduleTelemedicinePage() {
                         <SelectContent>
                           <SelectItem value="all">All Languages</SelectItem>
                           <SelectItem value="English">English</SelectItem>
-                          <SelectItem value="Thai">Thai</SelectItem>
+                          <SelectItem value="Yoruba">Yoruba</SelectItem>
+                          <SelectItem value="Hausa">Hausa</SelectItem>
+                          <SelectItem value="Igbo">Igbo</SelectItem>
                           <SelectItem value="Hindi">Hindi</SelectItem>
                           <SelectItem value="Mandarin">Mandarin</SelectItem>
-                          <SelectItem value="Gujarati">Gujarati</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -180,7 +184,10 @@ export default function ScheduleTelemedicinePage() {
                       <Label>Available Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left font-normal mt-1">
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal mt-1 bg-transparent"
+                          >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {date ? format(date, "PPP") : "Pick a date"}
                           </Button>
@@ -193,22 +200,23 @@ export default function ScheduleTelemedicinePage() {
 
                     {/* Price Range Filter */}
                     <div>
-                      <Label htmlFor="price">Price Range</Label>
+                      <Label htmlFor="price">Price Range (₦)</Label>
                       <Select>
                         <SelectTrigger id="price" className="mt-1">
                           <SelectValue placeholder="Any Price" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="any">Any Price</SelectItem>
-                          <SelectItem value="under100">Under $100</SelectItem>
-                          <SelectItem value="100-150">$100 - $150</SelectItem>
-                          <SelectItem value="150-200">$150 - $200</SelectItem>
-                          <SelectItem value="over200">Over $200</SelectItem>
+                          <SelectItem value="under15000">Under ₦15,000</SelectItem>
+                          <SelectItem value="15000-25000">₦15,000 - ₦25,000</SelectItem>
+                          <SelectItem value="25000-35000">₦25,000 - ₦35,000</SelectItem>
+                          <SelectItem value="over35000">Over ₦35,000</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <Button className="w-full">
+                    {/* Updated Apply Filters button */}
+                    <Button className="w-full bg-primary text-white hover:bg-primary/90">
                       <Filter className="mr-2 h-4 w-4" />
                       Apply Filters
                     </Button>
@@ -237,7 +245,6 @@ export default function ScheduleTelemedicinePage() {
               <Tabs defaultValue="all" className="mb-6">
                 <TabsList>
                   <TabsTrigger value="all">All Doctors</TabsTrigger>
-                  <TabsTrigger value="available">Available Today</TabsTrigger>
                   <TabsTrigger value="recommended">Recommended</TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -246,91 +253,81 @@ export default function ScheduleTelemedicinePage() {
               <div className="space-y-6">
                 {filteredDoctors.length > 0 ? (
                   filteredDoctors.map((doctor) => (
-                    <Card key={doctor.id} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <div className="p-6">
-                          <div className="flex flex-col md:flex-row gap-6">
-                            {/* Doctor Image */}
-                            <div className="flex-shrink-0">
-                              <div className="w-24 h-24 rounded-full overflow-hidden">
-                                <img
-                                  src={doctor.image || "/placeholder.svg"}
-                                  alt={doctor.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
+                    <Card key={doctor.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          {/* Doctor Image */}
+                          <div className="flex-shrink-0">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+                              <img
+                                src={doctor.image || "/placeholder.svg"}
+                                alt={doctor.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
+                          </div>
 
-                            {/* Doctor Info */}
-                            <div className="flex-grow">
-                              <div className="flex flex-col md:flex-row md:items-start md:justify-between">
-                                <div>
-                                  <h3 className="text-xl font-bold">{doctor.name}</h3>
-                                  <p className="text-gray-600">{doctor.specialty}</p>
-                                  <div className="flex items-center mt-1">
-                                    <div className="flex items-center text-amber-500">
-                                      <Star className="h-4 w-4 fill-current" />
-                                      <span className="ml-1 text-sm font-medium">{doctor.rating}</span>
-                                    </div>
-                                    <span className="mx-2 text-gray-300">•</span>
-                                    <span className="text-sm text-gray-600">{doctor.reviewCount} reviews</span>
+                          {/* Doctor Info */}
+                          <div className="flex-grow">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between">
+                              <div className="flex-grow">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="text-xl font-bold text-gray-900">{doctor.name}</h3>
+                                    <p className="text-primary font-medium">{doctor.specialty}</p>
                                   </div>
-                                  <div className="flex items-center gap-4 mt-2">
-                                    <div className="flex items-center text-sm text-gray-600">
-                                      <User className="h-4 w-4 mr-1" />
-                                      <span>{doctor.hospital}</span>
-                                    </div>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                      <Globe className="h-4 w-4 mr-1" />
-                                      <span>{doctor.country}</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-wrap gap-1 mt-2">
-                                    {doctor.languages.map((lang) => (
-                                      <Badge key={lang} variant="outline" className="text-xs">
-                                        {lang}
+                                  <div className="flex items-center gap-3">
+                                    {doctor.isAvailableToday && (
+                                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                        Available Today
                                       </Badge>
-                                    ))}
+                                    )}
+                                    <Button className="bg-primary text-white hover:bg-primary/90" asChild>
+                                      <Link href={`/telemedicine/doctors/${doctor.id}`}>View Profile</Link>
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="mt-4 md:mt-0 text-right">
-                                  <p className="text-lg font-bold text-primary">${doctor.consultationFee}</p>
-                                  <p className="text-sm text-gray-600">per consultation</p>
+
+                                <div className="mt-3 space-y-2">
+                                  <div className="flex items-center text-gray-600">
+                                    <User className="h-4 w-4 mr-2" />
+                                    <span className="font-medium">{doctor.hospital}</span>
+                                  </div>
+                                  <div className="flex items-center text-gray-600">
+                                    <MapPin className="h-4 w-4 mr-2" />
+                                    <span>{doctor.hospitalLocation}</span>
+                                  </div>
+                                  <div className="flex items-center text-gray-600">
+                                    <Clock className="h-4 w-4 mr-2" />
+                                    <span>{doctor.experience} experience</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center mt-3">
+                                  <div className="flex items-center text-amber-500">
+                                    <Star className="h-4 w-4 fill-current" />
+                                    <span className="ml-1 text-sm font-medium">{doctor.rating}</span>
+                                  </div>
+                                  <span className="mx-2 text-gray-300">•</span>
+                                  <span className="text-sm text-gray-600">{doctor.reviewCount} reviews</span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1 mt-3">
+                                  {doctor.languages.map((lang) => (
+                                    <Badge key={lang} variant="outline" className="text-xs">
+                                      {lang}
+                                    </Badge>
+                                  ))}
+                                </div>
+
+                                <div className="mt-4">
+                                  <p className="text-sm text-gray-600">
+                                    Next available:{" "}
+                                    <span className="font-medium text-gray-900">{doctor.nextAvailable}</span>
+                                  </p>
                                 </div>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Available Slots */}
-                          <div className="mt-6 pt-6 border-t">
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium">Available Time Slots</h4>
-                              <div className="flex items-center">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <span className="text-sm font-medium mx-2">May 15, 2024</span>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <ChevronRight className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                              {doctor.availableSlots[0].times.map((time) => (
-                                <Button key={time} variant="outline" size="sm" className="h-9">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {time}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex justify-end mt-6">
-                            <Button variant="outline" className="mr-3">
-                              View Profile
-                            </Button>
-                            <Button>Book Appointment</Button>
                           </div>
                         </div>
                       </CardContent>
@@ -343,7 +340,9 @@ export default function ScheduleTelemedicinePage() {
                     </div>
                     <h3 className="text-lg font-medium mb-2">No doctors found</h3>
                     <p className="text-gray-500 mb-6">Try adjusting your search or filters</p>
+                    {/* Updated Clear All Filters button */}
                     <Button
+                      className="bg-primary text-white hover:bg-primary/90"
                       onClick={() => {
                         setSearchQuery("")
                         setSpecialty("")
