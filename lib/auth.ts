@@ -1,4 +1,5 @@
-import { AUTH_CONSTANTS, HTTP_METHODS, API_ENDPOINTS } from "./constants"
+// lib/auth.ts
+import { AUTH_CONSTANTS, HTTP_METHODS, API_ENDPOINTS, buildApiUrl } from "./constants"
 
 export interface User {
   id: string
@@ -15,13 +16,21 @@ export interface AuthResponse {
   refreshToken: string
 }
 
+const parseError = async (response: Response) => {
+  try {
+    const err = await response.json()
+    return err?.message ?? "Request failed"
+  } catch {
+    const text = await response.text().catch(() => "")
+    return text || `Request failed with status ${response.status}`
+  }
+}
+
 export class AuthService {
   private static instance: AuthService
 
   public static getInstance(): AuthService {
-    if (!AuthService.instance) {
-      AuthService.instance = new AuthService()
-    }
+    if (!AuthService.instance) AuthService.instance = new AuthService()
     return AuthService.instance
   }
 
@@ -33,16 +42,12 @@ export class AuthService {
   }
 
   public getToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY)
-    }
+    if (typeof window !== "undefined") return localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY)
     return null
   }
 
   private getRefreshToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY)
-    }
+    if (typeof window !== "undefined") return localStorage.getItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY)
     return null
   }
 
@@ -55,30 +60,27 @@ export class AuthService {
   }
 
   public async signup(
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
     accountType?: string,
     metadata?: any,
   ): Promise<AuthResponse> {
-    const response = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.SIGNUP), {
       method: HTTP_METHODS.POST,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name,
-        email,
-        password,
-        ...(accountType && { accountType }),
+        first_name: firstName,              
+        last_name: lastName,                
+        email: email.toLowerCase(),       
+        password,                           
+        terms_of_service_agreement_checked: true,
+        ...(accountType && { account_type: accountType }),
         ...(metadata && { metadata }),
       }),
     })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || "Signup failed")
-    }
+    if (!response.ok) throw new Error(await parseError(response))
 
     const data: AuthResponse = await response.json()
     this.setTokens(data.token, data.refreshToken)
@@ -91,18 +93,16 @@ export class AuthService {
   }
 
   public async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), {
       method: HTTP_METHODS.POST,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email.toLowerCase(),         
+        password,                           
+      }),
     })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || "Login failed")
-    }
+    if (!response.ok) throw new Error(await parseError(response))
 
     const data: AuthResponse = await response.json()
     this.setTokens(data.token, data.refreshToken)
@@ -119,11 +119,9 @@ export class AuthService {
     if (!refreshToken) return null
 
     try {
-      const response = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.REFRESH), {
         method: HTTP_METHODS.POST,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),
       })
 
@@ -134,8 +132,13 @@ export class AuthService {
 
       const data = await response.json()
       this.setTokens(data.token, data.refreshToken)
+
+      if (typeof window !== "undefined" && (data as any).user) {
+        localStorage.setItem(AUTH_CONSTANTS.USER_KEY, JSON.stringify((data as any).user))
+      }
+
       return data.token
-    } catch (error) {
+    } catch {
       this.clearAuth()
       return null
     }
@@ -143,20 +146,16 @@ export class AuthService {
 
   public async logout(): Promise<void> {
     const token = this.getToken()
-
     if (token) {
       try {
-        await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
+        await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGOUT), {
           method: HTTP_METHODS.POST,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
       } catch (error) {
         console.error("Logout request failed:", error)
       }
     }
-
     this.clearAuth()
   }
 

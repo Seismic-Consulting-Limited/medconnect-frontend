@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  signup: (name: string, email: string, password: string, accountType?: string, metadata?: any) => Promise<void>
+  signup: (firstName: string, lastName: string, email: string, password: string, accountType?: string, metadata?: any) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   refreshAuth: () => Promise<void>
@@ -24,11 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const currentUser = authService.getCurrentUser()
         const token = authService.getToken()
-
         if (currentUser && token) {
           setUser(currentUser)
         } else if (token) {
-          // Try to refresh token
           const newToken = await authService.refreshToken()
           if (newToken) {
             setUser(authService.getCurrentUser())
@@ -40,14 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       }
     }
-
     initAuth()
   }, [])
 
-  const signup = async (name: string, email: string, password: string, accountType?: string, metadata?: any) => {
+  const signup = async (...args: Parameters<AuthContextType["signup"]>) => {
     setIsLoading(true)
     try {
-      const response = await authService.signup(name, email, password, accountType, metadata)
+      const response = await authService.signup(...args)
       setUser(response.user)
     } finally {
       setIsLoading(false)
@@ -77,75 +74,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAuth = async () => {
     try {
       const newToken = await authService.refreshToken()
-      if (newToken) {
-        setUser(authService.getCurrentUser())
-      } else {
-        setUser(null)
-      }
+      if (newToken) setUser(authService.getCurrentUser())
+      else setUser(null)
     } catch (error) {
-      console.error("Token refresh error:", error)
       setUser(null)
     }
   }
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    signup,
-    login,
-    logout,
-    refreshAuth,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, signup, login, logout, refreshAuth }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
-
   if (context === undefined) {
-    // During SSR or if provider is missing, return safe defaults
     if (typeof window === "undefined") {
       return {
         user: null,
         isLoading: true,
         isAuthenticated: false,
-        signup: async () => {
-          throw new Error("Auth not available during SSR")
-        },
-        login: async () => {
-          throw new Error("Auth not available during SSR")
-        },
-        logout: async () => {
-          throw new Error("Auth not available during SSR")
-        },
-        refreshAuth: async () => {
-          throw new Error("Auth not available during SSR")
-        },
+        signup: async () => { throw new Error("Auth not available during SSR") },
+        login: async () => { throw new Error("Auth not available during SSR") },
+        logout: async () => { throw new Error("Auth not available during SSR") },
+        refreshAuth: async () => { throw new Error("Auth not available during SSR") },
       }
     }
-
-    // On client side, if context is missing, provide safe fallback
-    console.error("useAuth must be used within an AuthProvider")
     return {
       user: null,
       isLoading: false,
       isAuthenticated: false,
-      signup: async () => {
-        throw new Error("Authentication not properly initialized")
-      },
-      login: async () => {
-        throw new Error("Authentication not properly initialized")
-      },
-      logout: async () => {
-        throw new Error("Authentication not properly initialized")
-      },
-      refreshAuth: async () => {
-        throw new Error("Authentication not properly initialized")
-      },
+      signup: async () => { throw new Error("Authentication not properly initialized - AuthProvider missing") },
+      login: async () => { throw new Error("Authentication not properly initialized - AuthProvider missing") },
+      logout: async () => { throw new Error("Authentication not properly initialized - AuthProvider missing") },
+      refreshAuth: async () => { throw new Error("Authentication not properly initialized - AuthProvider missing") },
     }
   }
-
   return context
 }
