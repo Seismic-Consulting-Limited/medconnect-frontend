@@ -1,6 +1,7 @@
 import "./globals.css"
 import type { Metadata } from "next"
 import { AuthProvider } from "@/hooks/use-auth"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "MedConnect",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           {children}
         </AuthProvider>
+         <Toaster />
       </body>
     </html>
   )

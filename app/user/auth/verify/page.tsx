@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Loader2, RotateCcw, ShieldCheck } from "lucide-react"
 import { authService } from "@/lib/auth"
+import { toast } from "sonner"
 
 function maskEmail(email: string) {
   const [user, domain] = email.split("@")
@@ -27,10 +28,8 @@ export default function VerifyEmailPage() {
 
   const [otp, setOtp] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
-  const [verifyMessage, setVerifyMessage] = useState<string>("")
 
   const [isResending, setIsResending] = useState(false)
-  const [resendMessage, setResendMessage] = useState<string>("")
   const [resendCooldown, setResendCooldown] = useState<number>(0)
 
   // simple 30s cooldown
@@ -38,28 +37,29 @@ export default function VerifyEmailPage() {
 
   const handleVerify = async () => {
     if (!emailParam) {
-      setVerifyMessage("Missing email. Please go back and try again.")
+      toast.error("Missing email. Please go back and try again.")
       return
     }
     if (!otp || otp.length < 4) {
-      setVerifyMessage("Please enter the verification code sent to your email.")
+      toast.error("Please enter the verification code sent to your email.")
       return
     }
 
     setIsVerifying(true)
-    setVerifyMessage("")
     try {
       const payload = await authService.verifyEmail(emailParam, otp)
       const msg = payload?.message ?? payload?.detail ?? "Email verified successfully."
-      setVerifyMessage(String(msg))
+      toast.success(String(msg))
 
+      // If backend returned tokens/user on verify, go to dashboard immediately
       if (payload?.token || payload?.refreshToken || payload?.user) {
         router.push("/dashboard")
       } else {
-        setTimeout(() => router.push("/user/auth/login"), 800)
+        // Otherwise send to login after a brief moment (toast persists across route)
+        setTimeout(() => router.push("/user/auth/login"), 400)
       }
     } catch (err) {
-      setVerifyMessage(err instanceof Error ? err.message : "Verification failed. Please try again.")
+      toast.error(err instanceof Error ? err.message : "Verification failed. Please try again.")
     } finally {
       setIsVerifying(false)
     }
@@ -67,18 +67,18 @@ export default function VerifyEmailPage() {
 
   const handleResend = async () => {
     if (!emailParam) {
-      setResendMessage("Missing email. Please go back and try again.")
+      toast.error("Missing email. Please go back and try again.")
       return
     }
     if (!canResend) return
 
     setIsResending(true)
-    setResendMessage("")
     try {
       const payload = await authService.resendEmailOtp(emailParam)
       const msg = payload?.message ?? payload?.detail ?? "A new code has been sent to your email."
-      setResendMessage(String(msg))
+      toast.success(String(msg))
       setResendCooldown(30)
+
       const id = setInterval(() => {
         setResendCooldown((v) => {
           if (v <= 1) {
@@ -89,7 +89,7 @@ export default function VerifyEmailPage() {
         })
       }, 1000)
     } catch (err) {
-      setResendMessage(err instanceof Error ? err.message : "Could not resend code. Please try again.")
+      toast.error(err instanceof Error ? err.message : "Could not resend code. Please try again.")
     } finally {
       setIsResending(false)
     }
@@ -123,10 +123,6 @@ export default function VerifyEmailPage() {
               />
             </div>
 
-            {verifyMessage && (
-              <div className="p-2 text-sm rounded-md border border-border text-foreground/90">{verifyMessage}</div>
-            )}
-
             <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4 || !emailParam} className="w-full h-12 text-white">
               {isVerifying ? (
                 <>
@@ -156,10 +152,6 @@ export default function VerifyEmailPage() {
                 </>
               )}
             </Button>
-
-            {resendMessage && (
-              <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">{resendMessage}</div>
-            )}
 
             <div className="text-center text-sm">
               <Link href="/user/auth/signup" className="text-primary hover:underline font-medium">

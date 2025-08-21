@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/hooks/use-auth"
 import { authService } from "@/lib/auth"
+import { toast } from "sonner"
 
 type Tab = "password" | "otp"
 
@@ -27,13 +28,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [passwordError, setPasswordError] = useState("")
 
   // OTP flow
   const [otpRequested, setOtpRequested] = useState(false)
   const [otp, setOtp] = useState("")
-  const [otpMessage, setOtpMessage] = useState("")
-  const [otpError, setOtpError] = useState("")
   const [isRequestingOtp, setIsRequestingOtp] = useState(false)
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
 
@@ -42,77 +40,68 @@ export default function LoginPage() {
 
   const switchTab = (next: Tab) => {
     setTab(next)
-    // Clear cross-tab state so errors don't bleed between tabs
-    setPasswordError("")
-    setOtpError("")
-    setOtpMessage("")
+    // reset per-tab states so messages don't bleed between tabs
     setOtpRequested(false)
     setOtp("")
     setIsLoading(false)
     setIsRequestingOtp(false)
     setIsVerifyingOtp(false)
-    // Optionally clear password when moving away
     if (next === "otp") setPassword("")
   }
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordError("")
     if (!email || !password) {
-      setPasswordError("Please fill in all fields")
+      toast.error("Please fill in all fields")
       return
     }
     setIsLoading(true)
     try {
       await login(email, password) // POST /v1/auth/signin/
+      // we don't fabricate success text since useAuth.login doesn't return payload
       router.push("/dashboard")
     } catch (err) {
-      // Show ONLY what we got (or "No response from server" from the service)
-      setPasswordError(err instanceof Error ? err.message : "")
+      toast.error(err instanceof Error ? err.message : "Login failed.")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleRequestOtp = async () => {
-    setOtpError("")
-    setOtpMessage("")
     if (!email) {
-      setOtpError("Please enter your email")
+      toast.error("Please enter your email")
       return
     }
     setIsRequestingOtp(true)
     try {
       const res = await authService.signinOtpInit(email) // POST /v1/auth/signin/otp/
-      const msg = res?.message ?? res?.detail ?? ""
+      const msg = res?.message ?? res?.detail ?? "Code sent to your email."
+      toast.success(String(msg))
       setOtpRequested(true)
-      setOtpMessage(String(msg))
     } catch (err) {
-      setOtpError(err instanceof Error ? err.message : "")
+      toast.error(err instanceof Error ? err.message : "Could not send code.")
     } finally {
       setIsRequestingOtp(false)
     }
   }
 
   const handleVerifyOtp = async () => {
-    setOtpError("")
-    setOtpMessage("")
     if (!email) {
-      setOtpError("Missing email")
+      toast.error("Missing email")
       return
     }
     if (!otp || otp.length < 4) {
-      setOtpError("Enter the code sent to your email")
+      toast.error("Enter the code sent to your email")
       return
     }
     setIsVerifyingOtp(true)
     try {
       const res = await authService.signinOtpVerify(email, otp) // POST /v1/auth/signin/otp/verify/
-      const msg = res?.message ?? res?.detail ?? ""
-      setOtpMessage(String(msg))
+      const msg = res?.message ?? res?.detail ?? "Logged in successfully."
+      toast.success(String(msg))
       router.push("/dashboard")
     } catch (err) {
-      setOtpError(err instanceof Error ? err.message : "")
+      toast.error(err instanceof Error ? err.message : "OTP verification failed.")
     } finally {
       setIsVerifyingOtp(false)
     }
@@ -149,12 +138,6 @@ export default function LoginPage() {
           <CardContent className="space-y-6">
             {tab === "password" ? (
               <form key="password-form" onSubmit={handlePasswordLogin} className="space-y-4">
-                {passwordError && (
-                  <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                    {passwordError}
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium text-foreground">
                     Email
@@ -177,7 +160,7 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Password
                   </Label>
-                  <div className="relative">
+                <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
@@ -238,12 +221,6 @@ export default function LoginPage() {
               </form>
             ) : (
               <div key="otp-form" className="space-y-4">
-                {otpError && (
-                  <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                    {otpError}
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <Label htmlFor="email-otp" className="text-sm font-medium text-foreground">
                     Email
@@ -302,12 +279,6 @@ export default function LoginPage() {
                         />
                       </div>
                     </div>
-
-                    {otpMessage && (
-                      <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">
-                        {otpMessage}
-                      </div>
-                    )}
 
                     <Button
                       type="button"
