@@ -1,3 +1,4 @@
+// hooks/use-auth.tsx
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
@@ -7,8 +8,15 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  signup: (firstName: string, lastName: string, email: string, password: string, accountType?: string, metadata?: any) => Promise<void>
-  login: (email: string, password: string) => Promise<void>
+  signup: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    accountType?: string,
+    metadata?: any,
+  ) => Promise<any>           // return backend payload
+  login: (email: string, password: string) => Promise<any> // return backend payload
   logout: () => Promise<void>
   refreshAuth: () => Promise<void>
 }
@@ -28,9 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(currentUser)
         } else if (token) {
           const newToken = await authService.refreshToken()
-          if (newToken) {
-            setUser(authService.getCurrentUser())
-          }
+          if (newToken) setUser(authService.getCurrentUser())
         }
       } catch (error) {
         console.error("Auth initialization error:", error)
@@ -41,21 +47,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth()
   }, [])
 
-  const signup = async (...args: Parameters<AuthContextType["signup"]>) => {
+  const signup: AuthContextType["signup"] = async (
+    firstName,
+    lastName,
+    email,
+    password,
+    accountType,
+    metadata,
+  ) => {
     setIsLoading(true)
     try {
-      const response = await authService.signup(...args)
-      setUser(response.user)
+      const response = await authService.signup(firstName, lastName, email, password, accountType, metadata)
+      if (response?.user) setUser(response.user) // if backend returned user (non-OTP flow)
+      return response
     } finally {
       setIsLoading(false)
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login: AuthContextType["login"] = async (email, password) => {
     setIsLoading(true)
     try {
       const response = await authService.login(email, password)
-      setUser(response.user)
+      if (response?.user) setUser(response.user)
+      return response
     } finally {
       setIsLoading(false)
     }
