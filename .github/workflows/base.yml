@@ -1,27 +1,44 @@
-name: Base config
+name: Base Config
 
 on:
   workflow_call:
     inputs:
+      environment:
+        required: true
+        type: string
+      project_path:
+        required: true
+        type: string
       branch:
         required: true
         type: string
-      project_dir:
+      install_command:
         required: true
         type: string
+      build_command:
+        required: true
+        type: string
+      web_server:
+        required: false
+        default: nginx
+      process_manager:
+        required: false
+        default: pm2
+
     secrets:
-      SSH_PRIVATE_KEY:
+      ssh_private_key:
         required: true
-      PASSWORD:
+      password:
         required: true
-      SERVER_IP:
+      server_ip:
         required: true
-      USERNAME:
+      username:
         required: true
 
 jobs:
-  deploy:
+  deployment:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Checkout code
@@ -30,39 +47,32 @@ jobs:
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.ssh_private_key }}
 
       - name: Pull code on server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
-          cd ${{ inputs.project_dir }} &&
-          git fetch origin ${{ inputs.branch }} &&
-          git reset --hard origin/${{ inputs.branch }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+            cd ${{ inputs.project_path }} &&
+            git fetch origin ${{ inputs.branch }} &&
+            git reset --hard origin/${{ inputs.branch }}
           "
-
       - name: Install project dependencies
         run: |
-          echo ${{ secrets.STAGING_PASSWORD }} | ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
-          cd ${{ inputs.project_dir }} &&
-          npm install
+          echo ${{ secrets.password }} | ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+          cd ${{ inputs.project_path }} &&
+          ${{ inputs.install_command }}
           "
 
       - name: Build project
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
-          cd ${{ inputs.project_dir }} &&
-          npm run build
+          ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+          cd ${{ inputs.project_path }} &&
+          ${{ inputs.build_command }}
           "
 
-      - name: Restart PM2
+      - name: Restart services
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
-          cd ${{ inputs.project_dir }} &&
-          pm2 restart ecosystem.config.js
-          "
-
-      - name: Restart Nginx
-        run: |
-          echo ${{ secrets.STAGING_PASSWORD }} | ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
-          sudo -S systemctl restart nginx
+          ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+            echo '${{ secrets.password }}' | sudo -S systemctl restart ${{ inputs.process_manager }} &&
+            echo '${{ secrets.password }}' | sudo -S systemctl restart ${{ inputs.web_server }}
           "
