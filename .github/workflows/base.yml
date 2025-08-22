@@ -20,10 +20,10 @@ on:
         type: string
       web_server:
         required: false
-        default: nginx
+        default: "nginx"
       process_manager:
         required: false
-        default: pm2
+        default: "pm2"
 
     secrets:
       ssh_private_key:
