@@ -1,0 +1,68 @@
+name: Base config
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      project_dir:
+        required: true
+        type: string
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+      PASSWORD:
+        required: true
+      SERVER_IP:
+        required: true
+      USERNAME:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+
+      - name: Pull code on server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
+          cd ${{ inputs.project_dir }} &&
+          git fetch origin ${{ inputs.branch }} &&
+          git reset --hard origin/${{ inputs.branch }}
+          "
+
+      - name: Install project dependencies
+        run: |
+          echo ${{ secrets.STAGING_PASSWORD }} | ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
+          cd ${{ inputs.project_dir }} &&
+          npm install
+          "
+
+      - name: Build project
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
+          cd ${{ inputs.project_dir }} &&
+          npm run build
+          "
+
+      - name: Restart PM2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
+          cd ${{ inputs.project_dir }} &&
+          pm2 restart ecosystem.config.js
+          "
+
+      - name: Restart Nginx
+        run: |
+          echo ${{ secrets.STAGING_PASSWORD }} | ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USERNAME }}@${{ secrets.STAGING_SERVER_IP }} "
+          sudo -S systemctl restart nginx
+          "

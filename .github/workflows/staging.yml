@@ -1,0 +1,18 @@
+name: Deploy to staging server
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/base.yml
+    with:
+      branch: 'staging'
+      project_dir: 'MedConnect/frontend'
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+      PASSWORD: ${{ secrets.STAGING_PASSWORD }}
+      SERVER_IP: ${{ secrets.STAGING_SERVER_IP }}
+      USERNAME: ${{ secrets.STAGING_USERNAME }}
