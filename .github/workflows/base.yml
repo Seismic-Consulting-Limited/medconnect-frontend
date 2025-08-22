@@ -20,9 +20,11 @@ on:
         type: string
       web_server:
         required: false
+        type: string
         default: "nginx"
       process_manager:
         required: false
+        type: string
         default: "pm2"
 
     secrets:
