@@ -10,7 +10,7 @@ jobs:
     uses: ./.github/workflows/base.yml
     with:
       environment: 'MedConnect Frontend'
-      project_dir: MedConnect/frontend
+      project_path: MedConnect/frontend
       branch: staging
       web_server: "nginx"
       process_manager: "pm2"
