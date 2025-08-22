@@ -22,10 +22,10 @@ on:
         required: false
         type: string
         default: "nginx"
-      process_manager:
+      restart_process_manager_command:
         required: false
         type: string
-        default: "pm2"
+        default: "pm2 restart ecosystem.config.js"
 
     secrets:
       ssh_private_key:
@@ -58,23 +58,30 @@ jobs:
             git fetch origin ${{ inputs.branch }} &&
             git reset --hard origin/${{ inputs.branch }}
           "
+
       - name: Install project dependencies
         run: |
-          echo ${{ secrets.password }} | ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
-          cd ${{ inputs.project_path }} &&
-          ${{ inputs.install_command }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+            cd ${{ inputs.project_path }} &&
+            ${{ inputs.install_command }}
           "
 
       - name: Build project
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
-          cd ${{ inputs.project_path }} &&
-          ${{ inputs.build_command }}
+            cd ${{ inputs.project_path }} &&
+            ${{ inputs.build_command }}
+          "
+
+      - name: Restart Process Manager
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
+            cd ${{ inputs.project_path }} &&
+            ${{ inputs.restart_process_manager_command }}
           "
 
       - name: Restart services
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.username }}@${{ secrets.server_ip }} "
-            echo '${{ secrets.password }}' | sudo -S systemctl restart ${{ inputs.process_manager }} &&
             echo '${{ secrets.password }}' | sudo -S systemctl restart ${{ inputs.web_server }}
           "

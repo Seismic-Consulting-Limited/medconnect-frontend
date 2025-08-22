@@ -13,7 +13,7 @@ jobs:
       project_path: MedConnect/frontend
       branch: staging
       web_server: "nginx"
-      process_manager: "pm2"
+      restart_process_manager_command: "pm2 restart ecosystem.config.js"
       install_command: "npm install"
       build_command: "npm run build"
     secrets:
