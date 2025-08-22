@@ -9,7 +9,7 @@ jobs:
   staging:
     uses: ./.github/workflows/base.yml
     with:
-      environment: 'MedConnect Frontend'
+      environment: STAGING
       project_path: MedConnect/frontend
       branch: staging
       web_server: "nginx"
