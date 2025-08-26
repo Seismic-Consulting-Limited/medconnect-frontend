@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -24,19 +24,35 @@ function maskEmail(email: string) {
 export default function VerifyEmailPage() {
   const params = useSearchParams()
   const router = useRouter()
-  const emailParam = (params.get("email") || "").toLowerCase()
 
+  const [email, setEmail] = useState<string>("")
   const [otp, setOtp] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
-
   const [isResending, setIsResending] = useState(false)
   const [resendCooldown, setResendCooldown] = useState<number>(0)
 
-  // simple 30s cooldown
+  // Read email from ?email= once (for backward compat), persist to session, then clean the URL.
+  useEffect(() => {
+    const qEmail = (params.get("email") || "").toLowerCase()
+    if (qEmail) {
+      setEmail(qEmail)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("pending_email", qEmail)
+      }
+      // remove the query from the address bar
+      router.replace("/user/auth/verify")
+      return
+    }
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("pending_email") || ""
+      setEmail(saved)
+    }
+  }, [params, router])
+
   const canResend = useMemo(() => resendCooldown <= 0 && !isResending, [resendCooldown, isResending])
 
   const handleVerify = async () => {
-    if (!emailParam) {
+    if (!email) {
       toast.error("Missing email. Please go back and try again.")
       return
     }
@@ -47,15 +63,18 @@ export default function VerifyEmailPage() {
 
     setIsVerifying(true)
     try {
-      const payload = await authService.verifyEmail(emailParam, otp)
+      const payload = await authService.verifyEmail(email, otp)
       const msg = payload?.message ?? payload?.detail ?? "Email verified successfully."
       toast.success(String(msg))
 
-      // If backend returned tokens/user on verify, go to dashboard immediately
+      // clear pending email after success
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("pending_email")
+      }
+
       if (payload?.token || payload?.refreshToken || payload?.user) {
         router.push("/dashboard")
       } else {
-        // Otherwise send to login after a brief moment (toast persists across route)
         setTimeout(() => router.push("/user/auth/login"), 400)
       }
     } catch (err) {
@@ -66,7 +85,7 @@ export default function VerifyEmailPage() {
   }
 
   const handleResend = async () => {
-    if (!emailParam) {
+    if (!email) {
       toast.error("Missing email. Please go back and try again.")
       return
     }
@@ -74,11 +93,10 @@ export default function VerifyEmailPage() {
 
     setIsResending(true)
     try {
-      const payload = await authService.resendEmailOtp(emailParam)
+      const payload = await authService.resendEmailOtp(email)
       const msg = payload?.message ?? payload?.detail ?? "A new code has been sent to your email."
       toast.success(String(msg))
       setResendCooldown(30)
-
       const id = setInterval(() => {
         setResendCooldown((v) => {
           if (v <= 1) {
@@ -104,7 +122,7 @@ export default function VerifyEmailPage() {
             <CardTitle className="text-2xl font-bold text-foreground">Verify your email</CardTitle>
             <p className="text-sm text-muted-foreground">
               We’ve sent a code to{" "}
-              <span className="font-medium text-foreground">{emailParam ? maskEmail(emailParam) : "your email"}</span>
+              <span className="font-medium text-foreground">{email ? maskEmail(email) : "your email"}</span>
             </p>
           </CardHeader>
 
@@ -123,7 +141,7 @@ export default function VerifyEmailPage() {
               />
             </div>
 
-            <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4 || !emailParam} className="w-full h-12 text-white">
+            <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4 || !email} className="w-full h-12 text-white">
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin " />
@@ -137,7 +155,7 @@ export default function VerifyEmailPage() {
             <Button
               variant="outline"
               onClick={handleResend}
-              disabled={!canResend || !emailParam}
+              disabled={!canResend || !email}
               className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white"
             >
               {isResending ? (

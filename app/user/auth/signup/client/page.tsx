@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Eye, EyeOff, Loader2, User, Mail, Lock } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -25,10 +25,16 @@ export default function ClientSignupPage() {
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const { signup } = useAuth()
+  const { signup, isAuthenticated } = useAuth()
   const router = useRouter()
 
-  // Basic password checks; align with backend rules as needed
+  // 🚫 If already logged in and user lands here, bounce to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard")
+    }
+  }, [isAuthenticated, router])
+
   const validatePassword = (pwd: string) => {
     const hasUppercase = /[A-Z]/.test(pwd)
     const hasLowercase = /[a-z]/.test(pwd)
@@ -46,7 +52,6 @@ export default function ClientSignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Client-side guards
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields")
       return
@@ -68,13 +73,11 @@ export default function ClientSignupPage() {
     try {
       const payload: any = await signup(firstName, lastName, email, password, "client")
 
-      // Optional success message from backend (preferred), fallback if absent
       const successMsg =
         (payload && (payload.message || payload.detail)) ||
         "Account created. Please check your email for verification."
       toast.success(String(successMsg))
 
-      // Detect if verification is required — check several common flags.
       const needsOtp =
         Boolean(payload?.requires_verification) ||
         Boolean(payload?.requiresVerification) ||
@@ -82,21 +85,20 @@ export default function ClientSignupPage() {
         payload?.status === "pending_verification" ||
         Boolean(payload?.otp_required)
 
-      // Detect if the backend already authenticated the user.
       const hasAuth = Boolean(payload?.token || payload?.refreshToken || payload?.user)
-
-      // 🚦 Redirect rule:
-      // - If verification is required OR there is no auth in the response → go to verify page
-      // - Only when NO verification is needed AND auth is present → go to dashboard
       const lower = email.toLowerCase()
+
       if (needsOtp || !hasAuth) {
-        const params = new URLSearchParams({ email: lower })
-        router.push(`/user/auth/verify?${params.toString()}`)
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("pending_email", lower)
+        }
+        // keep signup out of history when going to verify? push is fine (user may want to go back)
+        // but the verify page itself will guard and strip URL email
+        router.push("/user/auth/verify")
       } else {
-        router.push("/dashboard")
+        router.replace("/dashboard") // ✅ replace to keep signup out of history
       }
     } catch (err) {
-      // Show ONLY backend-provided/parsed message
       toast.error(err instanceof Error ? err.message : "Something went wrong.")
     } finally {
       setIsLoading(false)

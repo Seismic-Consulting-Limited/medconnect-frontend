@@ -1,123 +1,134 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Eye, EyeOff, Loader2, Mail, Lock, KeyRound, Send } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, Loader2, Mail, Lock, KeyRound, Send } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/hooks/use-auth"
-import { authService } from "@/lib/auth"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/use-auth";
+import { authService } from "@/lib/auth";
+import { toast } from "sonner";
 
-type Tab = "password" | "otp"
+type Tab = "password" | "otp";
 
 export default function LoginPage() {
-  const [tab, setTab] = useState<Tab>("password")
+  const [tab, setTab] = useState<Tab>("password");
 
   // Shared
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Password flow
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // OTP flow
-  const [otpRequested, setOtpRequested] = useState(false)
-  const [otp, setOtp] = useState("")
-  const [isRequestingOtp, setIsRequestingOtp] = useState(false)
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
-  const { login } = useAuth()
-  const router = useRouter()
+  const { login, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // 🚫 If already logged in and user lands here, bounce them to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
 
   const switchTab = (next: Tab) => {
-    setTab(next)
-    // reset per-tab states so messages don't bleed between tabs
-    setOtpRequested(false)
-    setOtp("")
-    setIsLoading(false)
-    setIsRequestingOtp(false)
-    setIsVerifyingOtp(false)
-    if (next === "otp") setPassword("")
-  }
+    setTab(next);
+    setOtpRequested(false);
+    setOtp("");
+    setIsLoading(false);
+    setIsRequestingOtp(false);
+    setIsVerifyingOtp(false);
+    if (next === "otp") setPassword("");
+  };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!email || !password) {
-      toast.error("Please fill in all fields")
-      return
+      toast.error("Please fill in all fields");
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await login(email, password) // POST /v1/auth/signin/
-      // we don't fabricate success text since useAuth.login doesn't return payload
-      router.push("/dashboard")
+      await login(email, password); // POST /v1/auth/signin/
+      router.replace("/dashboard"); // ✅ replace to keep login out of history
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed.")
+      toast.error(err instanceof Error ? err.message : "Login failed.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRequestOtp = async () => {
     if (!email) {
-      toast.error("Please enter your email")
-      return
+      toast.error("Please enter your email");
+      return;
     }
-    setIsRequestingOtp(true)
+    setIsRequestingOtp(true);
     try {
-      const res = await authService.signinOtpInit(email) // POST /v1/auth/signin/otp/
-      const msg = res?.message ?? res?.detail ?? "Code sent to your email."
-      toast.success(String(msg))
-      setOtpRequested(true)
+      const res = await authService.signinOtpInit(email); // POST /v1/auth/signin/otp/
+      const msg = res?.message ?? res?.detail ?? "Code sent to your email.";
+      toast.success(String(msg));
+      setOtpRequested(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send code.")
+      toast.error(err instanceof Error ? err.message : "Could not send code.");
     } finally {
-      setIsRequestingOtp(false)
+      setIsRequestingOtp(false);
     }
-  }
+  };
 
   const handleVerifyOtp = async () => {
     if (!email) {
-      toast.error("Missing email")
-      return
+      toast.error("Missing email");
+      return;
     }
     if (!otp || otp.length < 4) {
-      toast.error("Enter the code sent to your email")
-      return
+      toast.error("Enter the code sent to your email");
+      return;
     }
-    setIsVerifyingOtp(true)
+    setIsVerifyingOtp(true);
     try {
-      const res = await authService.signinOtpVerify(email, otp) // POST /v1/auth/signin/otp/verify/
-      const msg = res?.message ?? res?.detail ?? "Logged in successfully."
-      toast.success(String(msg))
-      router.push("/dashboard")
+      const res = await authService.signinOtpVerify(email, otp); // POST /v1/auth/signin/otp/verify/
+      const msg = res?.message ?? res?.detail ?? "Logged in successfully.";
+      toast.success(String(msg));
+      router.replace("/dashboard"); // ✅ replace
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "OTP verification failed.")
+      toast.error(
+        err instanceof Error ? err.message : "OTP verification failed."
+      );
     } finally {
-      setIsVerifyingOtp(false)
+      setIsVerifyingOtp(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-[520px]">
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-3 text-center">
-            <CardTitle className="text-3xl font-bold text-foreground">Login</CardTitle>
+            <CardTitle className="text-3xl font-bold text-foreground">
+              Login
+            </CardTitle>
 
             {/* Tabs */}
             <div className="mx-auto mt-2 inline-flex rounded-lg border p-1 bg-muted/30">
               <button
-                className={`px-4 py-2 rounded-md text-sm ${tab === "password" ? "bg-background shadow" : "opacity-70"}`}
+                className={`px-4 py-2 rounded-md text-sm ${
+                  tab === "password" ? "bg-background shadow" : "opacity-70"
+                }`}
                 onClick={() => switchTab("password")}
                 type="button"
                 aria-pressed={tab === "password"}
@@ -125,7 +136,9 @@ export default function LoginPage() {
                 Password
               </button>
               <button
-                className={`px-4 py-2 rounded-md text-sm ${tab === "otp" ? "bg-background shadow" : "opacity-70"}`}
+                className={`px-4 py-2 rounded-md text-sm ${
+                  tab === "otp" ? "bg-background shadow" : "opacity-70"
+                }`}
                 onClick={() => switchTab("otp")}
                 type="button"
                 aria-pressed={tab === "otp"}
@@ -137,9 +150,16 @@ export default function LoginPage() {
 
           <CardContent className="space-y-6">
             {tab === "password" ? (
-              <form key="password-form" onSubmit={handlePasswordLogin} className="space-y-4">
+              <form
+                key="password-form"
+                onSubmit={handlePasswordLogin}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                  <Label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Email
                   </Label>
                   <div className="relative">
@@ -157,10 +177,13 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                  <Label
+                    htmlFor="password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Password
                   </Label>
-                <div className="relative">
+                  <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
@@ -177,21 +200,33 @@ export default function LoginPage() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
-
-                  <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
+                  <Link
+                    href="/user/auth/reset"
+                    className="text-sm text-primary hover:underline font-medium"
+                  >
                     Forgot password?
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -204,7 +239,10 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-muted-foreground pt-2">
                   Don&apos;t have an account?{" "}
-                  <Link href="/user/auth/signup" className="text-primary hover:underline font-medium">
+                  <Link
+                    href="/user/auth/signup"
+                    className="text-primary hover:underline font-medium"
+                  >
                     Sign Up
                   </Link>
                 </div>
@@ -212,7 +250,10 @@ export default function LoginPage() {
             ) : (
               <div key="otp-form" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-otp" className="text-sm font-medium text-foreground">
+                  <Label
+                    htmlFor="email-otp"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Email
                   </Label>
                   <div className="relative">
@@ -251,7 +292,10 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="otp" className="text-sm font-medium text-foreground">
+                      <Label
+                        htmlFor="otp"
+                        className="text-sm font-medium text-foreground"
+                      >
                         Enter OTP
                       </Label>
                       <div className="relative">
@@ -263,7 +307,9 @@ export default function LoginPage() {
                           maxLength={6}
                           placeholder="6-digit code"
                           value={otp}
-                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                          onChange={(e) =>
+                            setOtp(e.target.value.replace(/\D/g, ""))
+                          }
                           className="pl-10 h-12 border-border"
                           required
                         />
@@ -290,7 +336,10 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-muted-foreground pt-2">
                   Prefer password?{" "}
-                  <button onClick={() => switchTab("password")} className="text-primary hover:underline font-medium">
+                  <button
+                    onClick={() => switchTab("password")}
+                    className="text-primary hover:underline font-medium"
+                  >
                     Use password instead
                   </button>
                 </div>
@@ -300,5 +349,5 @@ export default function LoginPage() {
         </Card>
       </div>
     </main>
-  )
+  );
 }

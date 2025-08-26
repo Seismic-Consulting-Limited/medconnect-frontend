@@ -1,4 +1,3 @@
-// lib/auth.ts
 import { AUTH_CONSTANTS, HTTP_METHODS, API_ENDPOINTS, buildApiUrl } from "./constants"
 
 export interface User {
@@ -27,7 +26,6 @@ const parseError = async (response: Response) => {
   const status = response.status
   const isServerError = status >= 500
 
-  // Try JSON first
   try {
     const data = await response.clone().json()
     if (typeof data === "string") return data
@@ -45,17 +43,13 @@ const parseError = async (response: Response) => {
       if (typeof first === "string") return first
     }
     return JSON.stringify(data)
-  } catch {
-    // not JSON
-  }
+  } catch {}
 
-  // Then try raw text
   try {
     const text = (await response.text()).trim()
     if (text) return isServerError ? SERVER_5XX_FALLBACK : text
   } catch {}
 
-  // Clean fallback
   return isServerError ? SERVER_5XX_FALLBACK : response.statusText || `HTTP ${status}`
 }
 
@@ -124,6 +118,7 @@ export class AuthService {
     return !!this.getToken() && !!this.getCurrentUser()
   }
 
+  // -------- Signup
   public async signup(
     firstName: string,
     lastName: string,
@@ -152,6 +147,7 @@ export class AuthService {
     return data
   }
 
+  // -------- Login (password)
   public async login(email: string, password: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), {
       method: HTTP_METHODS.POST,
@@ -174,8 +170,7 @@ export class AuthService {
           headers: { Authorization: `Bearer ${token}` },
         })
       }
-    } catch {
-    } finally {
+    } catch {} finally {
       this.clearAuth()
     }
   }
@@ -198,6 +193,7 @@ export class AuthService {
     return data?.token ?? null
   }
 
+  // -------- Signup OTP
   public async verifyEmail(email: string, otp: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.VERIFY_OTP), {
       method: HTTP_METHODS.POST,
@@ -221,6 +217,7 @@ export class AuthService {
     return response.json()
   }
 
+  // -------- Login OTP
   public async signinOtpInit(email: string): Promise<AuthResponseMaybe> {
     const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.SIGNIN_OTP_INIT), {
       method: HTTP_METHODS.POST,
@@ -236,6 +233,34 @@ export class AuthService {
       method: HTTP_METHODS.POST,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.toLowerCase(), otp }),
+    })
+    if (!response.ok) throw new Error(await parseError(response))
+    const data: AuthResponseMaybe = await response.json()
+    if (data?.token || data?.refreshToken) setTokens(data.token, data.refreshToken)
+    setUserLocal(data?.user)
+    return data
+  }
+
+  // -------- Password reset
+  public async resetPasswordInit(email: string): Promise<AuthResponseMaybe> {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PASSWORD_RESET), {
+      method: HTTP_METHODS.POST,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.toLowerCase() }),
+    })
+    if (!response.ok) throw new Error(await parseError(response))
+    return response.json()
+  }
+
+  public async resetPasswordConfirm(uid: string, token: string, newPassword: string): Promise<AuthResponseMaybe> {
+    const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PASSWORD_RESET_CONFIRM), {
+      method: HTTP_METHODS.POST,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid,
+        token,
+        new_password: newPassword, // matches backend payload
+      }),
     })
     if (!response.ok) throw new Error(await parseError(response))
     const data: AuthResponseMaybe = await response.json()
