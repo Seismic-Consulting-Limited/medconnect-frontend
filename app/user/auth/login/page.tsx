@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/use-auth";
 import { authService } from "@/lib/auth";
-import { toast } from "sonner";
 
 type Tab = "password" | "otp";
 
@@ -28,25 +27,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   // OTP flow
   const [otpRequested, setOtpRequested] = useState(false);
   const [otp, setOtp] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // 🚫 If already logged in and user lands here, bounce them to dashboard
+  // ✅ If already logged in, never show this page
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const switchTab = (next: Tab) => {
     setTab(next);
+    // Clear cross-tab state so errors don't bleed between tabs
+    setPasswordError("");
+    setOtpError("");
+    setOtpMessage("");
     setOtpRequested(false);
     setOtp("");
     setIsLoading(false);
@@ -57,58 +63,61 @@ export default function LoginPage() {
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError("");
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      setPasswordError("Please fill in all fields");
       return;
     }
     setIsLoading(true);
     try {
       await login(email, password); // POST /v1/auth/signin/
-      router.replace("/dashboard"); // ✅ replace to keep login out of history
+      // ✅ Replace so the login URL is not in the back stack
+      router.replace("/dashboard");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed.");
+      setPasswordError(err instanceof Error ? err.message : "");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRequestOtp = async () => {
+    setOtpError("");
+    setOtpMessage("");
     if (!email) {
-      toast.error("Please enter your email");
+      setOtpError("Please enter your email");
       return;
     }
     setIsRequestingOtp(true);
     try {
       const res = await authService.signinOtpInit(email); // POST /v1/auth/signin/otp/
-      const msg = res?.message ?? res?.detail ?? "Code sent to your email.";
-      toast.success(String(msg));
+      const msg = res?.message ?? res?.detail ?? "";
       setOtpRequested(true);
+      setOtpMessage(String(msg));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send code.");
+      setOtpError(err instanceof Error ? err.message : "");
     } finally {
       setIsRequestingOtp(false);
     }
   };
 
   const handleVerifyOtp = async () => {
+    setOtpError("");
+    setOtpMessage("");
     if (!email) {
-      toast.error("Missing email");
+      setOtpError("Missing email");
       return;
     }
     if (!otp || otp.length < 4) {
-      toast.error("Enter the code sent to your email");
+      setOtpError("Enter the code sent to your email");
       return;
     }
     setIsVerifyingOtp(true);
     try {
-      const res = await authService.signinOtpVerify(email, otp); // POST /v1/auth/signin/otp/verify/
-      const msg = res?.message ?? res?.detail ?? "Logged in successfully.";
-      toast.success(String(msg));
-      router.replace("/dashboard"); // ✅ replace
+      await authService.signinOtpVerify(email, otp); // POST /v1/auth/signin/otp/verify/
+      // ✅ Replace so back does not return to login
+      router.replace("/dashboard");
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "OTP verification failed."
-      );
+      setOtpError(err instanceof Error ? err.message : "");
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -155,6 +164,12 @@ export default function LoginPage() {
                 onSubmit={handlePasswordLogin}
                 className="space-y-4"
               >
+                {passwordError && (
+                  <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
+                    {passwordError}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="email"
@@ -214,6 +229,20 @@ export default function LoginPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(!!checked)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-white"
+                    />
+                    <label
+                      htmlFor="remember"
+                      className="text-sm text-muted-foreground"
+                    >
+                      Remember me
+                    </label>
+                  </div>
                   <Link
                     href="/user/auth/reset"
                     className="text-sm text-primary hover:underline font-medium"
@@ -249,6 +278,12 @@ export default function LoginPage() {
               </form>
             ) : (
               <div key="otp-form" className="space-y-4">
+                {otpError && (
+                  <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
+                    {otpError}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="email-otp"
@@ -315,6 +350,12 @@ export default function LoginPage() {
                         />
                       </div>
                     </div>
+
+                    {otpMessage && (
+                      <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">
+                        {otpMessage}
+                      </div>
+                    )}
 
                     <Button
                       type="button"
