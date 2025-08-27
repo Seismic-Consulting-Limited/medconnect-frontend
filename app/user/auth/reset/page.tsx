@@ -1,4 +1,3 @@
-// app/user/auth/reset/page.tsx
 "use client"
 
 import { useState, useMemo } from "react"
@@ -14,8 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 function maskEmail(email: string) {
   const [user, domain] = email.split("@")
   if (!user || !domain) return email
-  const maskedUser =
-    user.length <= 2 ? `${user[0] ?? ""}*` : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`
+  const maskedUser = user.length <= 2 ? `${user[0] ?? ""}*` : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`
   const [name, tld] = domain.split(".")
   const maskedDomain = name ? `${name[0]}***.${tld ?? ""}` : domain
   return `${maskedUser}@${maskedDomain}`
@@ -63,7 +61,6 @@ export default function PasswordResetRequestPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : ""
       toast({ title: "Request failed", description: message, variant: "destructive", duration: 5000 })
-      // stay on this page; do not navigate
     } finally {
       setIsSending(false)
     }
@@ -133,7 +130,7 @@ export default function PasswordResetRequestPage() {
                   onClick={handleResend}
                   disabled={!canResend}
                   variant="outline"
-                  className="w-full h-12"
+                  className="w-full h-12 hover:bg-primary hover:text-white"
                 >
                   {isSending ? (
                     <>
