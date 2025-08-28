@@ -1,0 +1,67 @@
+{
+"templateName": "Hospital Application Received (Under Review)",
+"description": "Email sent to a hospital after they submit an onboarding application, confirming receipt and that the application is under review.",
+"variables": {
+"contactName": {
+"type": "string",
+"description": "Primary contact person for the hospital",
+"example": "Mrs. Adaobi Okafor"
+},
+"hospitalName": {
+"type": "string",
+"description": "Name of the hospital or healthcare group",
+"example": "Medix Specialist Hospital"
+},
+"applicationId": {
+"type": "string",
+"description": "Unique identifier for the submitted application",
+"example": "HAPP-2025-004219"
+},
+"submittedDate": {
+"type": "string",
+"description": "Date and time the application was submitted (display-ready)",
+"example": "August 28, 2025, 14:32 WAT"
+},
+"reviewEta": {
+"type": "string",
+"description": "Estimated time to complete the review",
+"example": "3–5 business days"
+},
+"status": {
+"type": "string",
+"description": "Current review status text",
+"example": "Under Review"
+},
+"additionalNotes": {
+"type": "string",
+"description": "Optional extra guidance or requirements during review",
+"example": "A member of our compliance team may request copies of facility accreditation."
+},
+"portalUrl": {
+"type": "string",
+"description": "Link to view the application in the partner portal",
+"example": "https://partner.medconnect.com/applications/HAPP-2025-004219"
+},
+"documentsUrl": {
+"type": "string",
+"description": "Link to upload or update required documents",
+"example": "https://partner.medconnect.com/applications/HAPP-2025-004219/documents"
+},
+"supportEmail": {
+"type": "string",
+"description": "Partner support contact email",
+"example": "partnersupport@medconnect.com"
+},
+"email": {
+"type": "string",
+"description": "Recipient email address",
+"example": "admin@medixspecialist.ng"
+},
+"unsubscribeUrl": {
+"type": "string",
+"description": "Link to manage or unsubscribe from notifications",
+"example": "https://medconnect.com/email-preferences"
+}
+},
+"usage": "Trigger this email immediately after a hospital submits an onboarding application to acknowledge receipt and set expectations for the review timeline."
+}
