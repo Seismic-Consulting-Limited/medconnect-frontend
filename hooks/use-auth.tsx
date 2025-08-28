@@ -1,8 +1,7 @@
-// hooks/use-auth.tsx
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { authService, type User } from "@/lib/auth"
+import { authService, type User, type AuthResponseMaybe } from "@/lib/auth"
 
 interface AuthContextType {
   user: User | null
@@ -15,8 +14,8 @@ interface AuthContextType {
     password: string,
     accountType?: string,
     metadata?: any,
-  ) => Promise<any>        
-  login: (email: string, password: string) => Promise<any> 
+  ) => Promise<AuthResponseMaybe>   // return payload
+  login: (email: string, password: string) => Promise<AuthResponseMaybe> // return payload
   logout: () => Promise<void>
   refreshAuth: () => Promise<void>
 }
@@ -36,10 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(currentUser)
         } else if (token) {
           const newToken = await authService.refreshToken()
-          if (newToken) setUser(authService.getCurrentUser())
+          if (newToken) {
+            setUser(authService.getCurrentUser())
+          }
         }
       } catch (error) {
-        console.error("Auth initialization error:", error)
+        // swallow
       } finally {
         setIsLoading(false)
       }
@@ -47,25 +48,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth()
   }, [])
 
-  const signup: AuthContextType["signup"] = async (
-    firstName,
-    lastName,
-    email,
-    password,
-    accountType,
-    metadata,
-  ) => {
+  const signup = async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    accountType?: string,
+    metadata?: any,
+  ): Promise<AuthResponseMaybe> => {
     setIsLoading(true)
     try {
       const response = await authService.signup(firstName, lastName, email, password, accountType, metadata)
-      if (response?.user) setUser(response.user) // if backend returned user (non-OTP flow)
+      if (response?.user) setUser(response.user)
       return response
     } finally {
       setIsLoading(false)
     }
   }
 
-  const login: AuthContextType["login"] = async (email, password) => {
+  const login = async (email: string, password: string): Promise<AuthResponseMaybe> => {
     setIsLoading(true)
     try {
       const response = await authService.login(email, password)
@@ -89,18 +90,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAuth = async () => {
     try {
       const newToken = await authService.refreshToken()
-      if (newToken) setUser(authService.getCurrentUser())
-      else setUser(null)
-    } catch (error) {
+      if (newToken) {
+        setUser(authService.getCurrentUser())
+      } else {
+        setUser(null)
+      }
+    } catch {
       setUser(null)
     }
   }
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, signup, login, logout, refreshAuth }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    signup,
+    login,
+    logout,
+    refreshAuth,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

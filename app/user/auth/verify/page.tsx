@@ -1,3 +1,4 @@
+// app/user/auth/verify/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -31,6 +32,13 @@ export default function VerifyEmailPage() {
   const [isResending, setIsResending] = useState(false)
   const [resendCooldown, setResendCooldown] = useState<number>(0)
 
+  // 🔐 If already authenticated, never show verify – go straight to dashboard.
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      router.replace("/dashboard")
+    }
+  }, [router])
+
   // Read email from ?email= once (for backward compat), persist to session, then clean the URL.
   useEffect(() => {
     const qEmail = (params.get("email") || "").toLowerCase()
@@ -39,7 +47,7 @@ export default function VerifyEmailPage() {
       if (typeof window !== "undefined") {
         sessionStorage.setItem("pending_email", qEmail)
       }
-      // remove the query from the address bar
+      // remove the query from the address bar (history-safe)
       router.replace("/user/auth/verify")
       return
     }
@@ -72,10 +80,12 @@ export default function VerifyEmailPage() {
         sessionStorage.removeItem("pending_email")
       }
 
+      // ⤴️ Use replace so Back won't return to /verify
       if (payload?.token || payload?.refreshToken || payload?.user) {
-        router.push("/dashboard")
+        router.replace("/dashboard")
       } else {
-        setTimeout(() => router.push("/user/auth/login"), 400)
+        // If backend didn’t log them in, go to login (also replace)
+        setTimeout(() => router.replace("/user/auth/login"), 400)
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Verification failed. Please try again.")
@@ -141,7 +151,11 @@ export default function VerifyEmailPage() {
               />
             </div>
 
-            <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4 || !email} className="w-full h-12 text-white">
+            <Button
+              onClick={handleVerify}
+              disabled={isVerifying || otp.length < 4 || !email}
+              className="w-full h-12 text-white"
+            >
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin " />

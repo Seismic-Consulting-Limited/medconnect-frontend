@@ -1,5 +1,7 @@
+// app/user/auth/signup/page.tsx
 "use client"
-import { useState } from "react"
+
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, Building2, Plane } from "lucide-react"
 
@@ -7,18 +9,36 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "@/hooks/use-auth"
+import { toast } from "sonner"
 
 type AccountType = "client" | "hospital" | "travel-agent"
 
 export default function SignupPage() {
   const [selectedType, setSelectedType] = useState<AccountType | "">("")
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
+
+  // If a logged-in user lands here, bounce to dashboard (history-safe)
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard")
+    }
+  }, [isAuthenticated, router])
+
+  // Prefetch the next route for snappier navigation
+  useEffect(() => {
+    if (!selectedType) return
+    router.prefetch(`/user/auth/signup/${selectedType}`)
+  }, [selectedType, router])
 
   const handleContinue = () => {
-    if (!selectedType) return
-
-    // Route to specific signup flow based on account type
-    router.push(`/user/auth/signup/${selectedType}`)
+    if (!selectedType) {
+      toast.error("Please choose an account type to continue.")
+      return
+    }
+    // Use replace to keep this chooser out of history
+    router.replace(`/user/auth/signup/${selectedType}`)
   }
 
   const accountTypes = [
@@ -77,6 +97,7 @@ export default function SignupPage() {
                         <p className="text-sm text-muted-foreground leading-relaxed">{type.description}</p>
                       </div>
                       <div
+                        aria-hidden
                         className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                           isSelected ? "border-primary bg-primary" : "border-muted-foreground"
                         }`}

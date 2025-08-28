@@ -40,7 +40,7 @@ export default function LoginPage() {
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // ✅ If already logged in, never show this page
+  // If already logged in, never show this page
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       router.replace("/dashboard");
@@ -49,7 +49,6 @@ export default function LoginPage() {
 
   const switchTab = (next: Tab) => {
     setTab(next);
-    // Clear cross-tab state so errors don't bleed between tabs
     setPasswordError("");
     setOtpError("");
     setOtpMessage("");
@@ -70,9 +69,20 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
-      await login(email, password); // POST /v1/auth/signin/
-      // ✅ Replace so the login URL is not in the back stack
-      router.replace("/dashboard");
+      const payload = await login(email, password); // now returns payload
+
+      const needsVerify =
+        Boolean(payload?.requires_verification) ||
+        payload?.status === "pending_verification" ||
+        payload?.next === "verify" ||
+        payload?.user?.emailVerified === false;
+
+      if (needsVerify) {
+        const q = new URLSearchParams({ email: email.toLowerCase() });
+        router.replace(`/user/auth/verify?${q.toString()}`);
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : "");
     } finally {
@@ -89,7 +99,7 @@ export default function LoginPage() {
     }
     setIsRequestingOtp(true);
     try {
-      const res = await authService.signinOtpInit(email); // POST /v1/auth/signin/otp/
+      const res = await authService.signinOtpInit(email);
       const msg = res?.message ?? res?.detail ?? "";
       setOtpRequested(true);
       setOtpMessage(String(msg));
@@ -113,9 +123,18 @@ export default function LoginPage() {
     }
     setIsVerifyingOtp(true);
     try {
-      await authService.signinOtpVerify(email, otp); // POST /v1/auth/signin/otp/verify/
-      // ✅ Replace so back does not return to login
-      router.replace("/dashboard");
+      const res = await authService.signinOtpVerify(email, otp);
+      const needsVerify =
+        Boolean(res?.requires_verification) ||
+        res?.status === "pending_verification" ||
+        res?.next === "verify" ||
+        res?.user?.emailVerified === false;
+
+      router.replace(
+        needsVerify
+          ? `/user/auth/verify?email=${encodeURIComponent(email.toLowerCase())}`
+          : "/dashboard"
+      );
     } catch (err) {
       setOtpError(err instanceof Error ? err.message : "");
     } finally {
@@ -131,8 +150,6 @@ export default function LoginPage() {
             <CardTitle className="text-3xl font-bold text-foreground">
               Login
             </CardTitle>
-
-            {/* Tabs */}
             <div className="mx-auto mt-2 inline-flex rounded-lg border p-1 bg-muted/30">
               <button
                 className={`px-4 py-2 rounded-md text-sm ${

@@ -1,3 +1,4 @@
+// app/user/auth/signup/client/page.tsx
 "use client"
 
 import type React from "react"
@@ -28,13 +29,14 @@ export default function ClientSignupPage() {
   const { signup, isAuthenticated } = useAuth()
   const router = useRouter()
 
-  // 🚫 If already logged in and user lands here, bounce to dashboard
+  // If already logged in and user lands here, bounce to dashboard (history-safe)
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/dashboard")
     }
   }, [isAuthenticated, router])
 
+  // Basic password checks; align with backend rules as needed
   const validatePassword = (pwd: string) => {
     const hasUppercase = /[A-Z]/.test(pwd)
     const hasLowercase = /[a-z]/.test(pwd)
@@ -92,11 +94,11 @@ export default function ClientSignupPage() {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("pending_email", lower)
         }
-        // keep signup out of history when going to verify? push is fine (user may want to go back)
-        // but the verify page itself will guard and strip URL email
-        router.push("/user/auth/verify")
+        // Use replace so /signup is not left in history
+        router.replace("/user/auth/verify")
       } else {
-        router.replace("/dashboard") // ✅ replace to keep signup out of history
+        // Fully authenticated — go to dashboard and remove signup from history
+        router.replace("/dashboard")
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.")
