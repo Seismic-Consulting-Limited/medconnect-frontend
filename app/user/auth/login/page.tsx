@@ -1,8 +1,17 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
-import { Eye, EyeOff, Loader2, Mail, Lock, KeyRound, Send } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Lock,
+  KeyRound,
+  Send,
+  RotateCcw,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/use-auth";
 import { authService } from "@/lib/auth";
+import { toast } from "sonner";
 
 type Tab = "password" | "otp";
 
@@ -32,10 +42,17 @@ export default function LoginPage() {
   // OTP flow
   const [otpRequested, setOtpRequested] = useState(false);
   const [otp, setOtp] = useState("");
-  const [otpMessage, setOtpMessage] = useState("");
   const [otpError, setOtpError] = useState("");
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  // Resend controls
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
+  const canResend = useMemo(
+    () => resendCooldown <= 0 && !isResending,
+    [resendCooldown, isResending]
+  );
 
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -51,12 +68,13 @@ export default function LoginPage() {
     setTab(next);
     setPasswordError("");
     setOtpError("");
-    setOtpMessage("");
     setOtpRequested(false);
     setOtp("");
     setIsLoading(false);
     setIsRequestingOtp(false);
     setIsVerifyingOtp(false);
+    setIsResending(false);
+    setResendCooldown(0);
     if (next === "otp") setPassword("");
   };
 
@@ -90,9 +108,21 @@ export default function LoginPage() {
     }
   };
 
+  const startCooldown = (secs = 30) => {
+    setResendCooldown(secs);
+    const id = setInterval(() => {
+      setResendCooldown((v) => {
+        if (v <= 1) {
+          clearInterval(id as any);
+          return 0;
+        }
+        return v - 1;
+      });
+    }, 1000);
+  };
+
   const handleRequestOtp = async () => {
     setOtpError("");
-    setOtpMessage("");
     if (!email) {
       setOtpError("Please enter your email");
       return;
@@ -100,11 +130,21 @@ export default function LoginPage() {
     setIsRequestingOtp(true);
     try {
       const res = await authService.signinOtpInit(email);
-      const msg = res?.message ?? res?.detail ?? "";
+      const msg =
+        res?.message ??
+        res?.detail ??
+        "If an account exists, we’ve sent a code.";
       setOtpRequested(true);
-      setOtpMessage(String(msg));
+      toast.success(String(msg)); // 🔔 toast instead of inline message
+      // optional: begin cooldown immediately after first send
+      startCooldown(30);
     } catch (err) {
-      setOtpError(err instanceof Error ? err.message : "");
+      const m =
+        err instanceof Error
+          ? err.message
+          : "Could not send code. Please try again.";
+      setOtpError(m);
+      toast.error(m);
     } finally {
       setIsRequestingOtp(false);
     }
@@ -112,7 +152,6 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async () => {
     setOtpError("");
-    setOtpMessage("");
     if (!email) {
       setOtpError("Missing email");
       return;
@@ -136,9 +175,44 @@ export default function LoginPage() {
           : "/dashboard"
       );
     } catch (err) {
-      setOtpError(err instanceof Error ? err.message : "");
+      const m =
+        err instanceof Error
+          ? err.message
+          : "Verification failed. Please try again.";
+      setOtpError(m);
+      toast.error(m);
     } finally {
       setIsVerifyingOtp(false);
+    }
+  };
+
+  // 🔁 Resend uses signinOtpInit (backend has no resend endpoint)
+  const handleResendOtp = async () => {
+    if (!email) {
+      setOtpError("Missing email");
+      return;
+    }
+    if (!canResend) return;
+
+    setIsResending(true);
+    setOtpError("");
+    try {
+      const res = await authService.signinOtpInit(email);
+      const msg =
+        res?.message ??
+        res?.detail ??
+        "If an account exists, a new code has been sent.";
+      toast.success(String(msg));
+      startCooldown(30);
+    } catch (err) {
+      const m =
+        err instanceof Error
+          ? err.message
+          : "Could not resend code. Please try again.";
+      setOtpError(m);
+      toast.error(m);
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -368,11 +442,7 @@ export default function LoginPage() {
                       </div>
                     </div>
 
-                    {otpMessage && (
-                      <div className="p-2 text-xs rounded-md border border-border text-muted-foreground">
-                        {otpMessage}
-                      </div>
-                    )}
+                    {/* Inline message removed; we use toasts instead */}
 
                     <Button
                       type="button"
@@ -387,6 +457,27 @@ export default function LoginPage() {
                         </>
                       ) : (
                         "Verify & Login"
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleResendOtp}
+                      disabled={!canResend || !email}
+                      className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white"
+                    >
+                      {isResending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Resending...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Resend Code{" "}
+                          {resendCooldown > 0 ? `(${resendCooldown}s)` : ""}
+                        </>
                       )}
                     </Button>
                   </>
