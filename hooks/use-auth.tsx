@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { authService, type User, type AuthResponseMaybe } from "@/lib/auth"
+import { authService, type User, type AuthResponse } from "@/lib/auth"
 
 interface AuthContextType {
   user: User | null
@@ -14,8 +14,8 @@ interface AuthContextType {
     password: string,
     accountType?: string,
     metadata?: any,
-  ) => Promise<AuthResponseMaybe>   // return payload
-  login: (email: string, password: string) => Promise<AuthResponseMaybe> // return payload
+  ) => Promise<AuthResponse>   // return payload
+  login: (email: string, password: string) => Promise<AuthResponse> // return payload
   logout: () => Promise<void>
   refreshAuth: () => Promise<void>
 }
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     accountType?: string,
     metadata?: any,
-  ): Promise<AuthResponseMaybe> => {
+  ): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
       const response = await authService.signup(firstName, lastName, email, password, accountType, metadata)
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string): Promise<AuthResponseMaybe> => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
       const response = await authService.login(email, password)
