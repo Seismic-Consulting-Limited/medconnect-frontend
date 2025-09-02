@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { HeartPulse, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/cn"
 import { usePathname } from "next/navigation"
 
 export function SiteHeader() {
