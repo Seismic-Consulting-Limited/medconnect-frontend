@@ -1,127 +1,151 @@
 // app/user/auth/verify/page.tsx
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Loader2, RotateCcw, ShieldCheck } from "lucide-react"
-import { authService } from "@/lib/auth"
-import { toast } from "sonner"
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+import { authService } from "@/lib/auth";
+import { toast } from "sonner";
+
+// Mask email for display
 function maskEmail(email: string) {
-  const [user, domain] = email.split("@")
-  if (!user || !domain) return email
+  const [user, domain] = email.split("@");
+  if (!user || !domain) return email;
   const maskedUser =
-    user.length <= 2 ? `${user[0] ?? ""}*` : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`
-  const [name, tld] = domain.split(".")
-  const maskedDomain = name ? `${name[0]}***.${tld ?? ""}` : domain
-  return `${maskedUser}@${maskedDomain}`
+    user.length <= 2
+      ? `${user[0] ?? ""}*`
+      : `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}`;
+  const [name, tld] = domain.split(".");
+  const maskedDomain = name ? `${name[0]}***.${tld ?? ""}` : domain;
+  return `${maskedUser}@${maskedDomain}`;
+}
+
+// Read user_type from common backend shapes
+function extractUserType(payload: any): string | undefined {
+  return (
+    payload?.data?.user_type ||
+    payload?.user_type ||
+    payload?.data?.type ||
+    payload?.type ||
+    undefined
+  );
 }
 
 export default function VerifyEmailPage() {
-  const params = useSearchParams()
-  const router = useRouter()
+  const params = useSearchParams();
+  const router = useRouter();
 
-  const [email, setEmail] = useState<string>("")
-  const [otp, setOtp] = useState("")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isResending, setIsResending] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState<number>(0)
+  const [email, setEmail] = useState<string>("");
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
 
-  // 🔐 If already authenticated, never show verify – go straight to dashboard.
+  // Load email from ?email= or sessionStorage
   useEffect(() => {
-    if (authService.isAuthenticated()) {
-      router.replace("/dashboard")
-    }
-  }, [router])
-
-  // Read email from ?email= once (for backward compat), persist to session, then clean the URL.
-  useEffect(() => {
-    const qEmail = (params.get("email") || "").toLowerCase()
+    const qEmail = (params.get("email") || "").toLowerCase();
     if (qEmail) {
-      setEmail(qEmail)
+      setEmail(qEmail);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("pending_email", qEmail)
+        sessionStorage.setItem("pending_email", qEmail);
       }
-      // remove the query from the address bar (history-safe)
-      router.replace("/user/auth/verify")
-      return
+      // Clean query (history-safe)
+      router.replace("/user/auth/verify");
+      return;
     }
     if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("pending_email") || ""
-      setEmail(saved)
+      const saved = sessionStorage.getItem("pending_email") || "";
+      setEmail(saved);
     }
-  }, [params, router])
+  }, [params, router]);
 
-  const canResend = useMemo(() => resendCooldown <= 0 && !isResending, [resendCooldown, isResending])
+  const canResend = useMemo(
+    () => resendCooldown <= 0 && !isResending,
+    [resendCooldown, isResending]
+  );
 
   const handleVerify = async () => {
     if (!email) {
-      toast.error("Missing email. Please go back and try again.")
-      return
+      toast.error("Missing email. Please go back and try again.");
+      return;
     }
     if (!otp || otp.length < 4) {
-      toast.error("Please enter the verification code sent to your email.")
-      return
+      toast.error("Please enter the verification code sent to your email.");
+      return;
     }
 
-    setIsVerifying(true)
+    setIsVerifying(true);
     try {
-      const payload = await authService.verifyEmail(email, otp)
-      const msg = payload?.message ?? payload?.detail ?? "Email verified successfully."
-      toast.success(String(msg))
+      // Verify OTP – backend returns actual user_type here
+      const payload = await authService.verifyEmail(email, otp);
+      const msg =
+        payload?.message ?? payload?.detail ?? "Email verified successfully.";
+      toast.success(String(msg));
 
-      // clear pending email after success
+      // Clear pending email after success
       if (typeof window !== "undefined") {
-        sessionStorage.removeItem("pending_email")
+        sessionStorage.removeItem("pending_email");
       }
 
-      // ⤴️ Use replace so Back won't return to /verify
-      if (payload?.token || payload?.refreshToken || payload?.user) {
-        router.replace("/dashboard")
+      // Branch by user_type from THIS response
+      const userType = (extractUserType(payload) || "").toUpperCase();
+
+      if (userType === "HOSPITAL" || userType === "TRAVEL_AGENT") {
+        const q = new URLSearchParams({ role: userType.toLowerCase() });
+        router.replace(`/user/auth/verified?${q.toString()}`);
       } else {
-        // If backend didn’t log them in, go to login (also replace)
-        setTimeout(() => router.replace("/user/auth/login"), 400)
+        // Clients (PATIENT) or unknown → Login
+        router.replace("/user/auth/login");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed. Please try again.")
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Verification failed. Please try again."
+      );
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
-  }
+  };
 
   const handleResend = async () => {
     if (!email) {
-      toast.error("Missing email. Please go back and try again.")
-      return
+      toast.error("Missing email. Please go back and try again.");
+      return;
     }
-    if (!canResend) return
+    if (!canResend) return;
 
-    setIsResending(true)
+    setIsResending(true);
     try {
-      const payload = await authService.resendEmailOtp(email)
-      const msg = payload?.message ?? payload?.detail ?? "A new code has been sent to your email."
-      toast.success(String(msg))
-      setResendCooldown(30)
+      const res = await authService.resendEmailOtp(email);
+      const msg =
+        res?.message ?? res?.detail ?? "A new code has been sent to your email.";
+      toast.success(String(msg));
+      setResendCooldown(30);
       const id = setInterval(() => {
         setResendCooldown((v) => {
           if (v <= 1) {
-            clearInterval(id as any)
-            return 0
+            clearInterval(id as any);
+            return 0;
           }
-          return v - 1
-        })
-      }, 1000)
+          return v - 1;
+        });
+      }, 1000);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not resend code. Please try again.")
+      toast.error(
+        err instanceof Error ? err.message : "Could not resend code. Please try again."
+      );
     } finally {
-      setIsResending(false)
+      setIsResending(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -129,10 +153,14 @@ export default function VerifyEmailPage() {
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-2 text-center">
             <ShieldCheck className="mx-auto h-8 w-8 text-primary" />
-            <CardTitle className="text-2xl font-bold text-foreground">Verify your email</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Verify your email
+            </CardTitle>
             <p className="text-sm text-muted-foreground">
               We’ve sent a code to{" "}
-              <span className="font-medium text-foreground">{email ? maskEmail(email) : "your email"}</span>
+              <span className="font-medium text-foreground">
+                {email ? maskEmail(email) : "your email"}
+              </span>
             </p>
           </CardHeader>
 
@@ -186,11 +214,17 @@ export default function VerifyEmailPage() {
             </Button>
 
             <div className="text-center text-sm">
-              <Link href="/user/auth/signup" className="text-primary hover:underline font-medium">
+              <Link
+                href="/user/auth/signup"
+                className="text-primary hover:underline font-medium"
+              >
                 Back to Sign Up
               </Link>
               <span className="text-muted-foreground"> · </span>
-              <Link href="/user/auth/login" className="text-primary hover:underline font-medium">
+              <Link
+                href="/user/auth/login"
+                className="text-primary hover:underline font-medium"
+              >
                 Go to Login
               </Link>
             </div>
@@ -198,5 +232,5 @@ export default function VerifyEmailPage() {
         </Card>
       </div>
     </main>
-  )
+  );
 }

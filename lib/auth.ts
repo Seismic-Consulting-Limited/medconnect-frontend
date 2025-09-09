@@ -157,6 +157,20 @@ export class AuthService {
       }
     );
   }
+  
+  public async signupTravelAgent(payload: Record<string, any>): Promise<AuthResponse> {
+    return apiRequest<AuthResponse, AuthResponse>(
+      API_ENDPOINTS.AUTH.SIGNUP_TRAVEL_AGENT,
+      {
+        method: HTTP_METHODS.POST,
+        body: JSON.stringify(payload),
+      },
+      {
+        saveAuth: true,
+        onSaveAuth: persistAuthFromResponse,
+      }
+    );
+  }
 
   // Login (password)
   public async login(email: string, password: string): Promise<AuthResponse> {

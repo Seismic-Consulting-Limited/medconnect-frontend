@@ -22,6 +22,8 @@ export const API_ENDPOINTS = {
     SIGNUP: `${API_VERSION_PREFIX}/auth/patients/signup/`,
     // Hospitals
     SIGNUP_HOSPITAL: `${API_VERSION_PREFIX}/auth/hospital/signup/`,
+    // Travel Agents
+    SIGNUP_TRAVEL_AGENT: `${API_VERSION_PREFIX}/auth/travel-agent/signup/`,
     // OTP (signup verification)
     VERIFY_OTP: `${API_VERSION_PREFIX}/auth/signup/otp/verify/`,
     RESEND_OTP: `${API_VERSION_PREFIX}/auth/signup/otp/resend/`,
@@ -45,6 +47,10 @@ export const API_ENDPOINTS = {
 META: {
     COUNTRIES: `${API_VERSION_PREFIX}/countries`,
     STATES: (countryId: string | number) => `${API_VERSION_PREFIX}/countries/${countryId}/states`,
+    SERVICES: (type: string) => `${API_VERSION_PREFIX}/services/${type ? `?type=${encodeURIComponent(type)}` : ""}`,
+    FACILITIES: `${API_VERSION_PREFIX}/facilities/`,
+    LANGUAGES: `${API_VERSION_PREFIX}/languages/`,
+     USER_TYPES: `${API_VERSION_PREFIX}/user-types/`,
   },
 } as const;
 
