@@ -14,12 +14,24 @@
         </xml>
     </noscript>
     <![endif]-->
-    <!-- Added responsive media queries for mobile devices -->
+    <!-- Enhanced mobile CSS and removed flexbox for better email client compatibility -->
     <style type="text/css">
+        /* Reset styles for email clients */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
         @media only screen and (max-width: 600px) {
             .email-container {
                 width: 100% !important;
                 max-width: 100% !important;
+                margin: 0 !important;
             }
             .mobile-padding {
                 padding: 20px !important;
@@ -39,9 +51,17 @@
                 padding: 15px !important;
                 margin: 20px 0 !important;
             }
+            .mobile-icon-container {
+                width: 100% !important;
+                text-align: center !important;
+            }
             .mobile-icon {
                 width: 50px !important;
                 height: 50px !important;
+                margin: 0 auto !important;
+            }
+            .mobile-full-width {
+                width: 100% !important;
             }
         }
     </style>
@@ -60,13 +80,21 @@
                         <td class="mobile-header-padding" style="background: linear-gradient(135deg, #4A24C4 0%, #6B46C1 100%); padding: 30px; text-align: center;">
                             <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                                 <tr>
-                                    <!-- Removed align="center" attribute and added text-align: center to inline style -->
                                     <td style="text-align: center;">
-                                        <div class="mobile-icon" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
-                                            <div style="width: 30px; height: 30px; background: white; border-radius: 4px; position: relative;">
-                                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: #4A24C4; border-radius: 2px;"></div>
-                                            </div>
-                                        </div>
+                                        <!-- Replaced flexbox icon with table-based layout for better email client support -->
+                                        <table role="presentation" cellspacing="0" cellpadding="0" class="mobile-icon" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; margin: 0 auto 15px;">
+                                            <tr>
+                                                <td style="text-align: center; vertical-align: middle;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" style="width: 30px; height: 30px; background: white; border-radius: 4px; margin: 0 auto;">
+                                                        <tr>
+                                                            <td style="text-align: center; vertical-align: middle;">
+                                                                <div style="width: 16px; height: 16px; background: #4A24C4; border-radius: 2px; margin: 0 auto;"></div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
                                         <h1 class="mobile-font-size" style="color: white; font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.5px;">MedConnect</h1>
                                     </td>
                                 </tr>
@@ -94,13 +122,22 @@
 
                             <!-- Security Info -->
                             <div class="mobile-security-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; padding: 20px; margin: 30px 0;">
-                                <div style="display: flex; align-items: flex-start;">
-                                    <div style="background: #f59e0b; border-radius: 50%; width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0; margin-top: 2px;"></div>
-                                    <div>
-                                        <h4 style="color: #92400e; font-size: 14px; font-weight: 600; margin: 0 0 8px;">Security Notice</h4>
-                                        <p style="color: #92400e; font-size: 13px; line-height: 1.5; margin: 0;">This code expires in {{expirationMinutes}} minutes. Never share this code with anyone. MedConnect will never ask for your verification code.</p>
-                                    </div>
-                                </div>
+                                <!-- Replaced flexbox with table layout for security notice -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                    <tr>
+                                        <td width="32" style="vertical-align: top; padding-right: 12px;">
+                                            <table role="presentation" cellspacing="0" cellpadding="0" style="background: #f59e0b; border-radius: 50%; width: 20px; height: 20px;">
+                                                <tr>
+                                                    <td style="text-align: center; vertical-align: middle; color: white; font-size: 12px; font-weight: bold;">!</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td style="vertical-align: top;">
+                                            <h4 style="color: #92400e; font-size: 14px; font-weight: 600; margin: 0 0 8px;">Security Notice</h4>
+                                            <p style="color: #92400e; font-size: 13px; line-height: 1.5; margin: 0;">This code expires in {{expirationMinutes}} minutes. Never share this code with anyone. MedConnect will never ask for your verification code.</p>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
 
                             <!-- Additional Info -->

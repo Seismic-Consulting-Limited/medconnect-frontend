@@ -14,12 +14,25 @@
         </xml>
     </noscript>
     <![endif]-->
-    <!-- Added responsive media queries for mobile devices -->
+    <!-- Enhanced mobile CSS to prevent content sliding and ensure proper positioning -->
     <style type="text/css">
+        /* Reset styles for email clients */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
+        /* Mobile responsive styles */
         @media only screen and (max-width: 600px) {
             .email-container {
                 width: 100% !important;
                 max-width: 100% !important;
+                margin: 0 !important;
             }
             .mobile-padding {
                 padding: 20px !important;
@@ -33,17 +46,34 @@
             .mobile-button {
                 padding: 16px 30px !important;
                 font-size: 15px !important;
+                display: block !important;
+                width: 100% !important;
+                max-width: 280px !important;
+                margin: 0 auto !important;
             }
             .feature-card {
                 margin-bottom: 10px !important;
                 padding: 20px !important;
             }
+            .feature-icon-container {
+                width: 100% !important;
+                text-align: center !important;
+                padding-bottom: 15px !important;
+            }
             .feature-icon {
                 width: 35px !important;
                 height: 35px !important;
+                margin: 0 auto !important;
             }
             .mobile-spacing {
                 padding: 15px 0 !important;
+            }
+            .mobile-full-width {
+                width: 100% !important;
+            }
+            .mobile-stack {
+                display: block !important;
+                width: 100% !important;
             }
         }
     </style>
@@ -107,12 +137,21 @@
                                     <td class="feature-card" style="padding: 25px; background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%); border-radius: 16px; margin-bottom: 15px; position: relative;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                                             <tr>
-                                                <td width="50" style="vertical-align: top; padding-right: 20px;">
-                                                    <div class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                                        <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
-                                                    </div>
+                                                <!-- Replaced flexbox with table-based layout for better email client support -->
+                                                <td class="feature-icon-container mobile-stack" width="50" style="vertical-align: top; padding-right: 20px;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                                        <tr>
+                                                            <td style="text-align: left;">
+                                                                <table role="presentation" cellspacing="0" cellpadding="0" class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px;">
+                                                                    <tr>
+                                                                        <td style="text-align: center; vertical-align: middle; color: white; font-size: 18px; font-weight: bold;">✓</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
-                                                <td style="vertical-align: top;">
+                                                <td class="mobile-stack" style="vertical-align: top;">
                                                     <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Complete Your Profile</h3>
                                                     <p style="margin: 0; color: #64748b; font-size: 15px; line-height: 1.5;">
                                                         Personalize your experience and unlock all MedConnect features
@@ -129,12 +168,20 @@
                                     <td class="feature-card" style="padding: 25px; background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%); border-radius: 16px; margin-bottom: 15px;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                                             <tr>
-                                                <td width="50" style="vertical-align: top; padding-right: 20px;">
-                                                    <div class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                                        <span style="color: white; font-size: 18px; font-weight: bold;">🏥</span>
-                                                    </div>
+                                                <td class="feature-icon-container mobile-stack" width="50" style="vertical-align: top; padding-right: 20px;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                                        <tr>
+                                                            <td style="text-align: left;">
+                                                                <table role="presentation" cellspacing="0" cellpadding="0" class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px;">
+                                                                    <tr>
+                                                                        <td style="text-align: center; vertical-align: middle; color: white; font-size: 18px; font-weight: bold;">🏥</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
-                                                <td style="vertical-align: top;">
+                                                <td class="mobile-stack" style="vertical-align: top;">
                                                     <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Explore Healthcare Services</h3>
                                                     <p style="margin: 0; color: #64748b; font-size: 15px; line-height: 1.5;">
                                                         Discover top hospitals, specialists, and travel coordination services
@@ -151,12 +198,20 @@
                                     <td class="feature-card" style="padding: 25px; background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%); border-radius: 16px;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                                             <tr>
-                                                <td width="50" style="vertical-align: top; padding-right: 20px;">
-                                                    <div class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                                        <span style="color: white; font-size: 18px; font-weight: bold;">🚀</span>
-                                                    </div>
+                                                <td class="feature-icon-container mobile-stack" width="50" style="vertical-align: top; padding-right: 20px;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                                        <tr>
+                                                            <td style="text-align: left;">
+                                                                <table role="presentation" cellspacing="0" cellpadding="0" class="feature-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4A24C4, #7C3AED); border-radius: 12px;">
+                                                                    <tr>
+                                                                        <td style="text-align: center; vertical-align: middle; color: white; font-size: 18px; font-weight: bold;">🚀</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
-                                                <td style="vertical-align: top;">
+                                                <td class="mobile-stack" style="vertical-align: top;">
                                                     <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 18px; font-weight: 600;">Start Your Journey</h3>
                                                     <p style="margin: 0; color: #64748b; font-size: 15px; line-height: 1.5;">
                                                         Begin connecting with quality healthcare providers in Nigeria
