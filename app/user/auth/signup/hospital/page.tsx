@@ -44,6 +44,32 @@ type FieldErrors = {
   agreeToTerms?: string
 }
 
+function humanizeKey(k: string) {
+  return k.replace(/_/g, " ")
+}
+function flattenErrors(obj: any, prefix = ""): string[] {
+  const out: string[] = []
+  if (!obj || typeof obj !== "object") return out
+
+  if (typeof obj.detail === "string") out.push(obj.detail)
+  if (typeof obj.message === "string") out.push(obj.message)
+  if (typeof obj.error === "string") out.push(obj.error)
+
+  for (const [key, val] of Object.entries(obj)) {
+    if (["detail", "message", "error"].includes(key)) continue
+    const label = prefix ? `${prefix} → ${humanizeKey(key)}` : humanizeKey(key)
+
+    if (Array.isArray(val)) {
+      out.push(`${label}: ${val.map(String).join(", ")}`)
+    } else if (val && typeof val === "object") {
+      out.push(...flattenErrors(val as any, label))
+    } else if (typeof val === "string") {
+      out.push(`${label}: ${val}`)
+    }
+  }
+  return Array.from(new Set(out))
+}
+
 export default function HospitalSignupPage() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const router = useRouter()
@@ -90,6 +116,7 @@ export default function HospitalSignupPage() {
   const [loadingCountries, setLoadingCountries] = useState(false)
   const [loadingStates, setLoadingStates] = useState(false)
   const [loadingFacilities, setLoadingFacilities] = useState(false)
+  const [apiErrors, setApiErrors] = useState<string[]>([])
 
   const steps = [
     { number: 1, title: "Basic Information", description: "Provide basic information about your hospital" },
@@ -198,8 +225,13 @@ export default function HospitalSignupPage() {
 
   const validateWebsite = (website: string): string | null => {
     if (!website.trim()) return null // Optional field
-    const urlRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/
-    if (!urlRegex.test(website.replace(/^(https?:\/\/)?(www\.)?/, ""))) {
+
+    // More flexible URL validation that accepts standard domain formats
+    const urlRegex =
+      /^[a-zA-Z0-9]([a-zA-Z0-9\-_]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-_]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/
+    const cleanUrl = website.replace(/^(https?:\/\/)?(www\.)?/, "")
+
+    if (!urlRegex.test(cleanUrl)) {
       return "Please enter a valid website URL (e.g., yourhospital.com)"
     }
     return null
@@ -379,8 +411,6 @@ export default function HospitalSignupPage() {
       setFieldErrors({})
       if (currentStep < 4) setCurrentStep((currentStep + 1) as Step)
       else handleSubmit()
-    } else {
-      setError("Please fix the errors below before continuing")
     }
   }
 
@@ -394,6 +424,7 @@ export default function HospitalSignupPage() {
   const handleSubmit = async () => {
     setIsLoading(true)
     setError("")
+    setApiErrors([])
 
     try {
       let processedWebsite = website.trim()
@@ -440,15 +471,23 @@ export default function HospitalSignupPage() {
         body: JSON.stringify(payload),
       })
 
-      // Save pending email for verify screen if needed
+      // Save pending email and role for verify screen
       if (typeof window !== "undefined") {
         sessionStorage.setItem("pending_email", email.toLowerCase())
+        sessionStorage.setItem("pending_role", "hospital")
       }
 
-      // Redirect to verify page
-      router.replace("/user/auth/verify")
+      // Redirect to verify page with role parameter
+      router.replace("/user/auth/verify?role=hospital")
     } catch (err: any) {
-      setError(err?.message || "Something went wrong. Please try again.")
+      const server = err?.data?.errors ?? err?.data ?? null
+      const list = server ? flattenErrors(server) : []
+      if (list.length) {
+        setApiErrors(list)
+      } else {
+        setApiErrors([])
+        setError(err?.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -514,7 +553,7 @@ export default function HospitalSignupPage() {
                 {steps.map((step) => (
                   <div
                     key={step.number}
-                    className={`flex items-start gap-3 min-w-max lg:min-w-0 p-2 rounded-lg transition-all duration-200 border ${
+                    className={`flex items-start gap-3 min-w-max lg:min-w-0 p-2 rounded-lg transition-all duration-200 border mb-2 ${
                       currentStep === step.number
                         ? "bg-white/25 backdrop-blur-sm border-white/40"
                         : currentStep > step.number
@@ -569,7 +608,17 @@ export default function HospitalSignupPage() {
                 </div>
               </div>
 
-              {error && (
+              {apiErrors.length > 0 && (
+                <div className="p-3 text-xs bg-destructive/10 text-destructive rounded-lg border border-destructive/20 mb-3">
+                  <ul className="list-disc pl-5 space-y-1">
+                    {apiErrors.map((m, i) => (
+                      <li key={i}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {error && apiErrors.length === 0 && (
                 <div className="p-2 text-xs bg-destructive/10 text-destructive rounded-lg border border-destructive/20 mb-3">
                   {error}
                 </div>
