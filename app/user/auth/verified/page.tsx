@@ -18,6 +18,10 @@ export default function VerifiedInfoPage() {
     const r = (params.get("role") || "").toLowerCase().trim()
     if (r === "hospital" || r === "travel-agent" || r === "client") {
       setRole(r)
+      // Store role in sessionStorage for consistency
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("pending_role", r)
+      }
       return
     }
     if (typeof window !== "undefined") {
@@ -28,30 +32,28 @@ export default function VerifiedInfoPage() {
     }
   }, [params])
 
-const copy = useMemo(() => {
-  if (role === "hospital") {
+  const copy = useMemo(() => {
+    if (role === "hospital") {
+      return {
+        title: "Email verified!",
+        body: "Your email has been verified. Please log in to your hospital dashboard and complete your profile to send in your hospital partner application.",
+        cta: "Go to Login",
+      }
+    }
+    if (role === "travel-agent") {
+      return {
+        title: "Email verified!",
+        body: "Your travel agent account has been verified. Please log in to your travel agent dashboard and complete your profile to send in your travel agent partner application.",
+        cta: "Go to Login",
+      }
+    }
+    // client
     return {
       title: "Email verified!",
-      body:
-        "Your email has been verified. Please log in to your dashboard and complete your profile to send in your hospital partner application.",
-      cta: "Go to Login",
+      body: "Your email has been verified successfully. You can now log in to your account.",
+      cta: "Sign in",
     }
-  }
-  if (role === "travel-agent") {
-    return {
-      title: "Email verified!",
-      body:
-        "Your travel agent account has been verified. Please log in to your dashboard and complete your profile to send in your travel agent partner application.",
-      cta: "Go to Login",
-    }
-  }
-  // client
-  return {
-    title: "Email verified!",
-    body: "Your email has been verified successfully. You can now log in to your account.",
-    cta: "Sign in",
-  }
-}, [role])
+  }, [role])
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">

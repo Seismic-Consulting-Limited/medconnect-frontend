@@ -1,8 +1,9 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, Heart } from "lucide-react"
+import { Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, Plane } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -51,11 +52,13 @@ type Service = { id: number; name: string }
 
 export default function TravelAgentSignupPage() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
+  const router = useRouter()
+  const [showCancelModal, setShowCancelModal] = useState(false)
 
   // Step 1: Basic Information
   const [agencyName, setAgencyName] = useState("")
   const [registrationNumber, setRegistrationNumber] = useState("") // Added registration number field
-  const [yearEstablished, setYearEstablished] = useState("")
+  const [yearFounded, setyearFounded] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
   const [countryId, setCountryId] = useState<string>("")
@@ -95,7 +98,6 @@ export default function TravelAgentSignupPage() {
   const [apiErrors, setApiErrors] = useState<string[]>([])
 
   const { signup } = useAuth()
-  const router = useRouter()
 
   const validateField = (fieldName: string, value: string): string => {
     switch (fieldName) {
@@ -150,6 +152,7 @@ export default function TravelAgentSignupPage() {
         return ""
 
       case "yearsOfExperience":
+        if (!value.trim()) return "Years of experience is required"
         if (value && (isNaN(Number(value)) || Number(value) < 0)) {
           return "Years of experience must be a positive number"
         }
@@ -194,6 +197,9 @@ export default function TravelAgentSignupPage() {
         break
       case "yearsOfExperience":
         setYearsOfExperience(value)
+        break
+      case "yearFounded":
+        setyearFounded(value)
         break
     }
   }
@@ -262,6 +268,26 @@ export default function TravelAgentSignupPage() {
     })()
   }, [])
 
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault()
+      if (currentStep > 1) {
+        setCurrentStep((currentStep - 1) as Step)
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        router.push("/user/auth/signup")
+      }
+    }
+
+    // Push initial state to enable back button handling
+    window.history.pushState(null, "", window.location.href)
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [currentStep, router])
+
   // Fetch states for selected country (for address state select)
   useEffect(() => {
     if (!countryId) {
@@ -301,8 +327,8 @@ export default function TravelAgentSignupPage() {
           errors.registrationNumber = "Registration number must be at least 3 characters"
         }
 
-        if (!yearEstablished) {
-          errors.yearEstablished = "Year established is required"
+        if (!yearFounded) {
+          errors.yearFounded = "Year Founded is required"
         }
 
         if (!address.trim()) {
@@ -321,16 +347,16 @@ export default function TravelAgentSignupPage() {
           errors.state = "Please select a state"
         }
 
-        if (!email.trim()) {
-          errors.email = "Email is required"
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          errors.email = "Please enter a valid email address"
-        }
-
         if (!phone.trim()) {
           errors.phone = "Phone number is required"
         } else if (!/^[+]?[0-9\s\-()]{10,}$/.test(phone)) {
           errors.phone = "Please enter a valid phone number"
+        }
+
+        if (!email.trim()) {
+          errors.email = "Email is required"
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errors.email = "Please enter a valid email address"
         }
 
         if (postalCode && !/^\d+$/.test(postalCode)) {
@@ -352,6 +378,12 @@ export default function TravelAgentSignupPage() {
         } else if (agencyDescription.trim().length < 20) {
           errors.agencyDescription = "Please provide a more detailed description (at least 20 characters)"
         }
+
+        if (!yearsOfExperience || String(yearsOfExperience).trim() === "") {
+          errors.yearsOfExperience = "Years of experience is required"
+        } else if (isNaN(Number(yearsOfExperience)) || Number(yearsOfExperience) < 0) {
+          errors.yearsOfExperience = "Years of experience must be a positive number"
+        }
         break
 
       case 2:
@@ -368,7 +400,7 @@ export default function TravelAgentSignupPage() {
         const confirmPasswordError = validateField("confirmPassword", confirmPassword)
         if (passwordError) errors.password = passwordError
         if (confirmPasswordError) errors.confirmPassword = confirmPasswordError
-        if (!agreeToTerms) errors.agreeToTerms = "Please accept the Terms of Service and Privacy Policy"
+        if (!agreeToTerms) errors.agreeToTerms = "Please agree to the terms and conditions"
         break
     }
 
@@ -385,17 +417,48 @@ export default function TravelAgentSignupPage() {
 
     switch (currentStep) {
       case 1:
-        return !!(
-          agencyName.trim() &&
-          agencyName.trim().length >= 5 &&
-          registrationNumber.trim() &&
-          registrationNumber.trim().length >= 3 &&
-          yearEstablished &&
-          address.trim() &&
-          city.trim() &&
-          countryId &&
-          stateId
+        const step1Valid = !!(
+          (
+            agencyName.trim() &&
+            agencyName.trim().length >= 5 &&
+            registrationNumber.trim() &&
+            registrationNumber.trim().length >= 3 &&
+            yearFounded &&
+            address.trim() &&
+            city.trim() &&
+            countryId &&
+            stateId &&
+            phone.trim() &&
+            email.trim() &&
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+            yearsOfExperience &&
+            String(yearsOfExperience).trim() !== "" &&
+            !isNaN(Number(yearsOfExperience)) &&
+            Number(yearsOfExperience) >= 0
+          ) // Email format validation
         )
+        console.log("[v0] Step 1 validation details:", {
+          agencyName: agencyName.trim(),
+          agencyNameLength: agencyName.trim().length,
+          registrationNumber: registrationNumber.trim(),
+          registrationNumberLength: registrationNumber.trim().length,
+          yearFounded,
+          address: address.trim(),
+          city: city.trim(),
+          countryId,
+          stateId,
+          phone: phone.trim(),
+          email: email.trim(),
+          emailValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+          yearsOfExperience,
+          yearsOfExperienceValid:
+            yearsOfExperience &&
+            String(yearsOfExperience).trim() !== "" &&
+            !isNaN(Number(yearsOfExperience)) &&
+            Number(yearsOfExperience) >= 0,
+          overall: step1Valid,
+        })
+        return step1Valid
       case 2:
         return destinationStateIds.length > 0 && serviceIds.length > 0
       case 3:
@@ -437,79 +500,67 @@ export default function TravelAgentSignupPage() {
   }
 
   const handleSubmit = async () => {
-    if (!agreeToTerms) {
-      setFieldErrors((prev) => ({ ...prev, agreeToTerms: "Please accept the Terms of Service and Privacy Policy" }))
-      setIsLoading(false)
-      return
-    }
+    if (!isCurrentStepValid()) return
 
     setIsLoading(true)
     setError("")
     setApiErrors([])
 
-    let formattedWebsite = website.trim()
-    if (formattedWebsite) {
-      if (!formattedWebsite.startsWith("http://") && !formattedWebsite.startsWith("https://")) {
-        if (!formattedWebsite.startsWith("www.")) {
-          formattedWebsite = `https://www.${formattedWebsite}`
-        } else {
-          formattedWebsite = `https://${formattedWebsite}`
-        }
-      } else if (!formattedWebsite.includes("www.")) {
-        formattedWebsite = formattedWebsite.replace(/^https?:\/\//, "https://www.")
-      }
-    }
-
-    // Build payload per your backend example
-    const payload = {
-      email,
-      password,
-      terms_of_service_agreement_checked: agreeToTerms,
-      account_type: "travel-agent",
-      name: agencyName,
-      registration_number: registrationNumber,
-      destinations: destinationStateIds, // state IDs
-      year_founded: yearEstablished,
-      years_of_experience: typeof yearsOfExperience === "string" ? Number(yearsOfExperience || 0) : yearsOfExperience,
-      phone_number_1: phone,
-      description: agencyDescription,
-
-      location: {
-        address_1: address,
-        city,
-        state_id: stateId ? Number(stateId) : undefined,
-        postal_code: postalCode || undefined,
-      },
-
-      // not required
-      website_url: formattedWebsite || undefined,
-      languages: languageIds,
-      services: serviceIds,
-
-      hospital_partners: hospitalPartners
-        ? hospitalPartners
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-
-      extra_data: {
-        services: [], // if you collect extra free-text services, put them here
-      },
-    }
-
     try {
-      await apiRequest(API_ENDPOINTS.AUTH.SIGNUP_TRAVEL_AGENT, {
+      let processedWebsite = website.trim()
+      if (processedWebsite) {
+        if (!processedWebsite.startsWith("http://") && !processedWebsite.startsWith("https://")) {
+          if (!processedWebsite.startsWith("www.")) {
+            processedWebsite = `https://www.${processedWebsite}`
+          } else {
+            processedWebsite = `https://${processedWebsite}`
+          }
+        } else if (!processedWebsite.includes("www.")) {
+          processedWebsite = processedWebsite.replace(/^https?:\/\//, "https://www.")
+        }
+      }
+
+      const payload = {
+        email: email.trim(),
+        password,
+        terms_of_service_agreement_checked: agreeToTerms,
+        name: agencyName.trim(),
+        registration_number: registrationNumber.trim(),
+        year_founded: String(yearFounded),
+        phone_number_1: phone.trim(),
+        website_url: processedWebsite || undefined,
+        description: agencyDescription.trim(),
+        location: {
+          country_id: Number(countryId),
+          state_id: Number(stateId),
+          address_1: address.trim(),
+          city: city.trim(),
+          postal_code: postalCode.trim() || undefined,
+        },
+        destination_state_ids: destinationStateIds,
+        service_ids: serviceIds,
+        language_ids: languageIds,
+        hospital_partners: hospitalPartners.trim() || undefined,
+        years_of_experience: yearsOfExperience || undefined,
+      } as const
+
+      const response: any = await apiRequest(API_ENDPOINTS.AUTH.SIGNUP_TRAVEL_AGENT, {
         method: HTTP_METHODS.POST,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
 
+      if (response && (response.message || response.detail)) {
+        toast.success(String(response.message || response.detail))
+      }
+
+      // Save pending email and role for verify screen
       if (typeof window !== "undefined") {
         sessionStorage.setItem("pending_email", email.toLowerCase())
         sessionStorage.setItem("pending_role", "travel-agent")
       }
 
+      // Redirect to verify page with role parameter
       router.replace("/user/auth/verify?role=travel-agent")
     } catch (err: any) {
       const server = err?.data?.errors ?? err?.data ?? null
@@ -554,6 +605,70 @@ export default function TravelAgentSignupPage() {
                 {fieldErrors.agencyName && <p className="text-xs text-destructive">{fieldErrors.agencyName}</p>}
               </div>
               <div className="space-y-1">
+                <Label htmlFor="yearFounded" className="text-sm font-semibold">
+                  Year Founded *
+                </Label>
+                <Select value={yearFounded} onValueChange={(value) => handleFieldChange("yearFounded", value)}>
+                  <SelectTrigger className="h-10 text-sm">
+                    <SelectValue placeholder="Select Year" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-48">
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.yearFounded && <p className="text-xs text-destructive">{fieldErrors.yearFounded}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="phone" className="text-sm font-semibold">
+                  Phone Number *
+                </Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => handleFieldChange("phone", e.target.value)}
+                  onBlur={(e) => handleFieldBlur("phone", e.target.value)}
+                  className="h-10 text-sm"
+                />
+                {fieldErrors.phone && <p className="text-xs text-destructive">{fieldErrors.phone}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm font-semibold">
+                  Email Address *
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => handleFieldChange("email", e.target.value)}
+                  onBlur={(e) => handleFieldBlur("email", e.target.value)}
+                  className="h-10 text-sm"
+                />
+                {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="website" className="text-sm font-semibold">
+                  Website
+                </Label>
+                <Input
+                  id="website"
+                  value={website}
+                  onChange={(e) => handleFieldChange("website", e.target.value)}
+                  onBlur={(e) => handleFieldBlur("website", e.target.value)}
+                  className="h-10 text-sm"
+                />
+                {fieldErrors.website && <p className="text-xs text-destructive">{fieldErrors.website}</p>}
+              </div>
+              <div className="space-y-1">
                 <Label htmlFor="registrationNumber" className="text-sm font-semibold">
                   Registration Number *
                 </Label>
@@ -568,25 +683,6 @@ export default function TravelAgentSignupPage() {
                   <p className="text-xs text-destructive">{fieldErrors.registrationNumber}</p>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="yearEstablished" className="text-sm font-semibold">
-                Year Established *
-              </Label>
-              <Select value={yearEstablished} onValueChange={setYearEstablished}>
-                <SelectTrigger className="h-10 text-sm">
-                  <SelectValue placeholder="Select Year" />
-                </SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {years.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldErrors.yearEstablished && <p className="text-xs text-destructive">{fieldErrors.yearEstablished}</p>}
             </div>
 
             <div className="space-y-1">
@@ -666,50 +762,6 @@ export default function TravelAgentSignupPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="phone" className="text-sm font-semibold">
-                  Phone Number *
-                </Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => handleFieldChange("phone", e.target.value)}
-                  onBlur={(e) => handleFieldBlur("phone", e.target.value)}
-                  className="h-10 text-sm"
-                />
-                {fieldErrors.phone && <p className="text-xs text-destructive">{fieldErrors.phone}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="email" className="text-sm font-semibold">
-                  Email Address *
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => handleFieldChange("email", e.target.value)}
-                  onBlur={(e) => handleFieldBlur("email", e.target.value)}
-                  className="h-10 text-sm"
-                />
-                {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="website" className="text-sm font-semibold">
-                  Website
-                </Label>
-                <Input
-                  id="website"
-                  value={website}
-                  onChange={(e) => handleFieldChange("website", e.target.value)}
-                  onBlur={(e) => handleFieldBlur("website", e.target.value)}
-                  placeholder="example.com"
-                  className="h-10 text-sm"
-                />
-                {fieldErrors.website && <p className="text-xs text-destructive">{fieldErrors.website}</p>}
-              </div>
-            </div>
-
             <div className="space-y-1">
               <Label htmlFor="agencyDescription" className="text-sm font-semibold">
                 Agency Description *
@@ -722,6 +774,22 @@ export default function TravelAgentSignupPage() {
               />
               {fieldErrors.agencyDescription && (
                 <p className="text-xs text-destructive">{fieldErrors.agencyDescription}</p>
+              )}
+            </div>
+
+            <div className="space-y-1 max-w-md">
+              <Label htmlFor="yearsOfExperience" className="text-sm font-semibold">
+                Years of Experience
+              </Label>
+              <Input
+                id="yearsOfExperience"
+                value={String(yearsOfExperience)}
+                onChange={(e) => handleFieldChange("yearsOfExperience", e.target.value)}
+                onBlur={(e) => handleFieldBlur("yearsOfExperience", e.target.value)}
+                className="h-10 text-sm"
+              />
+              {fieldErrors.yearsOfExperience && (
+                <p className="text-xs text-destructive">{fieldErrors.yearsOfExperience}</p>
               )}
             </div>
           </div>
@@ -880,22 +948,6 @@ export default function TravelAgentSignupPage() {
                 <p className="text-xs text-destructive">{fieldErrors.hospitalPartners}</p>
               )}
             </div>
-
-            <div className="space-y-1 max-w-md">
-              <Label htmlFor="yearsOfExperience" className="text-sm font-semibold">
-                Years of Experience (optional)
-              </Label>
-              <Input
-                id="yearsOfExperience"
-                value={String(yearsOfExperience)}
-                onChange={(e) => handleFieldChange("yearsOfExperience", e.target.value)}
-                onBlur={(e) => handleFieldBlur("yearsOfExperience", e.target.value)}
-                className="h-10 text-sm"
-              />
-              {fieldErrors.yearsOfExperience && (
-                <p className="text-xs text-destructive">{fieldErrors.yearsOfExperience}</p>
-              )}
-            </div>
           </div>
         )
 
@@ -1025,7 +1077,7 @@ export default function TravelAgentSignupPage() {
             {/* Sidebar */}
             <div className="hidden lg:block w-full lg:w-1/3 bg-primary p-3 sm:p-4 text-white">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Plane className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="text-base sm:text-lg font-bold">MedKonnect</span>
               </div>
 
@@ -1073,7 +1125,9 @@ export default function TravelAgentSignupPage() {
               </div>
 
               <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/20 hidden lg:block">
-                <button className="text-white/80 text-xs hover:text-white">Cancel</button>
+                <button onClick={() => setShowCancelModal(true)} className="text-white/80 text-xs hover:text-white">
+                  Cancel
+                </button>
                 <div className="mt-2">
                   <span className="text-white/60 text-xs">Need help? </span>
                   <button className="text-white text-xs hover:underline">Contact Support</button>
@@ -1145,7 +1199,7 @@ export default function TravelAgentSignupPage() {
                   ) : (
                     <>
                       <span>Next</span>
-                      <span className="text-white/70 hidden sm:inline">| {steps[currentStep - 1]?.title}</span>
+                      <span className="text-white/70 hidden sm:inline">| {steps[currentStep]?.title}</span>
                       <ArrowRight className="w-3 h-3" />
                     </>
                   )}
@@ -1155,6 +1209,23 @@ export default function TravelAgentSignupPage() {
           </div>
         </Card>
       </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-2">Cancel Registration?</h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to cancel? All your progress will be lost.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+                Continue Registration
+              </Button>
+              <Button onClick={() => router.push("/user/auth/signup")}>Yes, Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

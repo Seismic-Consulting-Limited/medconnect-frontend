@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -24,7 +25,7 @@ type Facility = { id: number; name: string }
 
 type FieldErrors = {
   hospitalName?: string
-  yearEstablished?: string
+  yearFounded?: string
   address?: string
   city?: string
   postalCode?: string
@@ -73,10 +74,11 @@ function flattenErrors(obj: any, prefix = ""): string[] {
 export default function HospitalSignupPage() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const router = useRouter()
+  const [showCancelModal, setShowCancelModal] = useState(false)
 
   // Step 1: Basic Information
   const [hospitalName, setHospitalName] = useState("")
-  const [yearEstablished, setYearEstablished] = useState("")
+  const [yearFounded, setyearFounded] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
   const [postalCode, setPostalCode] = useState("")
@@ -198,6 +200,26 @@ export default function HospitalSignupPage() {
     }
   }, [])
 
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault()
+      if (currentStep > 1) {
+        setCurrentStep((currentStep - 1) as Step)
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        router.push("/user/auth/signup")
+      }
+    }
+
+    // Push initial state to enable back button handling
+    window.history.pushState(null, "", window.location.href)
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [currentStep, router])
+
   const toggleFacility = (id: number, checked: boolean) => {
     setFacilityIds((prev) => (checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id)))
   }
@@ -267,8 +289,8 @@ export default function HospitalSignupPage() {
         }
 
         // Year validation
-        if (!yearEstablished) {
-          errors.yearEstablished = "Year founded is required"
+        if (!yearFounded) {
+          errors.yearFounded = "Year founded is required"
         }
 
         // Address validation
@@ -360,13 +382,13 @@ export default function HospitalSignupPage() {
     return Object.keys(errors).length === 0
   }
 
-  const isCurrentStepValid = (step: Step): boolean => {
-    switch (step) {
+  const isCurrentStepValid = (): boolean => {
+    switch (currentStep) {
       case 1:
         return !!(
           hospitalName.trim() &&
           hospitalName.trim().length >= 5 &&
-          yearEstablished &&
+          yearFounded &&
           address.trim() &&
           address.trim().length >= 10 &&
           countryId &&
@@ -445,7 +467,7 @@ export default function HospitalSignupPage() {
         password,
         terms_of_service_agreement_checked: agreeToTerms,
         name: hospitalName.trim(),
-        year_founded: String(yearEstablished),
+        year_founded: String(yearFounded),
         phone_number_1: phone1.trim(),
         phone_number_2: phone2.trim() || undefined,
         website_url: processedWebsite || undefined,
@@ -465,11 +487,15 @@ export default function HospitalSignupPage() {
         },
       } as const
 
-      await apiRequest(API_ENDPOINTS.AUTH.SIGNUP_HOSPITAL, {
+      const response: any = await apiRequest(API_ENDPOINTS.AUTH.SIGNUP_HOSPITAL, {
         method: HTTP_METHODS.POST,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
+
+      if (response && (response.message || response.detail)) {
+        toast.success(String(response.message || response.detail))
+      }
 
       // Save pending email and role for verify screen
       if (typeof window !== "undefined") {
@@ -585,7 +611,9 @@ export default function HospitalSignupPage() {
               </div>
 
               <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/20 hidden lg:block">
-                <button className="text-white/80 text-xs hover:text-white">Cancel</button>
+                <button onClick={() => setShowCancelModal(true)} className="text-white/80 text-xs hover:text-white">
+                  Cancel
+                </button>
                 <div className="mt-2">
                   <span className="text-white/60 text-xs">Need help? </span>
                   <button className="text-white text-xs hover:underline">Contact Support</button>
@@ -652,12 +680,12 @@ export default function HospitalSignupPage() {
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="yearEstablished" className="text-sm font-semibold">
+                        <Label htmlFor="yearFounded" className="text-sm font-semibold">
                           Year Founded *
                         </Label>
-                        <Select value={yearEstablished} onValueChange={setYearEstablished}>
+                        <Select value={yearFounded} onValueChange={setyearFounded}>
                           <SelectTrigger
-                            className={`h-8 text-sm ${fieldErrors.yearEstablished ? "border-destructive" : ""}`}
+                            className={`h-8 text-sm ${fieldErrors.yearFounded ? "border-destructive" : ""}`}
                           >
                             <SelectValue placeholder="Select Year" />
                           </SelectTrigger>
@@ -669,8 +697,8 @@ export default function HospitalSignupPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        {fieldErrors.yearEstablished && (
-                          <p className="text-xs text-destructive">{fieldErrors.yearEstablished}</p>
+                        {fieldErrors.yearFounded && (
+                          <p className="text-xs text-destructive">{fieldErrors.yearFounded}</p>
                         )}
                       </div>
                     </div>
@@ -1066,10 +1094,10 @@ export default function HospitalSignupPage() {
                 </Button>
 
                 <Button
-                  onClick={handleNext}
+                  onClick={currentStep === 4 ? handleSubmit : handleNext}
                   disabled={isLoading}
                   className={`${
-                    !isLoading && isCurrentStepValid(currentStep)
+                    !isLoading && isCurrentStepValid()
                       ? "bg-primary hover:bg-primary/90"
                       : "bg-gray-400 hover:bg-gray-400"
                   } text-white flex items-center justify-center gap-2 h-8 text-sm order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1084,7 +1112,7 @@ export default function HospitalSignupPage() {
                   ) : (
                     <>
                       <span>Next</span>
-                      <span className="text-white/70 hidden sm:inline">| {steps[currentStep - 1]?.title}</span>
+                      <span className="text-white/70 hidden sm:inline">| {steps[currentStep]?.title}</span>
                       <ArrowRight className="w-3 h-3" />
                     </>
                   )}
@@ -1094,6 +1122,23 @@ export default function HospitalSignupPage() {
           </div>
         </Card>
       </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-2">Cancel Registration?</h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to cancel? All your progress will be lost.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+                Continue Registration
+              </Button>
+              <Button onClick={() => router.push("/user/auth/signup")}>Yes, Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

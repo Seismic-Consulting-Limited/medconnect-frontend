@@ -16,7 +16,7 @@ export function SiteHeader() {
     if (path === "/#how-it-works") {
       return pathname === "/"
     }
-    if (path === "/hospitals" && pathname?.startsWith("/hospital/")) {
+    if (path === "/hospitals" && pathname?.startsWith("/hospitals/")) {
       return true
     }
     return pathname?.startsWith(path)

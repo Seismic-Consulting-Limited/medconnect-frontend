@@ -47,6 +47,7 @@ export default function VerifyEmailPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState<number>(0);
+  const [hasAutoResent, setHasAutoResent] = useState(false);
 
   // Load email from ?email= or sessionStorage
   useEffect(() => {
@@ -65,6 +66,48 @@ export default function VerifyEmailPage() {
       setEmail(saved);
     }
   }, [params, router]);
+
+  useEffect(() => {
+    const shouldAutoResend =
+      params.get("from") === "login" && email && !hasAutoResent;
+
+    if (shouldAutoResend) {
+      setHasAutoResent(true);
+      handleAutoResend();
+    }
+  }, [email, params, hasAutoResent]);
+
+  const handleAutoResend = async () => {
+    if (!email) return;
+
+    setIsResending(true);
+    try {
+      const res = await authService.resendEmailOtp(email);
+      const msg =
+        res?.message ??
+        res?.detail ??
+        "A new verification code has been sent to your email.";
+      toast.success(String(msg));
+      setResendCooldown(30);
+      const id = setInterval(() => {
+        setResendCooldown((v) => {
+          if (v <= 1) {
+            clearInterval(id as any);
+            return 0;
+          }
+          return v - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Could not send verification code. Please try again."
+      );
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const canResend = useMemo(
     () => resendCooldown <= 0 && !isResending,
@@ -126,7 +169,9 @@ export default function VerifyEmailPage() {
     try {
       const res = await authService.resendEmailOtp(email);
       const msg =
-        res?.message ?? res?.detail ?? "A new code has been sent to your email.";
+        res?.message ??
+        res?.detail ??
+        "A new code has been sent to your email.";
       toast.success(String(msg));
       setResendCooldown(30);
       const id = setInterval(() => {
@@ -140,7 +185,9 @@ export default function VerifyEmailPage() {
       }, 1000);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Could not resend code. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Could not resend code. Please try again."
       );
     } finally {
       setIsResending(false);
@@ -198,7 +245,7 @@ export default function VerifyEmailPage() {
               variant="outline"
               onClick={handleResend}
               disabled={!canResend || !email}
-              className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white"
+              className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white bg-transparent"
             >
               {isResending ? (
                 <>

@@ -37,7 +37,7 @@ export default function AgentSignupPage() {
     phone: "",
     email: "",
     website: "",
-    yearEstablished: "",
+    yearFounded: "",
     description: "",
     // Services & Destinations
     destinations: [] as string[],
@@ -173,11 +173,11 @@ export default function AgentSignupPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="yearEstablished">Year Established</Label>
+                          <Label htmlFor="yearFounded">Year Founded</Label>
                           <Input
-                            id="yearEstablished"
-                            name="yearEstablished"
-                            value={formData.yearEstablished}
+                            id="yearFounded"
+                            name="yearFounded"
+                            value={formData.yearFounded}
                             onChange={handleInputChange}
                             placeholder="e.g., 2010"
                           />

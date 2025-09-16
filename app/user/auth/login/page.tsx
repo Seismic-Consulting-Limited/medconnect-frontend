@@ -1,7 +1,9 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -13,8 +15,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,49 @@ import { authService } from "@/lib/auth";
 import { toast } from "sonner";
 
 type Tab = "password" | "otp";
+
+function getDashboardPath(role?: string) {
+  switch ((role || "").toLowerCase()) {
+    case "hospital":
+      return "/dashboard/hospital";
+    case "travel_agent":
+    case "travel-agent":
+      return "/dashboard/travel-agent";
+    default:
+      return "/dashboard/client";
+  }
+}
+
+function setRoleCookie(role?: string) {
+  if (!role) return;
+  // 30 days; adjust as needed. HttpOnly would be ideal from server, but this works for now.
+  document.cookie = `role=${encodeURIComponent(role)}; path=/; max-age=${
+    60 * 60 * 24 * 30
+  }`;
+}
+
+function getNextParam(): string | null {
+  if (typeof window === "undefined") return null;
+  const url = new URL(window.location.href);
+  return url.searchParams.get("next");
+}
+
+function routeAfterLogin(router: ReturnType<typeof useRouter>, payload: any) {
+  const next = getNextParam();
+  const role =
+    payload?.user?.role ??
+    payload?.role ??
+    payload?.data?.user?.role ??
+    payload?.data?.role;
+
+  if (role) setRoleCookie(role);
+
+  if (next) {
+    router.replace(next);
+  } else {
+    router.replace(getDashboardPath(role));
+  }
+}
 
 export default function LoginPage() {
   const [tab, setTab] = useState<Tab>("password");
@@ -60,7 +103,21 @@ export default function LoginPage() {
   // If already logged in, never show this page
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.replace("/dashboard");
+      const next = getNextParam();
+      if (next) {
+        router.replace(next);
+        return;
+      }
+      // Try to read role from cookie (set previously on a successful login)
+      const roleCookie =
+        typeof document !== "undefined"
+          ? document.cookie
+              .split("; ")
+              .find((c) => c.startsWith("role="))
+              ?.split("=")[1]
+          : undefined;
+      const role = roleCookie ? decodeURIComponent(roleCookie) : undefined;
+      router.replace(getDashboardPath(role));
     }
   }, [authLoading, isAuthenticated, router]);
 
@@ -96,13 +153,39 @@ export default function LoginPage() {
         payload?.user?.emailVerified === false;
 
       if (needsVerify) {
-        const q = new URLSearchParams({ email: email.toLowerCase() });
+        const q = new URLSearchParams({
+          email: email.toLowerCase(),
+          from: "login",
+        });
         router.replace(`/user/auth/verify?${q.toString()}`);
       } else {
-        router.replace("/dashboard");
+        routeAfterLogin(router, payload);
       }
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : "");
+      if (err instanceof Error) {
+        const errorMessage = err.message;
+
+        // Check if this is the unverified user response
+        if (
+          errorMessage ===
+          "User not verified, an OTP has been sent to your email"
+        ) {
+          setPasswordError(errorMessage);
+
+          // Redirect after 3 seconds
+          setTimeout(() => {
+            const q = new URLSearchParams({
+              email: email.toLowerCase(),
+              from: "login",
+            });
+            router.replace(`/user/auth/verify?${q.toString()}`);
+          }, 3000);
+        } else {
+          setPasswordError(errorMessage);
+        }
+      } else {
+        setPasswordError("Login failed");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +254,9 @@ export default function LoginPage() {
 
       router.replace(
         needsVerify
-          ? `/user/auth/verify?email=${encodeURIComponent(email.toLowerCase())}`
+          ? `/user/auth/verify?email=${encodeURIComponent(
+              email.toLowerCase()
+            )}&from=login`
           : "/dashboard"
       );
     } catch (err) {
@@ -465,7 +550,7 @@ export default function LoginPage() {
                       variant="outline"
                       onClick={handleResendOtp}
                       disabled={!canResend || !email}
-                      className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white"
+                      className="w-full h-12 hover:bg-primary hover:text-white focus:bg-primary focus:text-white active:bg-primary active:text-white bg-transparent"
                     >
                       {isResending ? (
                         <>

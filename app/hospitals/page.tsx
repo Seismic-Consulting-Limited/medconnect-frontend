@@ -1,8 +1,25 @@
+// app/(marketing)/hospitals/page.tsx
 "use client"
+
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, CheckCircle, ChevronDown, Globe, Heart, ImageIcon, MapPin, Search, Shield, Sliders, Star, Stethoscope, X, BarChart2 } from 'lucide-react'
+import {
+  ArrowRight,
+  CheckCircle,
+  ChevronDown,
+  Globe,
+  Heart,
+  ImageIcon,
+  MapPin,
+  SearchIcon,
+  Sliders,
+  Star,
+  Stethoscope,
+  X,
+  BarChart2,
+} from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,315 +28,290 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ResponsiveContainer } from "@/components/responsive-container"
 import { SoftGate } from "@/components/soft-gate"
 import { useViewTracker } from "@/hooks/use-view-tracker"
 import { HospitalComparison } from "@/components/hospital-comparison"
-import { InsuranceCoverageChecker } from "@/components/insurance-coverage-checker"
+import { apiRequest } from "@/lib/utils/api-request"
+import { API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants"
 
-// Consistent Sample hospital data for Nigeria with original images
-const hospitals = [
-  {
-    id: "1",
-    name: "Lagos University Teaching Hospital (LUTH)",
-    location: "Lagos, Nigeria",
-    specialties: ["Cardiology", "Orthopedics", "Oncology", "Neurology"],
-    rating: 4.5,
-    reviews: 320,
-    image: "/bangkok-hospital-exterior.png", // Original image path
-    description:
-      "A premier federal teaching hospital in Nigeria, offering comprehensive medical services with a focus on advanced research and patient care.",
-    price: "$$",
-    languages: ["English", "Yoruba", "Hausa", "Igbo"],
-    accreditations: ["MDCN", "NHIS", "ISO 9001"],
-    waitTime: "Low",
-  },
-  {
-    id: "2",
-    name: "Reddington Hospital",
-    location: "Lagos, Nigeria",
-    specialties: ["Cardiac Surgery", "Gastroenterology", "Fertility Treatment", "Cosmetic Surgery"],
-    rating: 4.7,
-    reviews: 210,
-    image: "/indira-gandhi-hospital-exterior.png", // Original image path
-    description:
-      "A state-of-the-art private hospital in Lagos, known for its advanced cardiac care, minimally invasive surgeries, and personalized patient experience.",
-    price: "$$",
-    languages: ["English", "French", "Igbo"],
-    accreditations: ["MDCN", "NHIS", "COHSASA"],
-    waitTime: "Medium",
-  },
-  {
-    id: "3",
-    name: "National Hospital Abuja",
-    location: "Abuja, Nigeria",
-    specialties: ["Pediatrics", "Obstetrics & Gynecology", "Neurosurgery", "Urology"],
-    rating: 4.6,
-    reviews: 155,
-    image: "/modern-hospital-exterior.png", // Original image path
-    description:
-      "A leading federal hospital in Nigeria's capital, providing specialized medical services and a strong focus on maternal and child health.",
-    price: "$",
-    languages: ["English", "Hausa", "Yoruba", "French"],
-    accreditations: ["MDCN", "NHIS", "NMA"],
-    waitTime: "Medium",
-  },
-  {
-    id: "4",
-    name: "Ibadan University Teaching Hospital",
-    location: "Ibadan, Nigeria",
-    specialties: ["Fertility Treatment", "Ophthalmology", "ENT"],
-    rating: 4.5,
-    reviews: 210,
-    image: "/modern-hospital.png", // Original image path (from previous context)
-    description:
-      "A renowned teaching hospital with a strong focus on research and advanced medical training, offering specialized treatments.",
-    price: "$",
-    languages: ["English", "Yoruba"],
-    accreditations: ["JCI"],
-    waitTime: "Low",
-  },
-  {
-    id: "5",
-    name: "Kano Medical City",
-    location: "Kano, Nigeria",
-    specialties: ["Orthopedics", "Plastic Surgery", "Urology"],
-    rating: 4.7,
-    reviews: 195,
-    image: "/singapore-hospital-exterior.png", // Original image path (from previous context)
-    description:
-      "A modern medical complex providing a wide range of surgical and non-surgical treatments with a commitment to patient safety and quality.",
-    price: "$$",
-    languages: ["English", "Hausa"],
-    accreditations: ["ISO 9001"],
-    waitTime: "Low",
-  },
-  {
-    id: "6",
-    name: "Enugu Health Centre",
-    location: "Enugu, Nigeria",
-    specialties: ["Pediatrics", "Dental Care", "General Practice"],
-    rating: 4.4,
-    reviews: 120,
-    image: "/placeholder.svg?key=1lc0z", // Original image path (from previous context)
-    description:
-      "A community-focused health center offering primary and specialized care for families, with a friendly and experienced team.",
-    price: "$",
-    languages: ["English", "Igbo"],
-    accreditations: ["JCI"],
-    waitTime: "Medium",
-  },
-]
-
-// Sample specialty data - Updated for Nigerian context
-const specialties = [
+// ---------- Hardcoded Top Filters ----------
+const TOP_SPECIALTIES_PRESET = [
   "Cardiology",
   "Orthopedics",
-  "Oncology",
   "Neurology",
-  "Fertility Treatment",
-  "Plastic Surgery",
-  "Dental Care",
-  "Ophthalmology",
+  "Oncology",
   "Gastroenterology",
-  "Dermatology",
-  "Urology",
+  "Fertility",
   "Pediatrics",
-  "Cardiac Surgery",
   "Obstetrics & Gynecology",
-  "Neurosurgery",
 ]
 
-// Sample locations - Updated for Nigerian context
-const locations = [
-  "Lagos, Nigeria",
-  "Abuja, Nigeria",
-  "Port Harcourt, Nigeria",
-  "Ibadan, Nigeria",
-  "Kano, Nigeria",
-  "Enugu, Nigeria",
-]
+const TOP_LOCATIONS_PRESET = ["Lagos", "Abuja", "Ibadan", "Port Harcourt", "Kano", "Enugu", "Benin City", "Abeokuta"]
 
-// Sample accreditations - Updated for Nigerian context
-const accreditations = ["JCI", "ISO 9001", "MDCN", "NHIS", "COHSASA", "NMA", "Local Accreditation Body (LAB)"]
-
-const PremiumContentOverlay = ({ type, height }: { type: string; height: string }) => {
-  return (
-    <div className={`relative ${height} w-full overflow-hidden rounded-lg bg-muted`}>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-6 w-6 text-muted-foreground"
-          >
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-          <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-semibold">
-            Premium
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+// ---------- Types ----------
+type HospitalDTO = {
+  id: string | number
+  name: string
+  description?: string
+  city?: string
+  state?: string
+  country?: string
+  address_1?: string
+  rating?: number
+  reviews_count?: number
+  cover_image_url?: string
+  logo_url?: string
+  specialties?: Array<{ name: string } | string>
+  accreditations?: Array<{ name: string } | string>
+  price_tier?: 1 | 2 | 3 | "$" | "$$" | "$$$"
+  languages?: string[]
 }
 
+type HospitalsListResponse = {
+  data?:
+    | {
+        results?: HospitalDTO[]
+        next?: string | null
+        previous?: string | null
+      }
+    | HospitalDTO[]
+  next?: string | null
+  previous?: string | null
+  page?: number
+  next_page?: number | null
+  message?: string
+  detail?: string
+}
+
+// ---------- Mapping helpers ----------
+function toArrayOfStrings<T>(v: Array<{ name: string } | string> | undefined): string[] {
+  if (!v) return []
+  return v.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean) as string[]
+}
+
+function mapPriceTier(tier: HospitalDTO["price_tier"]): "$" | "$$" | "$$$" {
+  if (tier === 1 || tier === "$") return "$"
+  if (tier === 2 || tier === "$$") return "$$"
+  if (tier === 3 || tier === "$$$") return "$$$"
+  return "$$"
+}
+
+type HospitalUI = {
+  id: string
+  name: string
+  description: string
+  location: string
+  image?: string
+  rating: number
+  reviews: number
+  specialties: string[]
+  accreditations: string[]
+  price: "$" | "$$" | "$$$"
+  languages?: string[]
+}
+
+function mapHospital(dto: HospitalDTO): HospitalUI {
+  const locParts = [dto.city, dto.state, dto.country?.includes("Nigeria") ? "Nigeria" : dto.country].filter(Boolean)
+  return {
+    id: String(dto.id),
+    name: dto.name,
+    description: dto.description || "—",
+    location: locParts.join(", ") || dto.address_1 || "—",
+    image: dto.cover_image_url || dto.logo_url || "/placeholder.svg",
+    rating: typeof dto.rating === "number" ? dto.rating : 0,
+    reviews: typeof dto.reviews_count === "number" ? dto.reviews_count : 0,
+    specialties: toArrayOfStrings(dto.specialties),
+    accreditations: toArrayOfStrings(dto.accreditations),
+    price: mapPriceTier(dto.price_tier),
+    languages: dto.languages,
+  }
+}
+
+// ---------- Component ----------
 export default function HospitalsPage() {
   const [showGate, setShowGate] = useState(false)
-  const [visibleHospitals, setVisibleHospitals] = useState(6)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-  // Removed selectedLanguages state
   const [selectedAccreditations, setSelectedAccreditations] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState<number[]>([1, 3])
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [searchMode, setSearchMode] = useState<"text" | "image">("text")
   const [imageSearchUrl, setImageSearchUrl] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+
+  const [hospitals, setHospitals] = useState<HospitalUI[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  // Hardcoded Top Filters (initialize from presets)
+  const [topSpecialties] = useState<string[]>(TOP_SPECIALTIES_PRESET.slice(0, 6))
+  const [topLocations] = useState<string[]>(TOP_LOCATIONS_PRESET.slice(0, 6))
+
+  // Pagination
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const [page, setPage] = useState<number>(1)
+
   const [showComparison, setShowComparison] = useState(false)
   const [hospitalsToCompare, setHospitalsToCompare] = useState<string[]>([])
-  const [showInsuranceChecker, setShowInsuranceChecker] = useState(false)
-  const { trackView, loaded } = useViewTracker()
+  const [visibleHospitals, setVisibleHospitals] = useState(12) // show 12 first
 
-  // Filter hospitals based on search criteria
-  const filteredHospitals = hospitals.filter((hospital) => {
-    // Text search
-    const matchesSearch =
-      searchQuery === "" ||
-      hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      hospital.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      hospital.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      hospital.location.toLowerCase().includes(searchQuery.toLowerCase())
+  const { trackView } = useViewTracker()
 
-    // Specialty filter
-    const matchesSpecialty =
-      selectedSpecialties.length === 0 || hospital.specialties.some((s) => selectedSpecialties.includes(s))
+  // --------- Fetch hospitals ----------
+  const fetchHospitals = async (opts?: { url?: string; page?: number; append?: boolean }) => {
+    const url = opts?.url ?? `${API_ENDPOINTS.META.HOSPITALS}?page=${opts?.page ?? page}`
+    setIsLoading(true)
+    setLoadError(null)
+    try {
+      const res = await apiRequest<HospitalsListResponse>(url, { method: HTTP_METHODS.GET })
 
-    // Location filter
-    const matchesLocation =
-      selectedLocations.length === 0 || selectedLocations.some((loc) => hospital.location.includes(loc))
+      // Normalize shape
+      const results: HospitalDTO[] =
+        (Array.isArray(res?.data) ? (res?.data as HospitalDTO[]) : res?.data?.results) ?? ([] as HospitalDTO[])
 
-    // Removed Language filter logic
-    // Accreditation filter
-    const matchesAccreditation =
-      selectedAccreditations.length === 0 ||
-      (hospital.accreditations && hospital.accreditations.some((acc) => selectedAccreditations.includes(acc)))
+      const mapped = results.map(mapHospital)
 
-    // Price filter
-    const priceMapping = { $: 1, $$: 2, $$$: 3 }
-    const hospitalPrice = priceMapping[hospital.price as keyof typeof priceMapping] || 2
-    const matchesPrice = hospitalPrice >= priceRange[0] && hospitalPrice <= priceRange[1]
+      // Fix: ensure visible count is based on the *new* array length
+      setHospitals((prev) => {
+        const next = opts?.append ? [...prev, ...mapped] : mapped
+        setVisibleHospitals((v) => (opts?.append ? Math.min(v + 12, next.length) : Math.min(12, next.length)))
+        return next
+      })
 
-    return (
-      matchesSearch && matchesSpecialty && matchesLocation && matchesAccreditation && matchesPrice
-    )
-  })
+      // next URL detection
+      const nextFromData = (res as any)?.data?.next ?? (res as any)?.next ?? null
+      const nextPageFromData = (res as any)?.data?.next_page ?? (res as any)?.next_page ?? null
 
-  // Track when user views more than the initial set of hospitals
-  const handleLoadMore = () => {
-    if (visibleHospitals >= 3) {
-      const shouldPrompt = trackView("hospital", "load-more")
-      if (shouldPrompt) {
-        setShowGate(true)
+      if (nextFromData) {
+        setNextUrl(nextFromData as string)
+      } else if (nextPageFromData) {
+        setNextUrl(`${API_ENDPOINTS.META.HOSPITALS}?page=${nextPageFromData}`)
       } else {
-        setVisibleHospitals(hospitals.length)
+        setNextUrl(null)
       }
-    } else {
-      setVisibleHospitals(hospitals.length)
+    } catch (err: any) {
+      const m = err?.message || err?.detail || "Could not load hospitals. Please try again."
+      setLoadError(m)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // Handle search submission
-  const handleSearch = () => {
-    setIsSearching(true)
-    // Simulate search delay
-    setTimeout(() => {
-      setIsSearching(false)
-    }, 800)
+  // Initial load
+  useEffect(() => {
+    fetchHospitals({ page: 1, append: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleLoadMore = async () => {
+    if (hospitals.length >= 12) {
+      const shouldPrompt = trackView("hospital", "load-more")
+      if (shouldPrompt) {
+        setShowGate(true)
+        return
+      }
+    }
+    if (nextUrl) {
+      const nextPageMatch = /[?&]page=(\d+)/.exec(nextUrl)
+      const nextP = nextPageMatch ? Number(nextPageMatch[1]) : undefined
+      await fetchHospitals({ url: nextUrl, page: nextP, append: true })
+      setVisibleHospitals((v) => Math.min(v + 12, hospitals.length + 12))
+    } else {
+      // no server next -> just reveal more if already loaded
+      setVisibleHospitals((v) => Math.min(v + 12, hospitals.length))
+    }
   }
 
-  // Toggle specialty selection
+  // --------- Filters / search (client-side) ----------
+  const filteredHospitals = useMemo(() => {
+    const priceMapping = { $: 1, $$: 2, $$$: 3 } as const
+
+    return hospitals.filter((hospital) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        hospital.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        hospital.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        hospital.location.toLowerCase().includes(searchQuery.toLowerCase())
+
+      const matchesSpecialty =
+        selectedSpecialties.length === 0 || hospital.specialties.some((s) => selectedSpecialties.includes(s))
+
+      const matchesLocation =
+        selectedLocations.length === 0 || selectedLocations.some((loc) => hospital.location.includes(loc))
+
+      const matchesAccreditation =
+        selectedAccreditations.length === 0 ||
+        (hospital.accreditations && hospital.accreditations.some((acc) => selectedAccreditations.includes(acc)))
+
+      const hospitalPrice = priceMapping[hospital.price]
+      const matchesPrice = hospitalPrice >= priceRange[0] && hospitalPrice <= priceRange[1]
+
+      return matchesSearch && matchesSpecialty && matchesLocation && matchesAccreditation && matchesPrice
+    })
+  }, [hospitals, searchQuery, selectedSpecialties, selectedLocations, selectedAccreditations, priceRange])
+
+  // --------- UI handlers ----------
+  const handleSearch = () => {
+    setIsSearching(true)
+    setTimeout(() => setIsSearching(false), 800)
+  }
+
   const toggleSpecialty = (specialty: string) => {
     setSelectedSpecialties((prev) =>
       prev.includes(specialty) ? prev.filter((s) => s !== specialty) : [...prev, specialty],
     )
   }
 
-  // Toggle location selection
-  const toggleLocation = (location: string) => {
-    setSelectedLocations((prev) => (prev.includes(location) ? prev.filter((l) => l !== location) : [...prev, location]))
+  const toggleLocation = (loc: string) => {
+    setSelectedLocations((prev) => (prev.includes(loc) ? prev.filter((l) => l !== loc) : [...prev, loc]))
   }
 
-  // Removed toggleLanguage function
-  // Toggle accreditation selection
   const toggleAccreditation = (accreditation: string) => {
     setSelectedAccreditations((prev) =>
       prev.includes(accreditation) ? prev.filter((a) => a !== accreditation) : [...prev, accreditation],
     )
   }
 
-  // Reset all filters
   const resetFilters = () => {
     setSearchQuery("")
     setSelectedSpecialties([])
     setSelectedLocations([])
-    // Reset selectedLanguages
     setSelectedAccreditations([])
     setPriceRange([1, 3])
     setImageSearchUrl("")
     setSearchMode("text")
   }
 
-  // Handle image upload for search
   const handleImageSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setImageSearchUrl(event.target.result as string)
-        }
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      if (event.target?.result) setImageSearchUrl(event.target.result as string)
     }
+    reader.readAsDataURL(file)
   }
 
-  // Toggle hospital selection for comparison
   const toggleHospitalComparison = (hospitalId: string) => {
     setHospitalsToCompare((prev) => {
-      if (prev.includes(hospitalId)) {
-        return prev.filter((id) => id !== hospitalId)
-      } else {
-        // Limit to 6 hospitals for comparison
-        if (prev.length >= 6) {
-          return prev
-        }
-        return [...prev, hospitalId]
-      }
+      if (prev.includes(hospitalId)) return prev.filter((id) => id !== hospitalId)
+      if (prev.length >= 6) return prev
+      return [...prev, hospitalId]
     })
   }
 
-  // Remove hospital from comparison
   const removeFromComparison = (hospitalId: string) => {
     setHospitalsToCompare((prev) => prev.filter((id) => id !== hospitalId))
   }
 
-  // Open hospital selector when adding from comparison modal
   const handleAddHospital = () => {
     setShowComparison(false)
-    // Could show a hospital selector modal here
-    // For now, just close comparison to let user select from the list
   }
 
   return (
@@ -335,7 +327,8 @@ export default function HospitalsPage() {
                   Find Your Ideal Hospital in Nigeria
                 </h1>
                 <p className="text-gray-600 md:text-xl max-w-[85%] mx-auto">
-                  Search our network of accredited hospitals across Nigeria to find the perfect match for your healthcare needs.
+                  Search our network of accredited hospitals across Nigeria to find the perfect match for your
+                  healthcare needs.
                 </p>
               </div>
             </div>
@@ -351,7 +344,7 @@ export default function HospitalsPage() {
                             className="text-white data-[state=active]:bg-white data-[state=active]:text-purple-700"
                             onClick={() => setSearchMode("text")}
                           >
-                            <Search className="h-4 w-4 mr-1" />
+                            <SearchIcon className="h-4 w-4 mr-1" />
                             Text Search
                           </TabsTrigger>
                           <TabsTrigger
@@ -383,7 +376,7 @@ export default function HospitalsPage() {
                     <div className={`${searchMode === "text" ? "block" : "hidden"}`}>
                       <div className="flex flex-col sm:flex-row items-stretch gap-2">
                         <div className="relative flex-1">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <Input
                             placeholder="Search by hospital name, specialty, treatment, or location..."
                             className="pl-10 py-6 text-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
@@ -409,12 +402,12 @@ export default function HospitalsPage() {
                         >
                           {isSearching ? (
                             <div className="flex items-center">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                               Searching...
                             </div>
                           ) : (
                             <div className="flex items-center">
-                              <Search className="mr-2 h-5 w-5" />
+                              <SearchIcon className="mr-2 h-5 w-5" />
                               Search
                             </div>
                           )}
@@ -432,7 +425,12 @@ export default function HospitalsPage() {
                                 alt="Uploaded image"
                                 className="w-full h-auto rounded-lg"
                               />
-                              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setImageSearchUrl("")}>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2"
+                                onClick={() => setImageSearchUrl("")}
+                              >
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
@@ -459,33 +457,34 @@ export default function HospitalsPage() {
                           >
                             {isSearching ? (
                               <div className="flex items-center">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                                 Analyzing Image...
                               </div>
                             ) : (
                               <div className="flex items-center">
-                                <Search className="mr-2 h-5 w-5" />
+                                <SearchIcon className="mr-2 h-5 w-5" />
                                 Search with this Image
                               </div>
                             )}
                           </Button>
                         )}
                         <p className="text-xs text-gray-500 text-center">
-                          Our AI will analyze your image to find relevant hospitals and treatments.<br />
+                          Our AI will analyze your image to find relevant hospitals and treatments.
+                          <br />
                           Supported: Medical conditions, hospital facilities, medical equipment
                         </p>
                       </div>
                     </div>
                     {showAdvancedFilters && (
                       <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Adjusted grid columns */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           <div>
                             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                               <Stethoscope className="h-4 w-4 mr-2 text-purple-600" />
                               Specialties
                             </h3>
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                              {specialties.slice(0, 8).map((specialty) => (
+                              {topSpecialties.slice(0, 8).map((specialty) => (
                                 <div key={specialty} className="flex items-center">
                                   <Checkbox
                                     id={`specialty-${specialty}`}
@@ -501,6 +500,9 @@ export default function HospitalsPage() {
                                   </label>
                                 </div>
                               ))}
+                              {topSpecialties.length === 0 && (
+                                <div className="text-xs text-muted-foreground">No specialties available.</div>
+                              )}
                             </div>
                           </div>
                           <div>
@@ -509,25 +511,27 @@ export default function HospitalsPage() {
                               Locations
                             </h3>
                             <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                              {locations.slice(0, 8).map((location) => (
-                                <div key={location} className="flex items-center">
+                              {topLocations.slice(0, 8).map((loc) => (
+                                <div key={loc} className="flex items-center">
                                   <Checkbox
-                                    id={`location-${location}`}
-                                    checked={selectedLocations.includes(location)}
-                                    onCheckedChange={() => toggleLocation(location)}
+                                    id={`location-${loc}`}
+                                    checked={selectedLocations.includes(loc)}
+                                    onCheckedChange={() => toggleLocation(loc)}
                                     className="border-gray-300 text-purple-600 focus:ring-purple-500"
                                   />
                                   <label
-                                    htmlFor={`location-${location}`}
+                                    htmlFor={`location-${loc}`}
                                     className="ml-2 text-sm text-gray-700 cursor-pointer"
                                   >
-                                    {location}
+                                    {loc}
                                   </label>
                                 </div>
                               ))}
+                              {topLocations.length === 0 && (
+                                <div className="text-xs text-muted-foreground">No locations available.</div>
+                              )}
                             </div>
                           </div>
-                          {/* Removed Languages filter section */}
                           <div className="space-y-6">
                             <div>
                               <h3 className="font-medium text-gray-900 mb-3 flex items-center">
@@ -535,18 +539,18 @@ export default function HospitalsPage() {
                                 Accreditations
                               </h3>
                               <div className="flex flex-wrap gap-2">
-                                {accreditations.slice(0, 6).map((accreditation) => (
+                                {["JCI", "ISO 9001", "MDCN", "NHIS", "COHSASA", "NMA"].slice(0, 6).map((acc) => (
                                   <Badge
-                                    key={accreditation}
-                                    variant={selectedAccreditations.includes(accreditation) ? "default" : "outline"}
+                                    key={acc}
+                                    variant={selectedAccreditations.includes(acc) ? "default" : "outline"}
                                     className={`cursor-pointer ${
-                                      selectedAccreditations.includes(accreditation)
+                                      selectedAccreditations.includes(acc)
                                         ? "bg-purple-600 hover:bg-purple-700"
                                         : "hover:bg-purple-100"
                                     }`}
-                                    onClick={() => toggleAccreditation(accreditation)}
+                                    onClick={() => toggleAccreditation(acc)}
                                   >
-                                    {accreditation}
+                                    {acc}
                                   </Badge>
                                 ))}
                               </div>
@@ -589,7 +593,6 @@ export default function HospitalsPage() {
                                 <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedLocations([])} />
                               </Badge>
                             )}
-                            {/* Removed Languages badge */}
                             {selectedAccreditations.length > 0 && (
                               <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
                                 Accreditations: {selectedAccreditations.length}
@@ -610,7 +613,7 @@ export default function HospitalsPage() {
                             variant="outline"
                             size="sm"
                             onClick={resetFilters}
-                            className="text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-700 self-end sm:self-auto"
+                            className="text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-700 self-end sm:self-auto bg-transparent"
                           >
                             Reset All Filters
                           </Button>
@@ -620,6 +623,7 @@ export default function HospitalsPage() {
                   </div>
                 </CardContent>
               </Card>
+
               {/* Search tips */}
               <div className="mt-4 flex flex-wrap gap-4 justify-center text-sm text-gray-600">
                 <div className="flex items-center">
@@ -627,7 +631,11 @@ export default function HospitalsPage() {
                   <span>Popular: </span>
                   <div className="flex gap-2 ml-1">
                     {["Cardiology", "Orthopedics", "Dental"].map((term) => (
-                      <button key={term} className="underline hover:text-purple-600" onClick={() => setSearchQuery(term)}>
+                      <button
+                        key={term}
+                        className="underline hover:text-purple-600"
+                        onClick={() => setSearchQuery(term)}
+                      >
                         {term}
                       </button>
                     ))}
@@ -638,7 +646,11 @@ export default function HospitalsPage() {
                   <span>Top destinations: </span>
                   <div className="flex gap-2 ml-1">
                     {["Lagos", "Abuja", "Ibadan"].map((term) => (
-                      <button key={term} className="underline hover:text-purple-600" onClick={() => setSearchQuery(term)}>
+                      <button
+                        key={term}
+                        className="underline hover:text-purple-600"
+                        onClick={() => setSearchQuery(term)}
+                      >
                         {term}
                       </button>
                     ))}
@@ -654,17 +666,15 @@ export default function HospitalsPage() {
           <ResponsiveContainer>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
               <div>
-                {searchQuery ||
-                selectedSpecialties.length > 0 ||
-                selectedLocations.length > 0 ||
-                // Removed selectedLanguages check
-                selectedAccreditations.length > 0 ||
-                priceRange[0] !== 1 ||
-                priceRange[1] !== 3 ? (
+                {(isLoading || loadError || filteredHospitals.length > 0) && (
                   <p className="text-gray-500">
-                    {filteredHospitals.length} {filteredHospitals.length === 1 ? "result" : "results"} found
+                    {loadError
+                      ? "Unable to load hospitals"
+                      : isLoading
+                        ? "Loading hospitals…"
+                        : `${filteredHospitals.length} ${filteredHospitals.length === 1 ? "result" : "results"} found`}
                   </p>
-                ) : null}
+                )}
               </div>
               <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-end sm:items-center gap-2">
                 <div className="flex items-center gap-2">
@@ -697,10 +707,28 @@ export default function HospitalsPage() {
                 </Button>
               </div>
             </div>
-            {filteredHospitals.length === 0 ? (
+
+            {loadError && (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                  <X className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Error loading hospitals</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">{loadError}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => fetchHospitals({ page: 1, append: false })}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            {!loadError && filteredHospitals.length === 0 && !isLoading ? (
               <div className="text-center py-16">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
+                  <SearchIcon className="h-8 w-8 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">No hospitals found</h3>
                 <p className="text-gray-500 max-w-md mx-auto mb-6">
@@ -710,7 +738,7 @@ export default function HospitalsPage() {
                 <Button
                   variant="outline"
                   onClick={resetFilters}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
                 >
                   Reset All Filters
                 </Button>
@@ -748,7 +776,7 @@ export default function HospitalsPage() {
                         <h3 className="text-xl font-bold">{hospital.name}</h3>
                         <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-md">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{hospital.rating}</span>
+                          <span className="text-sm font-medium">{hospital.rating.toFixed(1)}</span>
                           <span className="text-xs text-gray-500">({hospital.reviews})</span>
                         </div>
                       </div>
@@ -759,7 +787,6 @@ export default function HospitalsPage() {
                       <div className="mt-3">
                         <p className="text-sm text-gray-500 line-clamp-3">{hospital.description}</p>
                       </div>
-                      {/* Accreditations */}
                       {hospital.accreditations && hospital.accreditations.length > 0 && (
                         <div className="mt-3 flex items-center gap-1">
                           <CheckCircle className="h-4 w-4 text-green-600" />
@@ -773,16 +800,12 @@ export default function HospitalsPage() {
                         </div>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {hospital.specialties.map((specialty) => (
-                          <span
-                            key={specialty}
-                            className="inline-block bg-gray-100 px-2 py-1 text-xs rounded-md text-gray-700"
-                          >
-                            {specialty}
+                        {hospital.specialties.map((s) => (
+                          <span key={s} className="inline-block bg-gray-100 px-2 py-1 text-xs rounded-md text-gray-700">
+                            {s}
                           </span>
                         ))}
                       </div>
-                      {/* Languages - simplified to just show English if present */}
                       {hospital.languages && hospital.languages.includes("English") && (
                         <div className="mt-3 flex items-center gap-1">
                           <Globe className="h-4 w-4 text-purple-600" />
@@ -792,46 +815,27 @@ export default function HospitalsPage() {
                     </CardContent>
                     <CardFooter className="p-6 pt-0 flex gap-2">
                       <Button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white" asChild>
-                        <Link href={`/hospital/${hospital.id}`}>View Hospital</Link>
+                        <Link href={`/hospitals/${hospital.id}`}>View Hospital</Link>
                       </Button>
                     </CardFooter>
                   </Card>
                 ))}
               </div>
             )}
-            {visibleHospitals < filteredHospitals.length && (
+
+            {/* Only show Load More if there's more to show */}
+            {!loadError && (nextUrl || visibleHospitals < filteredHospitals.length) && (
               <div className="mt-12 text-center">
                 <Button
                   variant="outline"
-                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                  className="border-purple-200 text-purple-600 hover:bg-purple-50 bg-transparent"
                   onClick={handleLoadMore}
+                  disabled={isLoading}
                 >
-                  Load More Hospitals
+                  {isLoading ? "Loading…" : "Load More Hospitals"}
                 </Button>
               </div>
             )}
-          </ResponsiveContainer>
-        </section>
-
-        {/* Insurance Coverage Section */}
-        <section className="w-full py-12 md:py-16 lg:py-20 bg-gray-50 border-y border-gray-200">
-          <ResponsiveContainer>
-            <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-              <div className="bg-purple-100 p-4 rounded-full mb-6">
-                <Shield className="h-8 w-8 text-purple-600" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter md:text-4xl mb-4">
-                Check Your Insurance Coverage
-              </h2>
-              <p className="text-gray-600 mb-8 text-lg">
-                Find out if your insurance covers treatment at hospitals in Nigeria before you travel. Our insurance
-                checker helps you understand your coverage options.
-              </p>
-              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setShowInsuranceChecker(true)}>
-                Check Insurance Coverage
-                <Shield className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
           </ResponsiveContainer>
         </section>
 
@@ -839,9 +843,12 @@ export default function HospitalsPage() {
         <section className="py-16 md:py-24 bg-primary text-white">
           <ResponsiveContainer>
             <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Hospital or Medical Practitioner in Nigeria?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Are You a Hospital or Medical Practitioner in Nigeria?
+              </h2>
               <p className="text-white/80 text-lg mb-8">
-                Join our platform to connect with patients seeking care in Nigeria and expand your reach in the medical tourism market.
+                Join our platform to connect with patients seeking care in Nigeria and expand your reach in the medical
+                tourism market.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
@@ -853,18 +860,16 @@ export default function HospitalsPage() {
           </ResponsiveContainer>
         </section>
 
-        {/* Hospital Comparison Modal */}
+        {/* Modals / Floating Compare */}
         {showComparison && (
           <HospitalComparison
-            hospitals={hospitals}
+            hospitals={hospitals as any} // keep if HospitalComparison expects a different shape
             selectedHospitals={hospitalsToCompare}
             onClose={() => setShowComparison(false)}
             onRemoveHospital={removeFromComparison}
             onAddHospital={handleAddHospital}
           />
         )}
-        {/* Insurance Coverage Checker Modal */}
-        {showInsuranceChecker && (<InsuranceCoverageChecker hospitalIds={hospitalsToCompare} onClose={() => setShowInsuranceChecker(false)} />)}
         {hospitalsToCompare.length > 0 && (
           <div className="fixed bottom-4 right-4 z-40">
             <Button
