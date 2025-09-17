@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface SoftGateProps {
-  type: "hospital" | "treatment" | "pricing" | "contact"
+  type: "hospital" | "treatment" | "pricing" | "contact" | "travel-agent"
   onClose: () => void
 }
 
@@ -32,6 +32,8 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
         return "Create an account to view pricing information"
       case "contact":
         return "Sign up to contact this hospital"
+      case "travel-agent":
+        return "Create an account to view more travel agents"
       default:
         return "Create a free account to continue"
     }
@@ -47,6 +49,8 @@ export function SoftGate({ type, onClose }: SoftGateProps) {
         return "Sign up to view detailed pricing, insurance information, and potential cost savings."
       case "contact":
         return "Create an account to contact hospitals directly, schedule consultations, and receive quotes."
+      case "travel-agent":
+        return "Join MedConnect to compare travel agents, save your favorites, and get personalized recommendations for your medical tourism journey."
       default:
         return "Join thousands of patients who found quality healthcare through MedConnect."
     }

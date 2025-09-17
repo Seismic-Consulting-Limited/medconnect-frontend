@@ -37,7 +37,7 @@ export function PremiumContentOverlay({ type, height = "h-60" }: PremiumContentO
         <p className="text-sm text-gray-500 mb-4 max-w-xs">
           Join thousands of patients who found quality healthcare through MedConnect.
         </p>
-        <div className="flex gap-3">      
+        <div className="flex gap-3">
           <Button
             size="sm"
             className="bg-primary hover:bg-primary/90 text-white"

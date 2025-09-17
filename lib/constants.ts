@@ -44,6 +44,20 @@ export const API_ENDPOINTS = {
     HOSPITALS_DASHBOARD: `${API_VERSION_PREFIX}/hospitals/dashboard`,
   },
 
+  DASHBOARD: {
+    CLIENT: `${API_VERSION_PREFIX}/patients/dashboard`,
+    HOSPITAL: `${API_VERSION_PREFIX}/hospitals/dashboard`,
+    TRAVEL_AGENT: `${API_VERSION_PREFIX}/travel-agents/dashboard`,
+  },
+
+  CLIENT: {
+    APPOINTMENTS: `${API_VERSION_PREFIX}/patients/appointments`,
+    APPOINTMENT_DETAIL: (appointmentId: string) => `${API_VERSION_PREFIX}/patients/appointments/${appointmentId}`,
+    MEDICAL_RECORDS: `${API_VERSION_PREFIX}/patients/medical-records`,
+    ACTIVITIES: `${API_VERSION_PREFIX}/patients/activities`,
+    STATS: `${API_VERSION_PREFIX}/patients/stats`,
+  },
+
   // Country/State metadata (these are NON-versioned per your backend)
   META: {
     COUNTRIES: `${API_VERSION_PREFIX}/countries`,
@@ -54,6 +68,8 @@ export const API_ENDPOINTS = {
     USER_TYPES: `${API_VERSION_PREFIX}/user-types/`,
     HOSPITALS: `${API_VERSION_PREFIX}/hospitals`,
     HOSPITAL_DETAIL: (hospitalId: string) => `${API_VERSION_PREFIX}/hospitals/${hospitalId}`,
+    TRAVEL_AGENTS: `${API_VERSION_PREFIX}/travel-agents`,
+    TRAVEL_AGENT_DETAIL: (agentId: string) => `${API_VERSION_PREFIX}/travel-agents/${agentId}`,
   },
 } as const
 

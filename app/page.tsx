@@ -51,7 +51,7 @@ export default function Home() {
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     size="lg"
-                    className="bg-primary hover:bg-primary-700 text-white w-full sm:w-auto text-base"
+                    className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto text-base"
                     asChild
                   >
                     <Link href="/user/auth/signup">
@@ -344,7 +344,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <div className="pt-4">
-                  <Button className="bg-primary hover:bg-primary-700 text-white" asChild>
+                  <Button className="bg-primary hover:bg-primary/90 text-white" asChild>
                     <Link href="/user/auth/signup">
                       Schedule a Consultation
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -395,7 +395,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <div>
-                  <Button className="bg-primary hover:bg-primary-700 text-white w-full sm:w-auto" asChild>
+                  <Button className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto" asChild>
                     <Link href="/travel-agents">
                       Find Travel Agents
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -420,6 +420,7 @@ export default function Home() {
           </ResponsiveContainer>
         </section>
 
+        {/* Complete Travel Support Section - updated text */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
           <ResponsiveContainer>
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -494,6 +495,7 @@ export default function Home() {
           </ResponsiveContainer>
         </section>
 
+        {/* Success Stories Section - updated text */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
           <ResponsiveContainer>
             <div className="flex flex-col items-center justify-center space-y-4 text-center">

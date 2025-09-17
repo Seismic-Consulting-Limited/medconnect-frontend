@@ -1,4 +1,3 @@
-
 import { AUTH_CONSTANTS, HTTP_METHODS, API_ENDPOINTS } from "./constants";
 import { apiRequest } from "./utils/api-request";
 
@@ -9,24 +8,34 @@ export interface User {
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  role?: string;
 }
 
 export interface AuthResponse {
   user?: User;
   token?: string;
   refreshToken?: string;
+  success?: boolean;
+  error?: string;
+  data?: any;
   [key: string]: any;
 }
 
-
-  // Local storage helpers
 const setTokens = (token?: string, refreshToken?: string) => {
   if (typeof window === "undefined") return;
-  if (token) localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, token);
-  if (refreshToken) localStorage.setItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY, refreshToken);
+  if (token) {
+    localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, token);
+    // Also set as cookie for server-side access
+    document.cookie = `medconnect_token=${token}; path=/; max-age=${
+      7 * 24 * 60 * 60
+    }; secure; samesite=strict`;
+  }
+  if (refreshToken) {
+    localStorage.setItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY, refreshToken);
+  }
 };
 
-const setUserLocal = (user?: unknown) => {
+const setUserLocal = (user?: User) => {
   if (typeof window === "undefined") return;
   try {
     if (user && typeof user === "object") {
@@ -54,6 +63,12 @@ const clearAuthLocal = (): void => {
   localStorage.removeItem(AUTH_CONSTANTS.TOKEN_KEY);
   localStorage.removeItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY);
   localStorage.removeItem(AUTH_CONSTANTS.USER_KEY);
+  localStorage.removeItem("user_type");
+  localStorage.removeItem("medconnect_token");
+  // Clear cookie
+  document.cookie =
+    "medconnect_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 };
 
 const getUserLocal = (): User | null => {
@@ -65,7 +80,11 @@ const getUserLocal = (): User | null => {
   }
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object" && ("email" in parsed || "id" in parsed)) {
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      ("email" in parsed || "id" in parsed)
+    ) {
       return parsed as User;
     }
   } catch {}
@@ -73,16 +92,49 @@ const getUserLocal = (): User | null => {
   return null;
 };
 
-/** Centralized "saveAuth" handler used by apiRequest when flags.saveAuth=true. */
 function persistAuthFromResponse(payload: AuthResponse) {
-  if (payload?.token || payload?.refreshToken) {
-    setTokens(payload.token, payload.refreshToken);
-    setUserLocal(payload.user);
+  const token =
+    payload?.token || payload?.data?.token || payload?.data?.access_token;
+  const refreshToken =
+    payload?.refreshToken ||
+    payload?.data?.refresh_token ||
+    payload?.data?.refreshToken;
+  const user = payload?.user || payload?.data?.user;
+  const userType =
+    payload?.user_type ||
+    payload?.data?.user_type ||
+    user?.user_type ||
+    user?.role;
+
+  if (token || refreshToken) {
+    setTokens(token, refreshToken);
+    if (userType && typeof window !== "undefined") {
+      localStorage.setItem("user_type", userType);
+    }
+    setUserLocal(user);
   }
 }
 
+const isTokenValid = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
 
-  // Auth Service
+    // Check if token has expired
+    if (payload.exp && payload.exp < currentTime) {
+      return false;
+    }
+
+    // Check if token has required fields
+    if (!payload.user_id && !payload.sub) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
 
 export class AuthService {
   private static instance: AuthService;
@@ -92,9 +144,37 @@ export class AuthService {
     return AuthService.instance;
   }
 
-  // ---- State helpers
   public getToken(): string | null {
-    return getTokenLocal();
+    if (typeof window === "undefined") return null;
+
+    // First try localStorage
+    const localToken = getTokenLocal();
+    if (localToken) {
+      if (isTokenValid(localToken)) {
+        return localToken;
+      } else {
+        this.clearAuth();
+        return null;
+      }
+    }
+
+    // Fallback to cookie
+    const cookieToken =
+      document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("medconnect_token="))
+        ?.split("=")[1] || null;
+
+    if (cookieToken) {
+      if (isTokenValid(cookieToken)) {
+        return cookieToken;
+      } else {
+        this.clearAuth();
+        return null;
+      }
+    }
+
+    return null;
   }
 
   private getRefreshToken(): string | null {
@@ -105,12 +185,45 @@ export class AuthService {
     clearAuthLocal();
   }
 
+  public debugClearAll(): void {
+    if (typeof window !== "undefined") {
+      // Clear all possible localStorage keys
+      const keysToRemove = [
+        AUTH_CONSTANTS.TOKEN_KEY,
+        AUTH_CONSTANTS.REFRESH_TOKEN_KEY,
+        AUTH_CONSTANTS.USER_KEY,
+        "user_type",
+        "medconnect_token",
+        "auth_token",
+        "token",
+      ];
+      keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+      });
+
+      // Clear all possible cookies
+      const cookiesToClear = [
+        "medconnect_token",
+        "role",
+        "auth_token",
+        "token",
+      ];
+      cookiesToClear.forEach((cookie) => {
+        document.cookie = `${cookie}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      });
+    }
+  }
+
   public getCurrentUser(): User | null {
-    return getUserLocal();
+    const user = getUserLocal();
+    return user;
   }
 
   public isAuthenticated(): boolean {
-    return !!this.getToken() && !!this.getCurrentUser();
+    const token = this.getToken(); // This now validates the token
+    const user = this.getCurrentUser();
+    const isAuth = !!token && !!user;
+    return isAuth;
   }
 
   // Patient Signup
@@ -143,8 +256,10 @@ export class AuthService {
     );
   }
 
-  //  Hospital Signup
-  public async signupHospital(payload: Record<string, any>): Promise<AuthResponse> {
+  // Hospital Signup
+  public async signupHospital(
+    payload: Record<string, any>
+  ): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNUP_HOSPITAL,
       {
@@ -157,8 +272,10 @@ export class AuthService {
       }
     );
   }
-  
-  public async signupTravelAgent(payload: Record<string, any>): Promise<AuthResponse> {
+
+  public async signupTravelAgent(
+    payload: Record<string, any>
+  ): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNUP_TRAVEL_AGENT,
       {
@@ -174,17 +291,26 @@ export class AuthService {
 
   // Login (password)
   public async login(email: string, password: string): Promise<AuthResponse> {
-    return apiRequest<AuthResponse, AuthResponse>(
-      API_ENDPOINTS.AUTH.LOGIN,
-      {
-        method: HTTP_METHODS.POST,
-        body: JSON.stringify({ email: email.toLowerCase(), password }),
-      },
-      {
-        saveAuth: true,
-        onSaveAuth: persistAuthFromResponse,
-      }
-    );
+    try {
+      const response = await apiRequest<AuthResponse, AuthResponse>(
+        API_ENDPOINTS.AUTH.LOGIN,
+        {
+          method: HTTP_METHODS.POST,
+          body: JSON.stringify({ email: email.toLowerCase(), password }),
+        },
+        {
+          saveAuth: true,
+          onSaveAuth: persistAuthFromResponse,
+        }
+      );
+      return response;
+    } catch (error) {
+      console.error("Auth service login error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Login failed",
+      } as AuthResponse;
+    }
   }
 
   // Logout
@@ -245,27 +371,24 @@ export class AuthService {
   }
 
   public async resendEmailOtp(email: string): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>(
-      API_ENDPOINTS.AUTH.RESEND_OTP,
-      {
-        method: HTTP_METHODS.POST,
-        body: JSON.stringify({ email: email.toLowerCase() }),
-      }
-    );
+    return apiRequest<AuthResponse>(API_ENDPOINTS.AUTH.RESEND_OTP, {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify({ email: email.toLowerCase() }),
+    });
   }
 
   // Login OTP
   public async signinOtpInit(email: string): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>(
-      API_ENDPOINTS.AUTH.SIGNIN_OTP_INIT,
-      {
-        method: HTTP_METHODS.POST,
-        body: JSON.stringify({ email: email.toLowerCase() }),
-      }
-    );
+    return apiRequest<AuthResponse>(API_ENDPOINTS.AUTH.SIGNIN_OTP_INIT, {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify({ email: email.toLowerCase() }),
+    });
   }
 
-  public async signinOtpVerify(email: string, otp: string): Promise<AuthResponse> {
+  public async signinOtpVerify(
+    email: string,
+    otp: string
+  ): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNIN_OTP_VERIFY,
       {
@@ -281,16 +404,17 @@ export class AuthService {
 
   // Password reset
   public async resetPasswordInit(email: string): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>(
-      API_ENDPOINTS.AUTH.PASSWORD_RESET,
-      {
-        method: HTTP_METHODS.POST,
-        body: JSON.stringify({ email: email.toLowerCase() }),
-      }
-    );
+    return apiRequest<AuthResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET, {
+      method: HTTP_METHODS.POST,
+      body: JSON.stringify({ email: email.toLowerCase() }),
+    });
   }
 
-  public async resetPasswordConfirm(uid: string, token: string, newPassword: string): Promise<AuthResponse> {
+  public async resetPasswordConfirm(
+    uid: string,
+    token: string,
+    newPassword: string
+  ): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.PASSWORD_RESET_CONFIRM,
       {
@@ -306,3 +430,10 @@ export class AuthService {
 }
 
 export const authService = AuthService.getInstance();
+
+if (typeof window !== "undefined") {
+  (window as any).debugClearAuth = () => {
+    authService.debugClearAll();
+    window.location.reload();
+  };
+}

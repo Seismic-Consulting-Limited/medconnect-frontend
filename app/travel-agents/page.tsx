@@ -1,511 +1,658 @@
 "use client"
-import { useState } from "react"
-import { ArrowRight, Check, Globe, MapPin, MessageSquare, Plane, Star, Users } from "lucide-react"
+
+import type React from "react"
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
+import {
+  ArrowRight,
+  CheckCircle,
+  ChevronDown,
+  Globe,
+  MapPin,
+  SearchIcon,
+  Sliders,
+  Star,
+  Plane,
+  X,
+  BarChart2,
+} from "lucide-react"
+
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ResponsiveContainer } from "@/components/responsive-container"
-import { AffiliateLink } from "@/components/affiliate-link"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { SoftGate } from "@/components/soft-gate"
+import { apiRequest } from "@/lib/utils/api-request"
+import { API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants"
+import type { TravelAgentDTO, TravelAgentUI } from "@/lib/types/travel-agent"
 
-// Mock data for travel agents - UPDATED: Removed specialties
-const travelAgents = [
-  {
-    id: "naija-med-travels",
-    name: "Naija Med Travels",
-    logo: "/placeholder.svg?key=naija-med-travels-logo",
-    description: "Your trusted partner for seamless travel to top cities in Nigeria.",
-    destinations: ["Lagos, Nigeria", "Abuja, Nigeria"],
-    rating: 4.9,
-    reviewCount: 85,
-    website: "https://naijamedtravels.com",
-    featured: true,
-    services: [
-      "International Flight Booking",
-      "Airport Transfers (Nigeria)",
-      "Accommodation in Nigeria",
-      "Translation Services",
-      "Local Transportation",
-      "Visa Assistance",
-    ],
-    languages: ["English", "French", "Arabic"],
-  },
-  {
-    id: "nigeria-health-connect",
-    name: "Nigeria Health Connect",
-    logo: "/placeholder.svg?key=nigeria-health-connect-logo",
-    description: "Connecting international visitors with premium travel and local support in Nigeria.",
-    destinations: ["Lagos, Nigeria", "Ibadan, Nigeria", "Port Harcourt, Nigeria"],
-    rating: 4.8,
-    reviewCount: 72,
-    website: "https://nigeriahealthconnect.com",
-    featured: true,
-    services: [
-      "International Flight Booking",
-      "Luxury Accommodation",
-      "Translation",
-      "Local Sightseeing",
-      "Visa Assistance",
-      "Post-treatment Support",
-    ],
-    languages: ["English", "Spanish", "German"],
-  },
-  {
-    id: "west-africa-med-link",
-    name: "West Africa Med Link",
-    logo: "/placeholder.svg?key=west-africa-med-link-logo",
-    description: "Comprehensive travel solutions for visitors to Nigeria.",
-    destinations: ["Abuja, Nigeria", "Kano, Nigeria"],
-    rating: 4.7,
-    reviewCount: 60,
-    website: "https://westafricamedlink.com",
-    featured: false,
-    services: [
-      "International Flight Booking",
-      "Budget Accommodation",
-      "Translation",
-      "Medical Record Management",
-      "24/7 Local Support",
-    ],
-    languages: ["English", "Hausa", "Yoruba"],
-  },
-  {
-    id: "lagos-medical-concierge",
-    name: "Lagos Medical Concierge",
-    logo: "/placeholder.svg?key=lagos-medical-concierge-logo",
-    description: "Personalized concierge services for your trip to Lagos, Nigeria.",
-    destinations: ["Lagos, Nigeria"],
-    rating: 4.6,
-    reviewCount: 55,
-    website: "https://lagosmedicalconcierge.com",
-    featured: false,
-    services: [
-      "Airport Transfers (Nigeria)",
-      "Accommodation in Lagos",
-      "Personalized Itinerary",
-      "Local Transportation",
-      "Visa Assistance",
-    ],
-    languages: ["English", "Igbo", "French"],
-  },
-  {
-    id: "abuja-health-travel",
-    name: "Abuja Health Travel",
-    logo: "/placeholder.svg?key=abuja-health-travel-logo",
-    description: "Expert travel planning for visits to Abuja's top destinations.",
-    destinations: ["Abuja, Nigeria"],
-    rating: 4.8,
-    reviewCount: 48,
-    website: "https://abujahealthtravel.com",
-    featured: false,
-    services: [
-      "Airport Transfers (Nigeria)",
-      "Premium Accommodation",
-      "Translation",
-      "Concierge Service",
-      "Post-treatment Follow-up Coordination",
-    ],
-    languages: ["English", "Arabic", "Hausa"],
-  },
+const TOP_DESTINATIONS_PRESET = ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Kano", "Enugu", "Benin City", "Abeokuta"]
+
+const TOP_SERVICES_PRESET = [
+  "Flight Booking",
+  "Hotel Reservations",
+  "Airport Transfers",
+  "Visa Assistance",
+  "Travel Insurance",
+  "Tour Packages",
+  "Car Rentals",
+  "Medical Travel Coordination",
 ]
 
-// Mock data for destinations - UNCHANGED
-const destinations = [
-  "Lagos, Nigeria",
-  "Abuja, Nigeria",
-  "Port Harcourt, Nigeria",
-  "Ibadan, Nigeria",
-  "Kano, Nigeria",
-  "Enugu, Nigeria",
-]
+// ---------- Types ----------
+type TravelAgentsListResponse = {
+  data?:
+    | {
+        results?: TravelAgentDTO[]
+        next?: string | null
+        previous?: string | null
+      }
+    | TravelAgentDTO[]
+  next?: string | null
+  previous?: string | null
+  page?: number
+  next_page?: number | null
+  message?: string
+  detail?: string
+}
 
-// Mock data for specialties - REMOVED as it's no longer needed for agents
-// const specialties = [
-//   "Cardiac Surgery",
-//   "Orthopedics",
-//   "Dental",
-//   "Cosmetic Surgery",
-//   "Weight Loss Surgery",
-//   "Fertility Treatments",
-//   "Cancer Care",
-//   "Neurology",
-//   "Ophthalmology",
-//   "Rehabilitation",
-//   "Dermatology",
-//   "Urology",
-//   "Pediatrics",
-//   "ENT",
-// ]
+// ---------- Mapping helpers ----------
+function toArrayOfStrings<T>(v: Array<{ name: string } | string> | undefined): string[] {
+  if (!v) return []
+  return v.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean) as string[]
+}
+
+function mapPriceTier(tier: TravelAgentDTO["price_tier"]): "$" | "$$" | "$$$" {
+  if (tier === 1 || tier === "$") return "$"
+  if (tier === 2 || tier === "$$") return "$$"
+  if (tier === 3 || tier === "$$$") return "$$$"
+  return "$$"
+}
+
+function mapTravelAgent(dto: TravelAgentDTO): TravelAgentUI {
+  const locationParts = [dto.location?.address_1, dto.location?.state?.name].filter(Boolean)
+
+  return {
+    id: String(dto.id),
+    name: dto.name,
+    description: dto.description || "—",
+    fullDescription: dto.full_description || dto.description,
+    location: locationParts.join(", ") || "—",
+    address: dto.location?.address_1,
+    state: dto.location?.state?.name,
+    country: "Nigeria",
+    image: dto.profile_image || dto.cover_image_url || dto.logo_url || "/placeholder.svg",
+    rating: typeof dto.rating === "number" ? dto.rating : 0,
+    reviews: typeof dto.reviews_count === "number" ? dto.reviews_count : 0,
+    destinations: toArrayOfStrings(dto.destinations),
+    services: toArrayOfStrings(dto.services),
+    hospitalPartners: toArrayOfStrings(dto.hospital_partners),
+    certifications: toArrayOfStrings(dto.certifications),
+    price: mapPriceTier(dto.price_tier),
+    languages: dto.languages,
+    yearFounded: dto.year_founded,
+    yearsOfExperience: dto.years_of_experience,
+    phoneNumber1: dto.phone_number_1,
+    phoneNumber2: dto.phone_number_2,
+    websiteUrl: dto.website_url,
+    registrationNumber: dto.registration_number,
+    images: dto.images,
+    internationalClients: dto.international_clients,
+  }
+}
 
 export default function TravelAgentsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedDestination, setSelectedDestination] = useState("")
-  // Removed selectedSpecialty state
-  const [viewMode, setViewMode] = useState("grid")
+  const [showGate, setShowGate] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedDestinations, setSelectedDestinations] = useState<string[]>([])
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([])
+  const [priceRange, setPriceRange] = useState<number[]>([1, 3])
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
-  // Filter agents based on search and filters
-  const filteredAgents = travelAgents.filter((agent) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agent.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesDestination = selectedDestination === "" || agent.destinations.includes(selectedDestination)
-    // Removed matchesSpecialty logic
-    return matchesSearch && matchesDestination
-  })
+  const [travelAgents, setTravelAgents] = useState<TravelAgentUI[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  // Hardcoded Top Filters (initialize from presets)
+  const [topDestinations] = useState<string[]>(TOP_DESTINATIONS_PRESET.slice(0, 6))
+  const [topServices] = useState<string[]>(TOP_SERVICES_PRESET.slice(0, 6))
+
+  // Pagination
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const [page, setPage] = useState<number>(1)
+
+  const [showComparison, setShowComparison] = useState(false)
+  const [agentsToCompare, setAgentsToCompare] = useState<string[]>([])
+  const [visibleAgents, setVisibleAgents] = useState(12)
+
+  // --------- Fetch travel agents ----------
+  const fetchTravelAgents = async (opts?: { url?: string; page?: number; append?: boolean }) => {
+    const url = opts?.url ?? `${API_ENDPOINTS.META.TRAVEL_AGENTS}?page=${opts?.page ?? page}`
+    setIsLoading(true)
+    setLoadError(null)
+    try {
+      const res = await apiRequest<TravelAgentsListResponse>(url, { method: HTTP_METHODS.GET })
+
+      // Normalize shape
+      const results: TravelAgentDTO[] =
+        (Array.isArray(res?.data) ? (res?.data as TravelAgentDTO[]) : res?.data?.results) ?? ([] as TravelAgentDTO[])
+
+      const mapped = results.map(mapTravelAgent)
+
+      // Fix: ensure visible count is based on the *new* array length
+      setTravelAgents((prev) => {
+        const next = opts?.append ? [...prev, ...mapped] : mapped
+        setVisibleAgents((v) => (opts?.append ? Math.min(v + 12, next.length) : Math.min(12, next.length)))
+        return next
+      })
+
+      // next URL detection
+      const nextFromData = (res as any)?.data?.next ?? (res as any)?.next ?? null
+      const nextPageFromData = (res as any)?.data?.next_page ?? (res as any)?.next_page ?? null
+
+      if (nextFromData) {
+        setNextUrl(nextFromData as string)
+      } else if (nextPageFromData) {
+        setNextUrl(`${API_ENDPOINTS.META.TRAVEL_AGENTS}?page=${nextPageFromData}`)
+      } else {
+        setNextUrl(null)
+      }
+    } catch (err: any) {
+      const m = err?.message || err?.detail || "Could not load travel agents. Please try again."
+      setLoadError(m)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initial load
+  useEffect(() => {
+    fetchTravelAgents({ page: 1, append: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleLoadMore = async () => {
+    if (travelAgents.length >= 12) {
+      setShowGate(true)
+      return
+    }
+    if (nextUrl) {
+      const nextPageMatch = /[?&]page=(\d+)/.exec(nextUrl)
+      const nextP = nextPageMatch ? Number(nextPageMatch[1]) : undefined
+      await fetchTravelAgents({ url: nextUrl, page: nextP, append: true })
+      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length + 12))
+    } else {
+      // no server next -> just reveal more if already loaded
+      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length))
+    }
+  }
+
+  // --------- Filters / search (client-side) ----------
+  const filteredAgents = useMemo(() => {
+    const priceMapping = { $: 1, $$: 2, $$$: 3 } as const
+
+    return travelAgents.filter((agent) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.destinations.some((d) => d.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        agent.services.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (agent.location && agent.location.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      const matchesDestination =
+        selectedDestinations.length === 0 || agent.destinations.some((d) => selectedDestinations.includes(d))
+
+      const matchesService = selectedServices.length === 0 || agent.services.some((s) => selectedServices.includes(s))
+
+      const matchesCertification =
+        selectedCertifications.length === 0 ||
+        (agent.certifications && agent.certifications.some((cert) => selectedCertifications.includes(cert)))
+
+      const agentPrice = priceMapping[agent.price]
+      const matchesPrice = agentPrice >= priceRange[0] && agentPrice <= priceRange[1]
+
+      return matchesSearch && matchesDestination && matchesService && matchesCertification && matchesPrice
+    })
+  }, [travelAgents, searchQuery, selectedDestinations, selectedServices, selectedCertifications, priceRange])
+
+  // --------- UI handlers ----------
+  const handleSearch = () => {}
+
+  const toggleDestination = (destination: string) => {
+    setSelectedDestinations((prev) =>
+      prev.includes(destination) ? prev.filter((d) => d !== destination) : [...prev, destination],
+    )
+  }
+
+  const toggleService = (service: string) => {
+    setSelectedServices((prev) => (prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]))
+  }
+
+  const toggleCertification = (certification: string) => {
+    setSelectedCertifications((prev) =>
+      prev.includes(certification) ? prev.filter((c) => c !== certification) : [...prev, certification],
+    )
+  }
+
+  const resetFilters = () => {
+    setSearchQuery("")
+    setSelectedDestinations([])
+    setSelectedServices([])
+    setSelectedCertifications([])
+    setPriceRange([1, 3])
+  }
+
+  const handleImageSearch = (e: React.ChangeEvent<HTMLInputElement>) => {}
+
+  const toggleAgentComparison = (agentId: string) => {
+    setAgentsToCompare((prev) => {
+      if (prev.includes(agentId)) return prev.filter((id) => id !== agentId)
+      if (prev.length >= 6) return prev
+      return [...prev, agentId]
+    })
+  }
+
+  const removeFromComparison = (agentId: string) => {
+    setAgentsToCompare((prev) => prev.filter((id) => id !== agentId))
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-1">
-        {/* All Travel Agents */}
-        <section className="py-12 md:py-16 bg-gray-50">
+        <section className="w-full bg-gradient-to-br from-purple-50 via-white to-green-50 py-8 md:py-12">
           <ResponsiveContainer>
-            <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold">Travel Agents for Your Trip to Nigeria</h2>
-              <p className="text-gray-500 mt-1">Find quality travel partners to facilitate your journey to Nigeria.</p>
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-6">
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Travel Agents in Nigeria</h1>
+                <p className="text-gray-600 text-base max-w-2xl mx-auto">
+                  Find certified travel agents to help with your medical tourism journey.
+                </p>
+              </div>
             </div>
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAgents.map((agent) => (
-                  <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="p-4 border-b flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 p-1 flex items-center justify-center">
-                          <img
-                            src={agent.logo || "/placeholder.svg"}
-                            alt={`${agent.name} logo`}
-                            className="w-10 h-10 object-contain rounded-full"
-                          />
-                        </div>
+
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-0 shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
+                    <div className="relative flex-1">
+                      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search agents, destinations, or services..."
+                        className="pl-9 py-3 border-gray-300 focus:border-primary focus:ring-primary"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                          onClick={() => setSearchQuery("")}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-primary border-primary/20 hover:bg-primary/5 bg-transparent px-3"
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    >
+                      <Sliders className="h-3 w-3 mr-1" />
+                      Filters
+                      <ChevronDown
+                        className={`h-3 w-3 ml-1 transition-transform ${showAdvancedFilters ? "rotate-180" : ""}`}
+                      />
+                    </Button>
+                  </div>
+
+                  {/* Advanced filters */}
+                  {showAdvancedFilters && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
-                          <h3 className="font-semibold">{agent.name}</h3>
-                          <div className="flex items-center text-sm">
-                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span className="font-medium">{agent.rating}</span>
-                            <span className="text-gray-500 ml-1">({agent.reviewCount})</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-5">
-                        <p className="text-gray-600 text-sm mb-4">{agent.description}</p>
-                        <div className="mb-4">
-                          <h4 className="text-xs font-medium text-gray-500 mb-2">DESTINATIONS IN NIGERIA</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {agent.destinations.map((destination) => (
-                              <Badge
-                                key={destination}
-                                variant="outline"
-                                className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                              >
-                                {destination}
-                              </Badge>
+                          <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                            <MapPin className="h-4 w-4 mr-2 text-primary" />
+                            Destinations
+                          </h3>
+                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            {topDestinations.slice(0, 8).map((destination) => (
+                              <div key={destination} className="flex items-center">
+                                <Checkbox
+                                  id={`destination-${destination}`}
+                                  checked={selectedDestinations.includes(destination)}
+                                  onCheckedChange={() => toggleDestination(destination)}
+                                  className="border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <label
+                                  htmlFor={`destination-${destination}`}
+                                  className="ml-2 text-sm text-gray-700 cursor-pointer"
+                                >
+                                  {destination}
+                                </label>
+                              </div>
                             ))}
                           </div>
                         </div>
-                        {/* Removed Specialties section */}
-                        <div className="flex gap-2">
-                          <AffiliateLink
-                            href={agent.website}
-                            vendorId={agent.id}
-                            trackingId="agent-profile"
-                            campaign="agent-listing"
-                            className="flex-1"
-                          >
-                            <Button className="w-full text-white">View Profile</Button>
-                          </AffiliateLink>
-                          <Button variant="outline" className="flex-1 bg-transparent">
-                            Contact
-                          </Button>
+                        <div>
+                          <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                            <Plane className="h-4 w-4 mr-2 text-primary" />
+                            Services
+                          </h3>
+                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            {topServices.slice(0, 8).map((service) => (
+                              <div key={service} className="flex items-center">
+                                <Checkbox
+                                  id={`service-${service}`}
+                                  checked={selectedServices.includes(service)}
+                                  onCheckedChange={() => toggleService(service)}
+                                  className="border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <label
+                                  htmlFor={`service-${service}`}
+                                  className="ml-2 text-sm text-gray-700 cursor-pointer"
+                                >
+                                  {service}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-6">
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                              <CheckCircle className="h-4 w-4 mr-2 text-primary" />
+                              Certifications
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {["IATA", "ASTA", "CLIA", "ABTA", "ATOL", "TAFI"].slice(0, 6).map((cert) => (
+                                <Badge
+                                  key={cert}
+                                  variant={selectedCertifications.includes(cert) ? "default" : "outline"}
+                                  className={`cursor-pointer ${
+                                    selectedCertifications.includes(cert)
+                                      ? "bg-primary hover:bg-primary/90"
+                                      : "hover:bg-primary/10"
+                                  }`}
+                                  onClick={() => toggleCertification(cert)}
+                                >
+                                  {cert}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                              <span className="h-4 w-4 mr-2 text-primary flex items-center justify-center">$</span>
+                              Price Range
+                            </h3>
+                            <div className="px-2">
+                              <Slider
+                                defaultValue={[1, 3]}
+                                min={1}
+                                max={3}
+                                step={1}
+                                value={priceRange}
+                                onValueChange={setPriceRange}
+                                className="my-4"
+                              />
+                              <div className="flex justify-between text-sm text-gray-500">
+                                <span>Budget</span>
+                                <span>Mid-range</span>
+                                <span>Premium</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between mt-6 pt-4 border-t border-gray-200 gap-4">
+                        <div className="flex flex-wrap gap-1">
+                          {selectedDestinations.length > 0 && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
+                              Destinations: {selectedDestinations.length}
+                              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedDestinations([])} />
+                            </Badge>
+                          )}
+                          {selectedServices.length > 0 && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
+                              Services: {selectedServices.length}
+                              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedServices([])} />
+                            </Badge>
+                          )}
+                          {selectedCertifications.length > 0 && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
+                              Certifications: {selectedCertifications.length}
+                              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedCertifications([])} />
+                            </Badge>
+                          )}
+                          {(priceRange[0] !== 1 || priceRange[1] !== 3) && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-700 gap-1">
+                              Price:{" "}
+                              {Array(priceRange[1] - priceRange[0] + 1)
+                                .fill("$")
+                                .join("")}
+                              <X className="h-3 w-3 cursor-pointer" onClick={() => setPriceRange([1, 3])} />
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resetFilters}
+                          className="text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-700 self-end sm:self-auto bg-transparent"
+                        >
+                          Reset All Filters
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </ResponsiveContainer>
+        </section>
+
+        <section className="w-full py-8 md:py-12 bg-white">
+          <ResponsiveContainer>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+              <div>
+                {(isLoading || loadError || filteredAgents.length > 0) && (
+                  <p className="text-gray-500">
+                    {loadError
+                      ? "Unable to load travel agents"
+                      : isLoading
+                        ? "Loading travel agents…"
+                        : `${filteredAgents.length} ${filteredAgents.length === 1 ? "result" : "results"} found`}
+                  </p>
+                )}
+              </div>
+              <div className="mt-4 md:mt-0 flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-500">Sort by:</p>
+                  <Select defaultValue="rating">
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rating">Highest Rated</SelectItem>
+                      <SelectItem value="reviews">Most Reviews</SelectItem>
+                      <SelectItem value="price-low">Price: Low to High</SelectItem>
+                      <SelectItem value="price-high">Price: High to Low</SelectItem>
+                      <SelectItem value="az">A-Z</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant={agentsToCompare.length > 0 ? "default" : "outline"}
+                  className={
+                    agentsToCompare.length > 0
+                      ? "bg-primary hover:bg-primary/90 text-white"
+                      : "border-primary/20 text-primary hover:bg-primary/5"
+                  }
+                  onClick={() => setShowComparison(true)}
+                  disabled={agentsToCompare.length === 0}
+                >
+                  <BarChart2 className="h-4 w-4 mr-2" />
+                  Compare Agents {agentsToCompare.length > 0 && `(${agentsToCompare.length})`}
+                </Button>
+              </div>
+            </div>
+
+            {loadError && (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                  <X className="h-8 w-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Error loading travel agents</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">{loadError}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => fetchTravelAgents({ page: 1, append: false })}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            {!loadError && filteredAgents.length === 0 && !isLoading ? (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                  <SearchIcon className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">No travel agents found</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">
+                  We couldn't find any travel agents matching your search criteria. Try adjusting your filters or search
+                  terms.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
+                >
+                  Reset All Filters
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAgents.slice(0, visibleAgents).map((agent) => (
+                  <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <div className="aspect-video w-full overflow-hidden relative">
+                      <img
+                        src={agent.image || "/placeholder.svg"}
+                        alt={`${agent.name} office`}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <Button
+                          variant={agentsToCompare.includes(agent.id) ? "default" : "outline"}
+                          size="sm"
+                          className={`rounded-md ${
+                            agentsToCompare.includes(agent.id)
+                              ? "bg-primary text-white hover:bg-primary/90"
+                              : "bg-white/90 border-gray-300 hover:bg-white"
+                          }`}
+                          onClick={() => toggleAgentComparison(agent.id)}
+                        >
+                          <BarChart2 className="h-4 w-4" />
+                          <span className="sr-only">
+                            {agentsToCompare.includes(agent.id) ? "Selected for comparison" : "Compare"}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-bold">{agent.name}</h3>
+                        <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">{agent.rating.toFixed(1)}</span>
+                          <span className="text-xs text-gray-500">({agent.reviews})</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 mt-2 text-gray-500">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="text-sm">{agent.location}</span>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-sm text-gray-500 line-clamp-3">{agent.description}</p>
+                      </div>
+                      {agent.certifications && agent.certifications.length > 0 && (
+                        <div className="mt-3 flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <div className="flex flex-wrap gap-1">
+                            {agent.certifications.map((cert) => (
+                              <span key={cert} className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
+                                {cert}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {agent.destinations.slice(0, 3).map((d) => (
+                          <span key={d} className="inline-block bg-gray-100 px-2 py-1 text-xs rounded-md text-gray-700">
+                            {d}
+                          </span>
+                        ))}
+                        {agent.destinations.length > 3 && (
+                          <span className="inline-block bg-gray-100 px-2 py-1 text-xs rounded-md text-gray-700">
+                            +{agent.destinations.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                      {agent.languages && agent.languages.includes("English") && (
+                        <div className="mt-3 flex items-center gap-1">
+                          <Globe className="h-4 w-4 text-primary" />
+                          <span className="text-xs text-gray-500">English</span>
+                        </div>
+                      )}
                     </CardContent>
+                    <CardFooter className="p-6 pt-0 flex gap-2">
+                      <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" asChild>
+                        <Link href={`/travel-agents/${agent.id}`}>View Agent</Link>
+                      </Button>
+                    </CardFooter>
                   </Card>
                 ))}
               </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredAgents.map((agent) => (
-                  <Card key={agent.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="p-5 flex flex-col md:flex-row gap-5">
-                        <div className="md:w-1/4 flex flex-col items-center text-center md:border-r md:pr-5">
-                          <div className="w-20 h-20 rounded-full bg-gray-100 p-1 flex items-center justify-center mb-3">
-                            <img
-                              src={agent.logo || "/placeholder.svg"}
-                              alt={`${agent.name} logo`}
-                              className="w-16 h-16 object-contain rounded-full"
-                            />
-                          </div>
-                          <h3 className="font-semibold text-lg">{agent.name}</h3>
-                          <div className="flex items-center justify-center text-sm mt-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span className="font-medium">{agent.rating}</span>
-                            <span className="text-gray-500 ml-1">({agent.reviewCount})</span>
-                          </div>
-                          <div className="mt-4 flex flex-col gap-2">
-                            <AffiliateLink
-                              href={agent.website}
-                              vendorId={agent.id}
-                              trackingId="agent-profile"
-                              campaign="agent-listing"
-                              className="w-full"
-                            >
-                              <Button className="w-full">View Profile</Button>
-                            </AffiliateLink>
-                            <Button variant="outline" className="w-full bg-transparent">
-                              Contact
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="md:w-3/4">
-                          <p className="text-gray-600 mb-4">{agent.description}</p>
-                          <Tabs defaultValue="details" className="w-full">
-                            <TabsList className="mb-4">
-                              <TabsTrigger value="details">Details</TabsTrigger>
-                              <TabsTrigger value="services">Services</TabsTrigger>
-                              <TabsTrigger value="languages">Languages</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="details" className="space-y-4">
-                              <div>
-                                <h4 className="text-xs font-medium text-gray-500 mb-2">DESTINATIONS IN NIGERIA</h4>
-                                <div className="flex flex-wrap gap-1">
-                                  {agent.destinations.map((destination) => (
-                                    <Badge
-                                      key={destination}
-                                      variant="outline"
-                                      className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                                    >
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      {destination}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              {/* Removed Specialties section */}
-                            </TabsContent>
-                            <TabsContent value="services">
-                              <h4 className="text-xs font-medium text-gray-500 mb-2">SERVICES PROVIDED</h4>
-                              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                {agent.services.map((service) => (
-                                  <li key={service} className="flex items-center text-sm">
-                                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                                    {service}
-                                  </li>
-                                ))}
-                              </ul>
-                            </TabsContent>
-                            <TabsContent value="languages">
-                              <h4 className="text-xs font-medium text-gray-500 mb-2">LANGUAGES SPOKEN</h4>
-                              <div className="flex flex-wrap gap-1">
-                                {agent.languages.map((language) => (
-                                  <Badge key={language} variant="outline" className="text-xs">
-                                    <Globe className="h-3 w-3 mr-1" />
-                                    {language}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </TabsContent>
-                          </Tabs>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+            )}
+
+            {/* Load More button */}
+            {!loadError && (nextUrl || visibleAgents < filteredAgents.length) && (
+              <div className="mt-12 text-center">
+                <Button
+                  variant="outline"
+                  className="border-primary/20 text-primary hover:bg-primary/5 bg-transparent"
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loading…" : "Load More Travel Agents"}
+                </Button>
               </div>
             )}
           </ResponsiveContainer>
         </section>
 
-        {/* How It Works */}
-        <section className="py-12 md:py-16">
-          <ResponsiveContainer>
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <Badge className="mb-4 bg-primary hover:bg-primary">How It Works</Badge>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Travel Support System for Nigeria</h2>
-                <p className="text-gray-600 mb-8">
-                  Our travel agents work alongside your chosen hospital in Nigeria to ensure your medical journey is as
-                  smooth and stress-free as possible.
-                </p>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary font-bold">
-                          1
-                        </div>
-                        <span>Select Your Hospital in Nigeria First</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-11">
-                      Begin by choosing your hospital and treatment in Nigeria. Our platform helps you find the best
-                      medical facilities for your needs.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-2">
-                    <AccordionTrigger className="text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary font-bold">
-                          2
-                        </div>
-                        <span>Find a Compatible Travel Agent</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-11">
-                      Search for travel agents who specialize in facilitating medical travel to your chosen Nigerian
-                      city and can coordinate with your chosen hospital.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-3">
-                    <AccordionTrigger className="text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary font-bold">
-                          3
-                        </div>
-                        <span>Review Travel Packages for Nigeria</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-11">
-                      Compare packages from different agents that include international transportation, accommodation in
-                      Nigeria, and local support services.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-4">
-                    <AccordionTrigger className="text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary font-bold">
-                          4
-                        </div>
-                        <span>Enjoy Seamless Coordination in Nigeria</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-11">
-                      Your travel agent will coordinate with your hospital to ensure all logistics align with your
-                      treatment schedule during your stay in Nigeria.
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-primary-100 rounded-3xl transform rotate-3 scale-105 opacity-50"></div>
-                <img
-                  src="/placeholder.svg?key=travelagentcoordination"
-                  alt="Travel agent coordinating with hospital"
-                  className="relative rounded-2xl w-full h-auto"
-                />
-              </div>
-            </div>
-          </ResponsiveContainer>
-        </section>
-
-        {/* Services Provided */}
-        <section className="py-12 md:py-16 bg-primary-50">
-          <ResponsiveContainer>
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <Badge className="mb-4 bg-primary hover:bg-primary">Travel Services</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                What Travel Agents Provide for Your Trip to Nigeria
-              </h2>
-              <p className="text-gray-600">
-                Our travel agents handle all non-medical aspects of your journey to Nigeria, allowing you to focus
-                entirely on your health and recovery.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-white hover:shadow-lg transition-all">
-                <CardContent className="p-6">
-                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
-                    <Plane className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Transportation to & within Nigeria</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>International flight bookings to Nigeria</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Airport pickup and drop-off services in Nigeria</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Local transportation to and from medical facilities</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Emergency transportation arrangements</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-              <Card className="bg-white hover:shadow-lg transition-all">
-                <CardContent className="p-6">
-                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
-                    <Users className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Accommodation in Nigeria</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Medical-friendly hotel or apartment arrangements</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Options for accompanying family members</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Extended stay coordination for recovery periods</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Special dietary needs and room requirements</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-              <Card className="bg-white hover:shadow-lg transition-all">
-                <CardContent className="p-6">
-                  <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
-                    <MessageSquare className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Local Support in Nigeria</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Translation and interpreter services</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>24/7 emergency assistance and support</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Coordination with hospital staff and appointments</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Cultural guidance and local recommendations</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          </ResponsiveContainer>
-        </section>
-
-        {/* CTA Section - Modified to invite travel agents to join the platform */}
+        {/* CTA Section */}
         <section className="py-16 md:py-24 bg-primary text-white">
           <ResponsiveContainer>
             <div className="text-center max-w-3xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Travel Agent in Nigeria?</h2>
               <p className="text-white/80 text-lg mb-8">
-                Join our platform to connect with international patients seeking medical care in Nigeria and grow your
-                medical tourism business.
+                Join our platform to connect with international patients seeking medical care in Nigeria and expand your
+                reach in the medical tourism market.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
@@ -516,6 +663,8 @@ export default function TravelAgentsPage() {
             </div>
           </ResponsiveContainer>
         </section>
+
+        {showGate && <SoftGate type="travel-agent" onClose={() => setShowGate(false)} />}
       </main>
       <SiteFooter />
     </div>

@@ -49,7 +49,7 @@ function setRoleCookie(role?: string) {
 function getNextParam(): string | null {
   if (typeof window === "undefined") return null;
   const url = new URL(window.location.href);
-  return url.searchParams.get("next");
+  return url.searchParams.get("next") || url.searchParams.get("redirect");
 }
 
 function routeAfterLogin(router: ReturnType<typeof useRouter>, payload: any) {
@@ -97,12 +97,33 @@ export default function LoginPage() {
     [resendCooldown, isResending]
   );
 
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  type LoginPayload = {
+    requires_verification?: boolean;
+    status?: string;
+    next?: string;
+    user?: {
+      emailVerified?: boolean;
+      role?: string;
+    };
+    role?: string;
+    data?: {
+      user?: {
+        role?: string;
+      };
+      role?: string;
+      access_token?: string;
+      token?: string;
+    };
+    access_token?: string;
+    token?: string;
+  };
+
+  const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const router = useRouter();
 
   // If already logged in, never show this page
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+if (!authLoading && isAuthenticated) {
       const next = getNextParam();
       if (next) {
         router.replace(next);
@@ -117,9 +138,12 @@ export default function LoginPage() {
               ?.split("=")[1]
           : undefined;
       const role = roleCookie ? decodeURIComponent(roleCookie) : undefined;
-      router.replace(getDashboardPath(role));
+      console.log("[v0] LOGIN: Role from cookie:", role);
+      const dashboardPath = getDashboardPath(role);
+      console.log("[v0] LOGIN: Redirecting to dashboard:", dashboardPath);
+      router.replace(dashboardPath);
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, user]); // Add user to dependencies
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -127,7 +151,7 @@ export default function LoginPage() {
     setOtpError("");
     setOtpRequested(false);
     setOtp("");
-    setIsLoading(false);
+    // Removed invalid login call from switchTab
     setIsRequestingOtp(false);
     setIsVerifyingOtp(false);
     setIsResending(false);
@@ -137,6 +161,7 @@ export default function LoginPage() {
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[v0] LOGIN: Password login form submitted");
     setPasswordError("");
     if (!email || !password) {
       setPasswordError("Please fill in all fields");
@@ -144,24 +169,42 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
-      const payload = await login(email, password); // now returns payload
+      console.log("[v0] LOGIN: Starting login process for:", email);
+      const response = await login(email, password);
 
-      const needsVerify =
-        Boolean(payload?.requires_verification) ||
-        payload?.status === "pending_verification" ||
-        payload?.next === "verify" ||
-        payload?.user?.emailVerified === false;
+      console.log("[v0] LOGIN: Login response:", response);
 
-      if (needsVerify) {
-        const q = new URLSearchParams({
-          email: email.toLowerCase(),
-          from: "login",
-        });
-        router.replace(`/user/auth/verify?${q.toString()}`);
+      if (!response || response.status !== "success") {
+        console.log(
+          "[v0] LOGIN: Login failed:",
+          response?.message || "Unknown error"
+        );
+        setPasswordError(response?.message || "Login failed");
+        return;
+      }
+
+      const userType = response.data?.user_type;
+      console.log("[v0] LOGIN: User type:", userType);
+
+      if (userType) {
+        console.log("[v0] LOGIN: Setting user type in localStorage:", userType);
+        localStorage.setItem("user_type", userType);
+        setRoleCookie(userType);
+      }
+
+      console.log("[v0] LOGIN: Login successful, auth state should be updated");
+
+      const next = getNextParam();
+      if (next) {
+        console.log("[v0] LOGIN: Redirecting to next param:", next);
+        router.replace(next);
       } else {
-        routeAfterLogin(router, payload);
+        const dashboardPath = getDashboardPath(userType);
+        console.log("[v0] LOGIN: Redirecting to dashboard:", dashboardPath);
+        router.replace(dashboardPath);
       }
     } catch (err) {
+      console.error("[v0] LOGIN: Login error:", err);
       if (err instanceof Error) {
         const errorMessage = err.message;
 
@@ -300,6 +343,13 @@ export default function LoginPage() {
       setIsResending(false);
     }
   };
+
+  console.log(
+    "[v0] LOGIN: Rendering login page - authLoading:",
+    authLoading,
+    "isAuthenticated:",
+    isAuthenticated
+  );
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
