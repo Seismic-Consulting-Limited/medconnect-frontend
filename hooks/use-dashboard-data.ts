@@ -43,18 +43,24 @@ export function useDashboardData() {
         setData(dashboardData)
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard data"
-        setError(errorMessage)
 
-        if (errorMessage.includes("Authentication required")) {
+        if (
+          errorMessage.includes("Authentication required") ||
+          errorMessage.toLowerCase().includes("user not found") ||
+          errorMessage.toLowerCase().includes("account not found")
+        ) {
           logout()
+          return
         }
+
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
     }
 
     fetchDashboardData()
-  }, [user, isAuthenticated, normalizedRole]) // Use normalizedRole instead of userRole
+  }, [user, isAuthenticated, normalizedRole, logout])
 
   const refetch = async () => {
     if (!isAuthenticated || !user) {
@@ -85,11 +91,17 @@ export function useDashboardData() {
       setData(dashboardData)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard data"
-      setError(errorMessage)
 
-      if (errorMessage.includes("Authentication required")) {
+      if (
+        errorMessage.includes("Authentication required") ||
+        errorMessage.toLowerCase().includes("user not found") ||
+        errorMessage.toLowerCase().includes("account not found")
+      ) {
         logout()
+        return
       }
+
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

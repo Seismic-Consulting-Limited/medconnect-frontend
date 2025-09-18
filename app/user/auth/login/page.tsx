@@ -123,7 +123,7 @@ export default function LoginPage() {
 
   // If already logged in, never show this page
   useEffect(() => {
-if (!authLoading && isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       const next = getNextParam();
       if (next) {
         router.replace(next);
@@ -138,12 +138,10 @@ if (!authLoading && isAuthenticated) {
               ?.split("=")[1]
           : undefined;
       const role = roleCookie ? decodeURIComponent(roleCookie) : undefined;
-      console.log("[v0] LOGIN: Role from cookie:", role);
       const dashboardPath = getDashboardPath(role);
-      console.log("[v0] LOGIN: Redirecting to dashboard:", dashboardPath);
       router.replace(dashboardPath);
     }
-  }, [authLoading, isAuthenticated, router, user]); // Add user to dependencies
+  }, [authLoading, isAuthenticated, router, user]);
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -151,7 +149,6 @@ if (!authLoading && isAuthenticated) {
     setOtpError("");
     setOtpRequested(false);
     setOtp("");
-    // Removed invalid login call from switchTab
     setIsRequestingOtp(false);
     setIsVerifyingOtp(false);
     setIsResending(false);
@@ -161,7 +158,6 @@ if (!authLoading && isAuthenticated) {
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[v0] LOGIN: Password login form submitted");
     setPasswordError("");
     if (!email || !password) {
       setPasswordError("Please fill in all fields");
@@ -169,60 +165,41 @@ if (!authLoading && isAuthenticated) {
     }
     setIsLoading(true);
     try {
-      console.log("[v0] LOGIN: Starting login process for:", email);
       const response = await login(email, password);
 
-      console.log("[v0] LOGIN: Login response:", response);
-
       if (!response || response.status !== "success") {
-        console.log(
-          "[v0] LOGIN: Login failed:",
-          response?.message || "Unknown error"
-        );
         setPasswordError(response?.message || "Login failed");
         return;
       }
 
       const userType = response.data?.user_type;
-      console.log("[v0] LOGIN: User type:", userType);
 
       if (userType) {
-        console.log("[v0] LOGIN: Setting user type in localStorage:", userType);
         localStorage.setItem("user_type", userType);
         setRoleCookie(userType);
       }
 
-      console.log("[v0] LOGIN: Login successful, auth state should be updated");
-
       const next = getNextParam();
       if (next) {
-        console.log("[v0] LOGIN: Redirecting to next param:", next);
         router.replace(next);
       } else {
         const dashboardPath = getDashboardPath(userType);
-        console.log("[v0] LOGIN: Redirecting to dashboard:", dashboardPath);
         router.replace(dashboardPath);
       }
     } catch (err) {
-      console.error("[v0] LOGIN: Login error:", err);
       if (err instanceof Error) {
         const errorMessage = err.message;
 
-        // Check if this is the unverified user response
         if (
           errorMessage ===
           "User not verified, an OTP has been sent to your email"
         ) {
-          setPasswordError(errorMessage);
-
-          // Redirect after 3 seconds
-          setTimeout(() => {
-            const q = new URLSearchParams({
-              email: email.toLowerCase(),
-              from: "login",
-            });
-            router.replace(`/user/auth/verify?${q.toString()}`);
-          }, 3000);
+          const q = new URLSearchParams({
+            email: email.toLowerCase(),
+            from: "login",
+          });
+          router.replace(`/user/auth/verify?${q.toString()}`);
+          return;
         } else {
           setPasswordError(errorMessage);
         }
@@ -261,8 +238,7 @@ if (!authLoading && isAuthenticated) {
         res?.detail ??
         "If an account exists, we’ve sent a code.";
       setOtpRequested(true);
-      toast.success(String(msg)); // 🔔 toast instead of inline message
-      // optional: begin cooldown immediately after first send
+      toast.success(String(msg));
       startCooldown(30);
     } catch (err) {
       const m =
@@ -314,7 +290,6 @@ if (!authLoading && isAuthenticated) {
     }
   };
 
-  // 🔁 Resend uses signinOtpInit (backend has no resend endpoint)
   const handleResendOtp = async () => {
     if (!email) {
       setOtpError("Missing email");
@@ -343,13 +318,6 @@ if (!authLoading && isAuthenticated) {
       setIsResending(false);
     }
   };
-
-  console.log(
-    "[v0] LOGIN: Rendering login page - authLoading:",
-    authLoading,
-    "isAuthenticated:",
-    isAuthenticated
-  );
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -576,8 +544,6 @@ if (!authLoading && isAuthenticated) {
                         />
                       </div>
                     </div>
-
-                    {/* Inline message removed; we use toasts instead */}
 
                     <Button
                       type="button"

@@ -278,6 +278,31 @@ export class DashboardService {
     }
   }
 
+  public async getHospitalProfileCompletionRate(): Promise<{ completion_rate: number }> {
+    try {
+      await this.validateAuthOrThrow()
+
+      console.log("[v0] Fetching profile completion rate from:", API_ENDPOINTS.META.PROFILE_COMPLETION_RATE)
+
+      const response = await apiRequest<{ data: { completion_rate: number } }>(
+        API_ENDPOINTS.META.PROFILE_COMPLETION_RATE,
+        {
+          method: HTTP_METHODS.GET,
+        },
+        {
+          auth: true,
+          getToken: () => authService.getToken(),
+        },
+      )
+
+      console.log("[v0] Profile completion response:", response)
+      return response.data || { completion_rate: 0 }
+    } catch (error) {
+      console.error("Failed to fetch profile completion rate:", error)
+      return { completion_rate: 0 }
+    }
+  }
+
   // Travel agent dashboard methods
   public async getTravelAgentDashboard(): Promise<TravelAgentDashboardData> {
     try {

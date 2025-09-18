@@ -68,6 +68,9 @@ export const API_ENDPOINTS = {
     USER_TYPES: `${API_VERSION_PREFIX}/user-types/`,
     HOSPITALS: `${API_VERSION_PREFIX}/hospitals`,
     HOSPITAL_DETAIL: (hospitalId: string) => `${API_VERSION_PREFIX}/hospitals/${hospitalId}`,
+    HOSPITAL_DOCUMENTS: `${API_VERSION_PREFIX}/hospitals/documents`,
+    CHECK_APPROVAL_DOCUMENTS: `${API_VERSION_PREFIX}/hospitals/check-approval-documents`,
+    PROFILE_COMPLETION_RATE: `${API_VERSION_PREFIX}/hospitals/profile-completion-rate`,
     TRAVEL_AGENTS: `${API_VERSION_PREFIX}/travel-agents`,
     TRAVEL_AGENT_DETAIL: (agentId: string) => `${API_VERSION_PREFIX}/travel-agents/${agentId}`,
   },
@@ -85,3 +88,14 @@ export const AUTH_CONSTANTS = {
   TOKEN_EXPIRY: 15 * 60 * 1000, // 15 minutes
   REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days
 } as const
+
+export const FILE_UPLOAD_CONSTANTS = {
+  ALLOWED_TYPES: ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
+  ALLOWED_EXTENSIONS: ".pdf,.jpg,.jpeg,.png",
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  ERROR_MESSAGES: {
+    FILE_SIZE: "File size must be less than 10MB",
+    FILE_TYPE: "Only PDF, JPG, and PNG files are allowed",
+  },
+} as const
+

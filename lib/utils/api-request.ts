@@ -12,7 +12,10 @@ export const parseError = async (response: Response): Promise<string> => {
     if (typeof data === "string") return data;
     if ((data as any)?.message) return String((data as any).message);
     if ((data as any)?.detail) return String((data as any).detail);
-    if (Array.isArray((data as any)?.non_field_errors) && (data as any).non_field_errors.length) {
+    if (
+      Array.isArray((data as any)?.non_field_errors) &&
+      (data as any).non_field_errors.length
+    ) {
       return String((data as any).non_field_errors[0]);
     }
     if (Array.isArray((data as any)?.errors) && (data as any).errors.length) {
@@ -34,7 +37,9 @@ export const parseError = async (response: Response): Promise<string> => {
   } catch {}
 
   // Clean fallback
-  return isServerError ? DEFAULT_SERVER_5XX_FALLBACK : response.statusText || `HTTP ${status}`;
+  return isServerError
+    ? DEFAULT_SERVER_5XX_FALLBACK
+    : response.statusText || `HTTP ${status}`;
 };
 
 const DEFAULT_SERVER_5XX_FALLBACK =
@@ -100,7 +105,32 @@ export async function apiRequest<T = unknown, TAuth = unknown>(
   });
 
   if (!response.ok) {
-    throw new Error(await parseError(response));
+    const errorMessage = await parseError(response);
+
+    // If user account is deleted or not found, treat as authentication error
+    if (
+      response.status === 404 ||
+      errorMessage.toLowerCase().includes("user not found") ||
+      errorMessage.toLowerCase().includes("account not found") ||
+      response.status === 401 ||
+      response.status === 403
+    ) {
+      // Clear any stored auth data
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("medconnect_token");
+        localStorage.removeItem("user_type");
+        document.cookie =
+          "medconnect_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        document.cookie =
+          "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+
+        // Redirect to login
+        window.location.href = "/user/auth/login";
+        return {} as T; // Return empty to prevent further processing
+      }
+    }
+
+    throw new Error(errorMessage);
   }
 
   if (response.status === 204) return {} as T;
