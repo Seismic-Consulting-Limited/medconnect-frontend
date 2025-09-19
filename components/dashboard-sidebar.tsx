@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -35,8 +35,37 @@ const iconMap = {
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const { getNavigationItems } = useRoleNavigation()
-  const navigationItems = getNavigationItems()
+  const { getNavigationItems, userRole } = useRoleNavigation()
+  const [navigationItems, setNavigationItems] = useState<any[]>([])
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setNavigationItems(getNavigationItems())
+    setIsHydrated(true)
+  }, [userRole]) // Only depend on userRole, not the function
+
+  if (!isHydrated) {
+    return (
+      <aside className="bg-white border-r border-gray-200 w-64 h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
+        <nav className="flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-4 w-4 bg-primary rounded-sm"></div>
+            </div>
+            <span className="font-bold text-xl text-primary">MedConnect</span>
+          </div>
+          <div className="space-y-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-lg">
+                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse flex-1"></div>
+              </div>
+            ))}
+          </div>
+        </nav>
+      </aside>
+    )
+  }
 
   return (
     <aside className="bg-white border-r border-gray-200 w-64 h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
@@ -67,9 +96,9 @@ export function DashboardSidebar() {
 
         <div className="flex-1"></div>
 
-        <div className="space-y-1 mt-auto">
-          <SidebarItem icon={<Settings className="h-4 w-4" />} label="Settings" href="#" />
-          <SidebarItem icon={<HelpCircle className="h-4 w-4" />} label="Help & Support" href="#" />
+        <div className="space-y-3 mt-auto border-t pt-4">
+          <SidebarItem icon={<Settings className="h-4 w-4" />} label="Settings" href="/settings" />
+          <SidebarItem icon={<HelpCircle className="h-4 w-4" />} label="Help & Support" href="/dashboard/help" />
         </div>
       </nav>
     </aside>

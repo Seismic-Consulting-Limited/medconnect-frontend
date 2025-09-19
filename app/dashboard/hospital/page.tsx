@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, ChevronDown, ChevronRight, Plus, Calendar, Stethoscope, MessageSquare, Users } from "lucide-react"
+import { Bell, ChevronRight, Plus, Calendar, Stethoscope, MessageSquare } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { dashboardService, type HospitalDashboardData } from "@/lib/services/dashboard-service"
 import { VerificationStepOne } from "@/components/verification/verification-step-one"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { ProfileDropdown } from "@/components/profile-dropdown"
 
 function SidebarItem({
   label,
@@ -77,14 +78,13 @@ export default function HospitalDashboard() {
   }, [router])
 
   const doctorCount = hospitalData.counts?.doctors || 0
-  const messageCount = 0 // Mock data as shown in screenshot
+  const messageCount = 0
 
   if (showVerification) {
     return (
       <VerificationStepOne
         onNext={() => {
           // Handle next step
-          console.log("Moving to step 2")
         }}
         onBack={() => setShowVerification(false)}
       />
@@ -113,13 +113,7 @@ export default function HospitalDashboard() {
               <Bell className="h-5 w-5" />
             </Button>
 
-            <Button variant="ghost" className="gap-2">
-              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <Users className="h-4 w-4" />
-              </div>
-              <span>Account</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+            <ProfileDropdown />
           </div>
         </div>
       </div>
@@ -201,7 +195,7 @@ export default function HospitalDashboard() {
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <Stethoscope className="h-5 w-5" />
-                  <CardTitle className="text-lg font-medium">Consultants (45)</CardTitle>
+                  <CardTitle className="text-lg font-medium">Consultants ({doctorCount})</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>

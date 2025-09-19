@@ -165,28 +165,48 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
-      const response = await login(email, password);
 
-      if (!response || response.status !== "success") {
-        setPasswordError(response?.message || "Login failed");
+      authService.debugClearAll();
+
+      const response = await authService.login(email, password);
+
+      // Check if login failed
+      if (response.success === false || response.error) {
+        console.log("[v0] LOGIN: Login failed:", response.error);
+        setPasswordError(response.error || "Login failed");
         return;
       }
 
-      const userType = response.data?.user_type;
+      // Check if token was stored
+      const storedToken = authService.getToken();
+      if (!storedToken) {
+        console.error("[v0] LOGIN: No token found after login");
+        setPasswordError("Authentication failed - please try again");
+        return;
+      }
+
+      console.log("[v0] LOGIN: Login successful, redirecting");
+
+      // Extract user type for routing
+      const userType =
+        response.data?.user_type ||
+        response.user?.role ||
+        response.data?.user?.role ||
+        localStorage.getItem("user_type");
 
       if (userType) {
-        localStorage.setItem("user_type", userType);
         setRoleCookie(userType);
       }
 
+      // Navigate to appropriate dashboard
       const next = getNextParam();
       if (next) {
         router.replace(next);
       } else {
-        const dashboardPath = getDashboardPath(userType);
-        router.replace(dashboardPath);
+        router.replace(getDashboardPath(userType));
       }
     } catch (err) {
+      console.error("[v0] LOGIN: Login error:", err);
       if (err instanceof Error) {
         const errorMessage = err.message;
 
