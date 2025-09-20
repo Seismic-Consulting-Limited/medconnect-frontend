@@ -6,7 +6,7 @@ import {
   FileText,
   Clock,
   Plus,
-  ActivityIcon,
+  Activity,
   Stethoscope,
   Plane,
   MessageSquare,
@@ -176,7 +176,7 @@ export default function ClientDashboard() {
               <Card className="overflow-hidden">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
-                    <ActivityIcon className="h-5 w-5" />
+                    <Activity className="h-5 w-5" />
                     Recent Activity
                   </CardTitle>
                 </CardHeader>
@@ -191,7 +191,7 @@ export default function ClientDashboard() {
                           className="flex items-start gap-3 pb-4 border-b last:border-b-0 last:pb-0"
                         >
                           <div className="mt-0.5 bg-primary/10 p-1.5 rounded-full">
-                            <ActivityIcon className="h-4 w-4 text-primary" />
+                            <Activity className="h-4 w-4 text-primary" />
                           </div>
                           <div>
                             <h4 className="text-sm font-medium">{activity.title}</h4>
@@ -304,7 +304,7 @@ function EmptyActivities() {
     <div className="grid place-items-center py-10">
       <div className="max-w-xs text-center">
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 grid place-items-center mb-3">
-          <ActivityIcon className="h-6 w-6 text-primary" />
+          <Activity className="h-6 w-6 text-primary" />
         </div>
         <div className="font-medium">No Recent Activity</div>
         <p className="text-xs text-gray-500 mt-1">Your health activities will appear here.</p>

@@ -1,174 +1,121 @@
-"use client"
+// components/dashboard-layout.tsx
+"use client";
 
-import type React from "react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Bell, HelpCircle, Home, ChevronRight, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/use-auth"
-import { apiRequest } from "@/lib/utils/api-request"
-import { API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants"
-import { authService } from "@/lib/auth"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/utils/api-request";
+import { API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants";
+import { authService } from "@/lib/auth";
 
-interface DashboardLayoutProps {
-  children: React.ReactNode
-  title?: string
-  subtitle?: string
-  profileCompletion?: number
-}
+type DashboardLayoutProps = {
+  title: string;
+  subtitle?: string;
+  /** Optional initial value; will be overridden for hospital/travel_agent when the endpoint returns */
+  profileCompletion?: number;
+  children: React.ReactNode;
+};
 
 export function DashboardLayout({
-  children,
-  title = "Dashboard",
+  title,
   subtitle,
-  profileCompletion = 75,
+  profileCompletion: initialCompletion = 75,
+  children,
 }: DashboardLayoutProps) {
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const [actualProfileCompletion, setActualProfileCompletion] = useState(profileCompletion)
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { isAuthenticated, userRole } = useAuth();
+  const [profileCompletion, setProfileCompletion] = useState<number>(initialCompletion);
+  const [loadingPC, setLoadingPC] = useState<boolean>(false);
+
+  const normalizedRole = useMemo(
+    () => (userRole ?? "").toLowerCase().replace(/\s+/g, "_"),
+    [userRole],
+  );
+
+  const shouldFetchProfileCompletion =
+    normalizedRole === "hospital" || normalizedRole === "travel_agent";
 
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      // If user tries to go back from dashboard, redirect to landing page
-      if (window.location.pathname.startsWith("/dashboard")) {
-        event.preventDefault()
-        router.replace("/")
-      }
-    }
+    let cancelled = false;
 
-    // Replace current history entry to prevent back to login
-    if (typeof window !== "undefined") {
-      window.history.replaceState({ fromDashboard: true }, "", window.location.pathname)
-      window.addEventListener("popstate", handlePopState)
-    }
-
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("popstate", handlePopState)
-      }
-    }
-  }, [router])
-
-  useEffect(() => {
     const fetchProfileCompletion = async () => {
-      try {
-        const token = authService.getToken()
-        if (!token) return
+      if (!isAuthenticated || !shouldFetchProfileCompletion) {
+        // Client/patient: keep whatever was passed (or default)
+        return;
+      }
 
-        const response = await apiRequest<{ data: { completion_rate: number } }>(
+      setLoadingPC(true);
+      try {
+        // NOTE: your constants already pointed to hospitals endpoint in logs.
+        // If your backend uses a single endpoint for both roles, keep this.
+        // If you later split them, switch by role here.
+        const res: any = await apiRequest(
           API_ENDPOINTS.META.PROFILE_COMPLETION_RATE,
-          {
-            method: HTTP_METHODS.GET,
-          },
+          { method: HTTP_METHODS.GET },
           {
             auth: true,
             getToken: () => authService.getToken(),
           },
-        )
+        );
 
-        if (response.data?.completion_rate !== undefined) {
-          setActualProfileCompletion(response.data.completion_rate)
+        if (cancelled) return;
+
+        // Accept multiple possible shapes: number or object
+        const value =
+          typeof res === "number"
+            ? res
+            : (res?.data?.completion_rate ??
+               res?.completion_rate ??
+               res?.rate ??
+               res?.percentage);
+
+        if (typeof value === "number" && !Number.isNaN(value)) {
+          setProfileCompletion(Math.max(0, Math.min(100, value)));
         }
-      } catch (error) {
-        console.error("Failed to fetch profile completion rate:", error)
-        // Keep using the fallback value
+      } catch (err: any) {
+        // Ignore 403 (not applicable for this role or permissions)
+        if (err?.status !== 403) {
+          // Log other errors quietly; keep existing completion value
+          console.error("Failed to fetch profile completion rate:", err);
+        }
+      } finally {
+        if (!cancelled) setLoadingPC(false);
       }
-    }
+    };
 
-    fetchProfileCompletion()
-  }, [])
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await logout()
-      router.push("/user/auth/login")
-    } catch (error) {
-      console.error("Logout failed:", error)
-    } finally {
-      setIsLoggingOut(false)
-      setShowLogoutDialog(false)
-    }
-  }
-
-  const handleLogoutClick = () => {
-    setShowLogoutDialog(true)
-  }
+    fetchProfileCompletion();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, shouldFetchProfileCompletion]);
 
   return (
-    <>
-      <div className="min-h-screen bg-[#F7F7F8]">
-        {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-                <Home className="h-4 w-4 text-primary" />
-              </div>
-              <span className="font-semibold">MedKonnect</span>
+    <div className="min-h-screen bg-background">
+      {/* Page header */}
+      <header className="border-b bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+              {subtitle && (
+                <p className="text-sm text-muted-foreground">{subtitle}</p>
+              )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-purple-500 text-white px-3 py-1.5">
-                <div className="h-6 w-6 rounded-full bg-white/20 grid place-items-center text-xs font-semibold">
-                  {Math.round(actualProfileCompletion)}%
-                </div>
-                <span className="text-sm">Profile Complete</span>
-                <ChevronRight className="h-4 w-4 opacity-90" />
-              </div>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <HelpCircle className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={handleLogoutClick}>
-                <User className="h-5 w-5" />
-              </Button>
+            {/* Profile completion badge (shown for all roles, but only fetched for hospital/travel_agent) */}
+            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
+              <span className="font-medium">Profile completion</span>
+              <span className="tabular-nums">
+                {loadingPC ? "…" : `${Math.round(profileCompletion)}%`}
+              </span>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Main content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          {title && (
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-              {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
-            </div>
-          )}
-          {children}
-        </div>
-      </div>
-
-      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to log out? You will need to sign in again to access your account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} disabled={isLoggingOut} className="bg-red-600 hover:bg-red-700">
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  )
+      {/* Page body (you pass sidebar + main from the children) */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+    </div>
+  );
 }
+
+export default DashboardLayout;

@@ -1,5 +1,7 @@
+// /lib/auth.ts
 import { AUTH_CONSTANTS, HTTP_METHODS, API_ENDPOINTS } from "./constants";
 import { apiRequest } from "./utils/api-request";
+import { setAuthCookie } from "../lib/cookies";
 
 export interface User {
   id: string;
@@ -9,6 +11,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role?: string;
+  hospitalId?: string;
 }
 
 export interface AuthResponse {
@@ -18,6 +21,7 @@ export interface AuthResponse {
   success?: boolean;
   error?: string;
   data?: any;
+  next?: string; // e.g. "verify" when backend says user is unverified
   [key: string]: any;
 }
 
@@ -25,10 +29,8 @@ const setTokens = (token?: string, refreshToken?: string) => {
   if (typeof window === "undefined") return;
   if (token) {
     localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, token);
-    // Also set as cookie for server-side access
-    document.cookie = `medconnect_token=${token}; path=/; max-age=${
-      7 * 24 * 60 * 60
-    }; secure; samesite=strict`;
+    // cookie (skip Secure on http://localhost)
+    setAuthCookie("medconnect_token", token, 7 * 24 * 60 * 60);
   }
   if (refreshToken) {
     localStorage.setItem(AUTH_CONSTANTS.REFRESH_TOKEN_KEY, refreshToken);
@@ -65,10 +67,9 @@ const clearAuthLocal = (): void => {
   localStorage.removeItem(AUTH_CONSTANTS.USER_KEY);
   localStorage.removeItem("user_type");
   localStorage.removeItem("medconnect_token");
-  // Clear cookie
-  document.cookie =
-    "medconnect_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  // expire cookies
+  document.cookie = "medconnect_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
 };
 
 const getUserLocal = (): User | null => {
@@ -80,11 +81,7 @@ const getUserLocal = (): User | null => {
   }
   try {
     const parsed = JSON.parse(raw);
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      ("email" in parsed || "id" in parsed)
-    ) {
+    if (parsed && typeof parsed === "object" && ("email" in parsed || "id" in parsed)) {
       return parsed as User;
     }
   } catch {}
@@ -92,49 +89,130 @@ const getUserLocal = (): User | null => {
   return null;
 };
 
-function persistAuthFromResponse(payload: AuthResponse) {
-  const token =
-    payload?.token || payload?.data?.token || payload?.data?.access_token;
-  const refreshToken =
-    payload?.refreshToken ||
-    payload?.data?.refresh_token ||
-    payload?.data?.refreshToken;
-  const user = payload?.user || payload?.data?.user;
-  const userType =
-    payload?.user_type ||
-    payload?.data?.user_type ||
-    user?.user_type ||
-    user?.role;
-
-  if (token || refreshToken) {
-    setTokens(token, refreshToken);
-    if (userType && typeof window !== "undefined") {
-      localStorage.setItem("user_type", userType);
-    }
-    setUserLocal(user);
-  }
-}
-
-const isTokenValid = (token: string): boolean => {
+// base64url-safe decoder for JWT payloads (browser env)
+const decodeJwt = (token: string): any | null => {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    // Check if token has expired
-    if (payload.exp && payload.exp < currentTime) {
-      return false;
-    }
-
-    // Check if token has required fields
-    if (!payload.user_id && !payload.sub) {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    return false;
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const b64 = part.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (part.length % 4)) % 4);
+    const json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  } catch {
+    return null;
   }
 };
+
+const isTokenValid = (token: string): boolean => {
+  const payload = decodeJwt(token);
+  if (!payload) return false;
+  const currentTime = Math.floor(Date.now() / 1000);
+  const leeway = 60; // small clock skew
+  if (payload.exp && payload.exp < currentTime - leeway) return false;
+  if (!payload.user_id && !payload.sub && !payload.id) return false;
+  return true;
+};
+
+function persistAuthFromResponse(payload: AuthResponse) {
+  console.log("[v0] AUTH: persistAuthFromResponse called");
+
+  let token: string | null = null;
+  let user: any = null;
+  let userType: string | null = null;
+
+  const tokenPaths = [
+    payload?.token,
+    payload?.data?.token,
+    payload?.data?.access_token,
+    payload?.access_token,
+    payload?.authToken,
+    payload?.data?.authToken,
+    payload?.jwt,
+    payload?.data?.jwt,
+  ];
+
+  for (const t of tokenPaths) {
+    if (t && typeof t === "string" && t.length > 10) {
+      token = t;
+      break;
+    }
+  }
+
+  const userPaths = [payload?.user, payload?.data?.user, payload?.data];
+
+  for (const u of userPaths) {
+    if (u && typeof u === "object" && (u.email || u.id)) {
+      user = u;
+      break;
+    }
+  }
+
+  const userTypePaths = [
+    payload?.user_type,
+    payload?.data?.user_type,
+    user?.user_type,
+    user?.role,
+    payload?.role,
+    payload?.data?.role,
+  ];
+
+  for (const ut of userTypePaths) {
+    if (ut && typeof ut === "string") {
+      userType = ut;
+      break;
+    }
+  }
+
+  if (token) {
+    console.log("[v0] AUTH: Storing token and user data...");
+
+    try {
+      localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, token);
+      localStorage.setItem("medconnect_token", token);
+
+      // cookie (IMPORTANT: no Secure on http)
+      setAuthCookie("medconnect_token", token, 7 * 24 * 60 * 60);
+
+      const immediateCheck = localStorage.getItem(AUTH_CONSTANTS.TOKEN_KEY);
+      if (!immediateCheck) {
+        console.error("[v0] AUTH: Token storage failed");
+        return false;
+      }
+    } catch (error) {
+      console.error("[v0] AUTH: Error storing token:", error);
+      return false;
+    }
+
+    if (user) {
+      try {
+        const safeUser =
+          user && typeof user === "object"
+            ? {
+                id: user.id ?? user.sub ?? user.user_id,
+                email: user.email,
+                name: user.name ?? [user.first_name, user.last_name].filter(Boolean).join(" "),
+                role: user.role ?? user.user_type,
+                emailVerified: user.emailVerified ?? user.email_verified ?? false,
+                createdAt: user.createdAt ?? user.created_at ?? "",
+                updatedAt: user.updatedAt ?? user.updated_at ?? "",
+              }
+            : null;
+        if (safeUser) localStorage.setItem(AUTH_CONSTANTS.USER_KEY, JSON.stringify(safeUser));
+      } catch {
+        // ignore bad user shapes
+      }
+    }
+
+    if (userType) {
+      localStorage.setItem("user_type", userType);
+    }
+
+    console.log("[v0] AUTH: Successfully stored auth data");
+    return true;
+  } else {
+    console.error("[v0] AUTH: No token found in response");
+    return false;
+  }
+}
 
 export class AuthService {
   private static instance: AuthService;
@@ -150,28 +228,20 @@ export class AuthService {
     // First try localStorage
     const localToken = getTokenLocal();
     if (localToken) {
-      if (isTokenValid(localToken)) {
-        return localToken;
-      } else {
-        this.clearAuth();
-        return null;
-      }
+      if (isTokenValid(localToken)) return localToken;
+      return null;
     }
 
     // Fallback to cookie
     const cookieToken =
-      document.cookie
-        .split("; ")
-        .find((c) => c.startsWith("medconnect_token="))
-        ?.split("=")[1] || null;
+      document.cookie.split("; ").find((c) => c.startsWith("medconnect_token="))?.split("=")[1] || null;
 
     if (cookieToken) {
       if (isTokenValid(cookieToken)) {
+        localStorage.setItem(AUTH_CONSTANTS.TOKEN_KEY, cookieToken);
         return cookieToken;
-      } else {
-        this.clearAuth();
-        return null;
       }
+      return null;
     }
 
     return null;
@@ -187,7 +257,6 @@ export class AuthService {
 
   public debugClearAll(): void {
     if (typeof window !== "undefined") {
-      // Clear all possible localStorage keys
       const keysToRemove = [
         AUTH_CONSTANTS.TOKEN_KEY,
         AUTH_CONSTANTS.REFRESH_TOKEN_KEY,
@@ -201,29 +270,21 @@ export class AuthService {
         localStorage.removeItem(key);
       });
 
-      // Clear all possible cookies
-      const cookiesToClear = [
-        "medconnect_token",
-        "role",
-        "auth_token",
-        "token",
-      ];
+      const cookiesToClear = ["medconnect_token", "role", "auth_token", "token"];
       cookiesToClear.forEach((cookie) => {
-        document.cookie = `${cookie}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        document.cookie = `${cookie}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
       });
     }
   }
 
   public getCurrentUser(): User | null {
-    const user = getUserLocal();
-    return user;
+    return getUserLocal();
   }
 
   public isAuthenticated(): boolean {
-    const token = this.getToken(); // This now validates the token
+    const token = this.getToken();
     const user = this.getCurrentUser();
-    const isAuth = !!token && !!user;
-    return isAuth;
+    return !!token && !!user;
   }
 
   // Patient Signup
@@ -233,7 +294,7 @@ export class AuthService {
     email: string,
     password: string,
     accountType?: string,
-    metadata?: any
+    metadata?: any,
   ): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNUP,
@@ -252,14 +313,11 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 
-  // Hospital Signup
-  public async signupHospital(
-    payload: Record<string, any>
-  ): Promise<AuthResponse> {
+  public async signupHospital(payload: Record<string, any>): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNUP_HOSPITAL,
       {
@@ -269,13 +327,11 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 
-  public async signupTravelAgent(
-    payload: Record<string, any>
-  ): Promise<AuthResponse> {
+  public async signupTravelAgent(payload: Record<string, any>): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNUP_TRAVEL_AGENT,
       {
@@ -285,11 +341,10 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 
-  // Login (password)
   public async login(email: string, password: string): Promise<AuthResponse> {
     try {
       const response = await apiRequest<AuthResponse, AuthResponse>(
@@ -298,22 +353,39 @@ export class AuthService {
           method: HTTP_METHODS.POST,
           body: JSON.stringify({ email: email.toLowerCase(), password }),
         },
-        {
-          saveAuth: true,
-          onSaveAuth: persistAuthFromResponse,
-        }
+        { saveAuth: false } // manual persist below
       );
+
+      const persisted = persistAuthFromResponse(response);
+
+      // handle “unverified” path even if token wasn't persisted
+      if (!persisted) {
+        const backendMsg =
+          (response as any)?.message ||
+          (response as any)?.detail ||
+          (response as any)?.error;
+
+        if (backendMsg === "User not verified, an OTP has been sent to your email") {
+          return { success: false, error: backendMsg, next: "verify" };
+        }
+        return { success: false, error: "Authentication failed - could not store login data" };
+      }
+
+      const storedToken = this.getToken();
+      if (!storedToken) {
+        return { success: false, error: "Authentication failed - token not stored" };
+      }
+
       return response;
     } catch (error) {
-      console.error("Auth service login error:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Login failed",
-      } as AuthResponse;
+      const msg = error instanceof Error ? error.message : "Login failed";
+      if (msg === "User not verified, an OTP has been sent to your email") {
+        return { success: false, error: msg, next: "verify" };
+      }
+      return { success: false, error: msg };
     }
   }
 
-  // Logout
   public async logout(): Promise<void> {
     try {
       await apiRequest(
@@ -322,16 +394,15 @@ export class AuthService {
         {
           auth: true,
           getToken: () => this.getToken(),
-        }
+        },
       );
     } catch {
-      // ignore – we'll still clear local state
+      // ignore
     } finally {
       this.clearAuth();
     }
   }
 
-  // Refresh token
   public async refreshToken(): Promise<string | null> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) return null;
@@ -346,7 +417,7 @@ export class AuthService {
         {
           saveAuth: true,
           onSaveAuth: persistAuthFromResponse,
-        }
+        },
       );
       return data?.token ?? null;
     } catch {
@@ -355,7 +426,6 @@ export class AuthService {
     }
   }
 
-  // Signup OTP
   public async verifyEmail(email: string, otp: string): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.VERIFY_OTP,
@@ -366,7 +436,7 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 
@@ -377,7 +447,6 @@ export class AuthService {
     });
   }
 
-  // Login OTP
   public async signinOtpInit(email: string): Promise<AuthResponse> {
     return apiRequest<AuthResponse>(API_ENDPOINTS.AUTH.SIGNIN_OTP_INIT, {
       method: HTTP_METHODS.POST,
@@ -385,10 +454,7 @@ export class AuthService {
     });
   }
 
-  public async signinOtpVerify(
-    email: string,
-    otp: string
-  ): Promise<AuthResponse> {
+  public async signinOtpVerify(email: string, otp: string): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.SIGNIN_OTP_VERIFY,
       {
@@ -398,11 +464,10 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 
-  // Password reset
   public async resetPasswordInit(email: string): Promise<AuthResponse> {
     return apiRequest<AuthResponse>(API_ENDPOINTS.AUTH.PASSWORD_RESET, {
       method: HTTP_METHODS.POST,
@@ -410,11 +475,7 @@ export class AuthService {
     });
   }
 
-  public async resetPasswordConfirm(
-    uid: string,
-    token: string,
-    newPassword: string
-  ): Promise<AuthResponse> {
+  public async resetPasswordConfirm(uid: string, token: string, newPassword: string): Promise<AuthResponse> {
     return apiRequest<AuthResponse, AuthResponse>(
       API_ENDPOINTS.AUTH.PASSWORD_RESET_CONFIRM,
       {
@@ -424,7 +485,7 @@ export class AuthService {
       {
         saveAuth: true,
         onSaveAuth: persistAuthFromResponse,
-      }
+      },
     );
   }
 }

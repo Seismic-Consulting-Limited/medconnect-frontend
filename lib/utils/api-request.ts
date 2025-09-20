@@ -1,4 +1,4 @@
-// src/utils/api-request.ts
+// /lib/utils/api-request.ts
 import { buildApiUrl } from "@/lib/constants";
 
 /** Human-friendly error extraction from API responses. */
@@ -99,38 +99,45 @@ export async function apiRequest<T = unknown, TAuth = unknown>(
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(buildApiUrl(endpoint), {
+  const url = buildApiUrl(endpoint);
+  const response = await fetch(url, {
     ...init,
-    headers, // explicit & readable
+    headers,
   });
 
   if (!response.ok) {
-    const errorMessage = await parseError(response);
+    const message = await parseError(response);
+    const err = new Error(message) as Error & { status?: number };
+    err.status = response.status;
 
-    // If user account is deleted or not found, treat as authentication error
-    if (
-      response.status === 404 ||
-      errorMessage.toLowerCase().includes("user not found") ||
-      errorMessage.toLowerCase().includes("account not found") ||
-      response.status === 401 ||
-      response.status === 403
-    ) {
-      // Clear any stored auth data
-      if (typeof window !== "undefined") {
+    // Auto-logout policy: only on 401/403, and NOT for auth endpoints themselves.
+    const status = response.status;
+    const isAuthzError = status === 401 || status === 403;
+
+    const endpointLower = endpoint.toLowerCase();
+    const isAuthEndpoint =
+      endpointLower.includes("/auth/login") ||
+      endpointLower.includes("/auth/signin") ||
+      endpointLower.includes("/auth/verify") ||
+      endpointLower.includes("/auth/refresh") ||
+      endpointLower.includes("/auth/password") ||
+      endpointLower.includes("/auth/signup");
+
+    if (isAuthzError && !isAuthEndpoint && typeof window !== "undefined") {
+      try {
         localStorage.removeItem("medconnect_token");
         localStorage.removeItem("user_type");
-        document.cookie =
-          "medconnect_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        document.cookie =
-          "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-
-        // Redirect to login
-        window.location.href = "/user/auth/login";
-        return {} as T; // Return empty to prevent further processing
-      }
+      } catch {}
+      document.cookie =
+        "medconnect_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie =
+        "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      window.location.href = "/user/auth/login";
+      // Prevent further processing in callers
+      return {} as T;
     }
 
-    throw new Error(errorMessage);
+    throw err;
   }
 
   if (response.status === 204) return {} as T;
@@ -138,8 +145,11 @@ export async function apiRequest<T = unknown, TAuth = unknown>(
   const data = (await response.json()) as T;
 
   if (saveAuth && typeof onSaveAuth === "function") {
-    // Let the caller decide how to persist (tokens/user/etc.)
-    onSaveAuth(data as unknown as TAuth);
+    try {
+      onSaveAuth(data as unknown as TAuth);
+    } catch {
+      // ignore persistence errors
+    }
   }
 
   return data;

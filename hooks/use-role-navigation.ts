@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { useAuth } from "./use-auth"
+import { useAuth } from "./use-auth";
 
 export function useRoleNavigation() {
-  const { userRole } = useAuth() // Use userRole from auth context
+  const { userRole } = useAuth();
+  const role = userRole?.toLowerCase();
 
-  const getDashboardPath = (role?: string | null | undefined) => {
-    const effectiveRole = role || userRole || null
-    const userRoleNormalized = effectiveRole?.toLowerCase()
-
-    switch (userRoleNormalized) {
+  const getDashboardPath = (r?: string | null | undefined) => {
+    const effective = (r || role || "").toLowerCase();
+    if (!effective) return "/dashboard"; // ← avoid defaulting to client when unknown
+    switch (effective) {
       case "hospital":
-        return "/dashboard/hospital"
+        return "/dashboard/hospital";
       case "travel_agent":
       case "travel-agent":
-        return "/dashboard/travel-agent"
+        return "/dashboard/travel-agent";
       case "client":
       case "patient":
+        return "/dashboard/client";
       default:
-        return "/dashboard/client"
+        return "/dashboard/client";
     }
-  }
+  };
 
   const getNavigationItems = () => {
-    const role = userRole?.toLowerCase() // Use userRole from context
-
+    if (!role) return []; // ← don’t build client nav when role is unknown
     switch (role) {
       case "hospital":
         return [
@@ -47,40 +47,35 @@ export function useRoleNavigation() {
 
       case "client":
       case "patient":
-      default:
         return [
+          /* client items… */
+        ];
+      default:
+         return [
           { label: "Dashboard", href: "/dashboard/client", icon: "Home" },
           { label: "Appointments", href: "/dashboard/client/appointments", icon: "Calendar" },
           { label: "Medical Records", href: "/dashboard/client/records", icon: "FileText" },
           { label: "Find Doctors", href: "/dashboard/client/doctors", icon: "Stethoscope" },
           { label: "Medical Travel", href: "/dashboard/client/travel", icon: "Plane" },
           { label: "Messages", href: "/dashboard/client/messages", icon: "MessageSquare" },
-        ]
+        ];
     }
-  }
+  };
 
   const isAuthorizedForRoute = (route: string) => {
-    const role = userRole?.toLowerCase() // Use userRole from context
-
-    if (route.startsWith("/dashboard/hospital")) {
-      return role === "hospital"
-    }
-
-    if (route.startsWith("/dashboard/travel-agent")) {
-      return role === "travel_agent" || role === "travel-agent"
-    }
-
-    if (route.startsWith("/dashboard/client")) {
-      return role === "client" || role === "patient" || !role // default to client
-    }
-
-    return true
-  }
+    if (!role) return false; // until we know, block (sidebar skeleton is shown)
+    if (route.startsWith("/dashboard/hospital")) return role === "hospital";
+    if (route.startsWith("/dashboard/travel-agent"))
+      return role === "travel_agent" || role === "travel-agent";
+    if (route.startsWith("/dashboard/client"))
+      return role === "client" || role === "patient";
+    return true;
+  };
 
   return {
     getDashboardPath,
     getNavigationItems,
     isAuthorizedForRoute,
-    userRole: userRole?.toLowerCase(),
-  }
+    userRole: role,
+  };
 }

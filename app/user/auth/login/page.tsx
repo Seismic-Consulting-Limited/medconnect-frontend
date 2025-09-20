@@ -1,19 +1,10 @@
+// /app/user/auth/login/page.tsx
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Eye,
-  EyeOff,
-  Loader2,
-  Mail,
-  Lock,
-  KeyRound,
-  Send,
-  RotateCcw,
-} from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock, KeyRound, Send, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,10 +31,7 @@ function getDashboardPath(role?: string) {
 
 function setRoleCookie(role?: string) {
   if (!role) return;
-  // 30 days; adjust as needed. HttpOnly would be ideal from server, but this works for now.
-  document.cookie = `role=${encodeURIComponent(role)}; path=/; max-age=${
-    60 * 60 * 24 * 30
-  }`;
+  document.cookie = `role=${encodeURIComponent(role)}; Path=/; Max-Age=${60 * 60 * 24 * 30}`;
 }
 
 function getNextParam(): string | null {
@@ -52,22 +40,7 @@ function getNextParam(): string | null {
   return url.searchParams.get("next") || url.searchParams.get("redirect");
 }
 
-function routeAfterLogin(router: ReturnType<typeof useRouter>, payload: any) {
-  const next = getNextParam();
-  const role =
-    payload?.user?.role ??
-    payload?.role ??
-    payload?.data?.user?.role ??
-    payload?.data?.role;
-
-  if (role) setRoleCookie(role);
-
-  if (next) {
-    router.replace(next);
-  } else {
-    router.replace(getDashboardPath(role));
-  }
-}
+const UNVERIFIED_MSG = "User not verified, an OTP has been sent to your email";
 
 export default function LoginPage() {
   const [tab, setTab] = useState<Tab>("password");
@@ -92,36 +65,29 @@ export default function LoginPage() {
   // Resend controls
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState<number>(0);
-  const canResend = useMemo(
-    () => resendCooldown <= 0 && !isResending,
-    [resendCooldown, isResending]
-  );
+  const canResend = useMemo(() => resendCooldown <= 0 && !isResending, [resendCooldown, isResending]);
 
-  type LoginPayload = {
-    requires_verification?: boolean;
-    status?: string;
-    next?: string;
-    user?: {
-      emailVerified?: boolean;
-      role?: string;
-    };
-    role?: string;
-    data?: {
-      user?: {
-        role?: string;
-      };
-      role?: string;
-      access_token?: string;
-      token?: string;
-    };
-    access_token?: string;
-    token?: string;
-  };
-
-  const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user, login: loginViaContext } = useAuth();
   const router = useRouter();
 
-  // If already logged in, never show this page
+  // green toast + 5s countdown → verify page
+  const startVerifyCountdown = (targetEmail: string) => {
+    const base = UNVERIFIED_MSG;
+    let secs = 5;
+    const id = toast.success(`${base}. Redirecting in ${secs}s…`, { duration: 6000 });
+    const t = setInterval(() => {
+      secs -= 1;
+      if (secs <= 0) {
+        clearInterval(t);
+        const q = new URLSearchParams({ email: targetEmail.toLowerCase(), from: "login" });
+        router.replace(`/user/auth/verify?${q.toString()}`);
+      } else {
+        toast.success(`${base}. Redirecting in ${secs}s…`, { id, duration: 6000 });
+      }
+    }, 1000);
+  };
+
+  // Already logged in? send them onward
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       const next = getNextParam();
@@ -129,17 +95,12 @@ export default function LoginPage() {
         router.replace(next);
         return;
       }
-      // Try to read role from cookie (set previously on a successful login)
       const roleCookie =
         typeof document !== "undefined"
-          ? document.cookie
-              .split("; ")
-              .find((c) => c.startsWith("role="))
-              ?.split("=")[1]
+          ? document.cookie.split("; ").find((c) => c.startsWith("role="))?.split("=")[1]
           : undefined;
-      const role = roleCookie ? decodeURIComponent(roleCookie) : undefined;
-      const dashboardPath = getDashboardPath(role);
-      router.replace(dashboardPath);
+      const role = roleCookie ? decodeURIComponent(roleCookie) : user?.role;
+      router.replace(getDashboardPath(role));
     }
   }, [authLoading, isAuthenticated, router, user]);
 
@@ -165,66 +126,42 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
+      const response = await loginViaContext(email, password);
 
-      authService.debugClearAll();
+      if (response?.success === false || response?.error) {
+        const msg = response.error || "Login failed";
 
-      const response = await authService.login(email, password);
-
-      // Check if login failed
-      if (response.success === false || response.error) {
-        console.log("[v0] LOGIN: Login failed:", response.error);
-        setPasswordError(response.error || "Login failed");
-        return;
-      }
-
-      // Check if token was stored
-      const storedToken = authService.getToken();
-      if (!storedToken) {
-        console.error("[v0] LOGIN: No token found after login");
-        setPasswordError("Authentication failed - please try again");
-        return;
-      }
-
-      console.log("[v0] LOGIN: Login successful, redirecting");
-
-      // Extract user type for routing
-      const userType =
-        response.data?.user_type ||
-        response.user?.role ||
-        response.data?.user?.role ||
-        localStorage.getItem("user_type");
-
-      if (userType) {
-        setRoleCookie(userType);
-      }
-
-      // Navigate to appropriate dashboard
-      const next = getNextParam();
-      if (next) {
-        router.replace(next);
-      } else {
-        router.replace(getDashboardPath(userType));
-      }
-    } catch (err) {
-      console.error("[v0] LOGIN: Login error:", err);
-      if (err instanceof Error) {
-        const errorMessage = err.message;
-
-        if (
-          errorMessage ===
-          "User not verified, an OTP has been sent to your email"
-        ) {
-          const q = new URLSearchParams({
-            email: email.toLowerCase(),
-            from: "login",
-          });
-          router.replace(`/user/auth/verify?${q.toString()}`);
+        // If unverified → show ONLY green toast + countdown (no red inline duplicate)
+        if (msg === UNVERIFIED_MSG) {
+          setPasswordError("");
+          startVerifyCountdown(email);
           return;
-        } else {
-          setPasswordError(errorMessage);
         }
+
+        setPasswordError(msg);
+        return;
+      }
+
+      const roleFromResp =
+        response?.data?.user_type ||
+        response?.user?.role ||
+        response?.data?.user?.role ||
+        (typeof window !== "undefined" ? localStorage.getItem("user_type") : undefined);
+
+      if (roleFromResp) setRoleCookie(roleFromResp);
+
+      await Promise.resolve();
+
+      const next = getNextParam();
+      router.replace(next || getDashboardPath(roleFromResp || user?.role));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Login failed";
+
+      if (msg === UNVERIFIED_MSG) {
+        setPasswordError("");
+        startVerifyCountdown(email);
       } else {
-        setPasswordError("Login failed");
+        setPasswordError(msg);
       }
     } finally {
       setIsLoading(false);
@@ -253,18 +190,12 @@ export default function LoginPage() {
     setIsRequestingOtp(true);
     try {
       const res = await authService.signinOtpInit(email);
-      const msg =
-        res?.message ??
-        res?.detail ??
-        "If an account exists, we’ve sent a code.";
-      setOtpRequested(true);
+      const msg = res?.message ?? res?.detail ?? "If an account exists, we’ve sent a code.";
       toast.success(String(msg));
+      setOtpRequested(true);
       startCooldown(30);
     } catch (err) {
-      const m =
-        err instanceof Error
-          ? err.message
-          : "Could not send code. Please try again.";
+      const m = err instanceof Error ? err.message : "Could not send code. Please try again.";
       setOtpError(m);
       toast.error(m);
     } finally {
@@ -278,33 +209,42 @@ export default function LoginPage() {
       setOtpError("Missing email");
       return;
     }
-    if (!otp || otp.length < 4) {
-      setOtpError("Enter the code sent to your email");
+    if (!otp || otp.length < 6) {
+      setOtpError("Enter the 6-digit code sent to your email");
       return;
     }
     setIsVerifyingOtp(true);
     try {
       const res = await authService.signinOtpVerify(email, otp);
-      const needsVerify =
-        Boolean(res?.requires_verification) ||
-        res?.status === "pending_verification" ||
-        res?.next === "verify" ||
-        res?.user?.emailVerified === false;
 
-      router.replace(
-        needsVerify
-          ? `/user/auth/verify?email=${encodeURIComponent(
-              email.toLowerCase()
-            )}&from=login`
-          : "/dashboard"
-      );
+      if (res?.error === UNVERIFIED_MSG || res?.message === UNVERIFIED_MSG || res?.detail === UNVERIFIED_MSG) {
+        setOtpError(""); // no red inline duplicate
+        startVerifyCountdown(email);
+        return;
+      }
+
+      const roleFromResp =
+        res?.data?.user_type ||
+        res?.user?.role ||
+        res?.data?.user?.role ||
+        (typeof window !== "undefined" ? localStorage.getItem("user_type") : undefined);
+
+      if (roleFromResp) setRoleCookie(roleFromResp);
+
+      await Promise.resolve();
+
+      const next = getNextParam();
+      router.replace(next || getDashboardPath(roleFromResp || "client"));
     } catch (err) {
-      const m =
-        err instanceof Error
-          ? err.message
-          : "Verification failed. Please try again.";
-      setOtpError(m);
-      toast.error(m);
+      const m = err instanceof Error ? err.message : "Verification failed. Please try again.";
+
+      if (m === UNVERIFIED_MSG) {
+        setOtpError(""); // no red inline duplicate
+        startVerifyCountdown(email);
+      } else {
+        setOtpError(m);
+        toast.error(m);
+      }
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -321,17 +261,11 @@ export default function LoginPage() {
     setOtpError("");
     try {
       const res = await authService.signinOtpInit(email);
-      const msg =
-        res?.message ??
-        res?.detail ??
-        "If an account exists, a new code has been sent.";
+      const msg = res?.message ?? res?.detail ?? "If an account exists, a new code has been sent.";
       toast.success(String(msg));
       startCooldown(30);
     } catch (err) {
-      const m =
-        err instanceof Error
-          ? err.message
-          : "Could not resend code. Please try again.";
+      const m = err instanceof Error ? err.message : "Could not resend code. Please try again.";
       setOtpError(m);
       toast.error(m);
     } finally {
@@ -344,14 +278,10 @@ export default function LoginPage() {
       <div className="w-full max-w-[520px]">
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-3 text-center">
-            <CardTitle className="text-3xl font-bold text-foreground">
-              Login
-            </CardTitle>
+            <CardTitle className="text-3xl font-bold text-foreground">Login</CardTitle>
             <div className="mx-auto mt-2 inline-flex rounded-lg border p-1 bg-muted/30">
               <button
-                className={`px-4 py-2 rounded-md text-sm ${
-                  tab === "password" ? "bg-background shadow" : "opacity-70"
-                }`}
+                className={`px-4 py-2 rounded-md text-sm ${tab === "password" ? "bg-background shadow" : "opacity-70"}`}
                 onClick={() => switchTab("password")}
                 type="button"
                 aria-pressed={tab === "password"}
@@ -359,9 +289,7 @@ export default function LoginPage() {
                 Password
               </button>
               <button
-                className={`px-4 py-2 rounded-md text-sm ${
-                  tab === "otp" ? "bg-background shadow" : "opacity-70"
-                }`}
+                className={`px-4 py-2 rounded-md text-sm ${tab === "otp" ? "bg-background shadow" : "opacity-70"}`}
                 onClick={() => switchTab("otp")}
                 type="button"
                 aria-pressed={tab === "otp"}
@@ -373,11 +301,7 @@ export default function LoginPage() {
 
           <CardContent className="space-y-6">
             {tab === "password" ? (
-              <form
-                key="password-form"
-                onSubmit={handlePasswordLogin}
-                className="space-y-4"
-              >
+              <form key="password-form" onSubmit={handlePasswordLogin} className="space-y-4">
                 {passwordError && (
                   <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
                     {passwordError}
@@ -385,10 +309,7 @@ export default function LoginPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-medium text-foreground"
-                  >
+                  <Label htmlFor="email" className="text-sm font-medium text-foreground">
                     Email
                   </Label>
                   <div className="relative">
@@ -406,10 +327,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="text-sm font-medium text-foreground"
-                  >
+                  <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Password
                   </Label>
                   <div className="relative">
@@ -429,9 +347,7 @@ export default function LoginPage() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -450,26 +366,16 @@ export default function LoginPage() {
                       onCheckedChange={(checked) => setRememberMe(!!checked)}
                       className="data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-white"
                     />
-                    <label
-                      htmlFor="remember"
-                      className="text-sm text-muted-foreground"
-                    >
+                    <label htmlFor="remember" className="text-sm text-muted-foreground">
                       Remember me
                     </label>
                   </div>
-                  <Link
-                    href="/user/auth/reset"
-                    className="text-sm text-primary hover:underline font-medium"
-                  >
+                  <Link href="/user/auth/reset" className="text-sm text-primary hover:underline font-medium">
                     Forgot password?
                   </Link>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -482,10 +388,7 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-muted-foreground pt-2">
                   Don&apos;t have an account?{" "}
-                  <Link
-                    href="/user/auth/signup"
-                    className="text-primary hover:underline font-medium"
-                  >
+                  <Link href="/user/auth/signup" className="text-primary hover:underline font-medium">
                     Sign Up
                   </Link>
                 </div>
@@ -499,10 +402,7 @@ export default function LoginPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email-otp"
-                    className="text-sm font-medium text-foreground"
-                  >
+                  <Label htmlFor="email-otp" className="text-sm font-medium text-foreground">
                     Email
                   </Label>
                   <div className="relative">
@@ -541,10 +441,7 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="otp"
-                        className="text-sm font-medium text-foreground"
-                      >
+                      <Label htmlFor="otp" className="text-sm font-medium text-foreground">
                         Enter OTP
                       </Label>
                       <div className="relative">
@@ -556,9 +453,7 @@ export default function LoginPage() {
                           maxLength={6}
                           placeholder="6-digit code"
                           value={otp}
-                          onChange={(e) =>
-                            setOtp(e.target.value.replace(/\D/g, ""))
-                          }
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                           className="pl-10 h-12 border-border"
                           required
                         />
@@ -569,7 +464,7 @@ export default function LoginPage() {
                       type="button"
                       className="w-full h-12 bg-primary hover:bg-primary/90 text-white"
                       onClick={handleVerifyOtp}
-                      disabled={isVerifyingOtp || otp.length < 4}
+                      disabled={isVerifyingOtp || otp.length < 6}
                     >
                       {isVerifyingOtp ? (
                         <>
@@ -596,8 +491,7 @@ export default function LoginPage() {
                       ) : (
                         <>
                           <RotateCcw className="mr-2 h-4 w-4" />
-                          Resend Code{" "}
-                          {resendCooldown > 0 ? `(${resendCooldown}s)` : ""}
+                          Resend Code {resendCooldown > 0 ? `(${resendCooldown}s)` : ""}
                         </>
                       )}
                     </Button>
@@ -606,10 +500,7 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-muted-foreground pt-2">
                   Prefer password?{" "}
-                  <button
-                    onClick={() => switchTab("password")}
-                    className="text-primary hover:underline font-medium"
-                  >
+                  <button onClick={() => switchTab("password")} className="text-primary hover:underline font-medium">
                     Use password instead
                   </button>
                 </div>

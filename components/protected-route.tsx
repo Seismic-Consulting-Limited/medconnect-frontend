@@ -1,73 +1,85 @@
-"use client"
+// components/protected-route.tsx
+"use client";
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRoleNavigation } from "@/hooks/use-role-navigation"
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRoleNavigation } from "@/hooks/use-role-navigation";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  requiredRole?: string | string[]
-  fallbackPath?: string
+  children: React.ReactNode;
+  requiredRole?: string | string[];
+  fallbackPath?: string;
 }
 
+const norm = (v?: string | null) => (v ?? "").toLowerCase().replace(/\s+/g, "_");
+const alias = (r?: string | null) => {
+  const x = norm(r);
+  if (x === "patient") return "client";
+  if (x === "travel-agent") return "travel_agent";
+  return x;
+};
+const hasAnyRole = (userRole?: string | null, required?: string | string[]) => {
+  if (!required) return true;
+  const ur = alias(userRole) || "";
+  const allowed = (Array.isArray(required) ? required : [required]).map(alias);
+  return allowed.includes(ur);
+};
+
 export function ProtectedRoute({ children, requiredRole, fallbackPath }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading, getUserRole } = useAuth()
-  const { getDashboardPath, isAuthorizedForRoute } = useRoleNavigation()
-  const router = useRouter()
-  const [isChecking, setIsChecking] = useState(true)
+  const router = useRouter();
+  const { isAuthenticated, isLoading, getUserRole } = useAuth();
+  const { getDashboardPath, isAuthorizedForRoute } = useRoleNavigation();
+  const [isChecking, setIsChecking] = useState(true);
+
+  // consider cookie presence while user hydrates
+  const tokenPresent = useMemo(() => {
+    if (typeof document === "undefined") return false;
+    return document.cookie.split("; ").some((c) => c.startsWith("medconnect_token="));
+  }, []);
+
+  const rawRole: string | undefined = (getUserRole?.() ?? undefined) as string | undefined;
+  const userRole = alias(rawRole);
+  const authNow = isAuthenticated || (!isLoading && tokenPresent);
+
+  const currentUrl = () => {
+    if (typeof window === "undefined") return "/";
+    const { pathname, search } = window.location;
+    return `${pathname}${search || ""}`;
+  };
 
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading) return;
 
-    // Not authenticated - redirect to login
-    if (!isAuthenticated) {
-      const currentPath = window.location.pathname
-      router.replace(`/user/auth/login?next=${encodeURIComponent(currentPath)}`)
-      return
-    }
+    const here = currentUrl();
 
-    // Check role-based authorization
-    if (requiredRole && user) {
-      const userRole = getUserRole()?.toLowerCase()
-      const allowedRoles = Array.isArray(requiredRole)
-        ? requiredRole.map((r) => r.toLowerCase())
-        : [requiredRole.toLowerCase()]
-
-      if (!allowedRoles.includes(userRole || "")) {
-        // Redirect to appropriate dashboard for user's role
-        const correctPath = fallbackPath || getDashboardPath(userRole)
-        router.replace(correctPath)
-        return
+    // 1) not authenticated → login with ?next=<full path + query>
+    if (!authNow) {
+      if (!here.startsWith("/user/auth/login")) {
+        router.replace(`/user/auth/login?next=${encodeURIComponent(here)}`);
       }
+      return;
     }
 
-    // Check route authorization
-    const currentPath = window.location.pathname
-    if (!isAuthorizedForRoute(currentPath)) {
-      const userRole = getUserRole()
-      const correctPath = fallbackPath || getDashboardPath(userRole)
-      router.replace(correctPath)
-      return
+    // 2) role gating (patient == client)
+    if (requiredRole && !hasAnyRole(userRole, requiredRole)) {
+      const target = fallbackPath || getDashboardPath(userRole ?? undefined) || "/dashboard/client";
+      if (target !== here) router.replace(target);
+      return;
     }
 
-    setIsChecking(false)
-  }, [
-    isLoading,
-    isAuthenticated,
-    user,
-    requiredRole,
-    fallbackPath,
-    router,
-    getDashboardPath,
-    isAuthorizedForRoute,
-    getUserRole,
-  ])
+    // 3) route-level authorization
+    if (typeof isAuthorizedForRoute === "function" && !isAuthorizedForRoute(here)) {
+      const target = fallbackPath || getDashboardPath(userRole ?? undefined) || "/dashboard/client";
+      if (target !== here) router.replace(target);
+      return;
+    }
 
-  // Show loading while checking authentication and authorization
+    setIsChecking(false);
+  }, [isLoading, authNow, requiredRole, userRole, fallbackPath, router, getDashboardPath, isAuthorizedForRoute]);
+
   if (isLoading || isChecking) {
     return (
       <div className="min-h-screen bg-[#F7F7F8] flex items-center justify-center">
@@ -76,8 +88,8 @@ export function ProtectedRoute({ children, requiredRole, fallbackPath }: Protect
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

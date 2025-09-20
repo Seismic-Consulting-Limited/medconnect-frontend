@@ -1,117 +1,168 @@
-"use client"
+// hooks/use-dashboard-data.ts
+"use client";
 
-import { useState, useEffect } from "react"
-import { dashboardService } from "@/lib/services/dashboard-service"
-import { useAuth } from "./use-auth"
+import { useState, useEffect } from "react";
+import { dashboardService } from "@/lib/services/dashboard-service";
+import { useAuth } from "./use-auth";
 
 export function useDashboardData() {
-  const { user, isAuthenticated, userRole, logout } = useAuth() // Use cached userRole from context
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<any>(null)
+  const { user, isAuthenticated, userRole, logout, refreshAuth } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any>(null);
 
-  const normalizedRole = userRole?.toLowerCase()
+  const normalizedRole = userRole?.toLowerCase();
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!isAuthenticated || !user) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
-    const fetchDashboardData = async () => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        let dashboardData
-
-        switch (normalizedRole) {
-          case "hospital":
-            dashboardData = await dashboardService.getHospitalDashboard()
-            break
-          case "travel_agent":
-          case "travel-agent":
-            dashboardData = await dashboardService.getTravelAgentDashboard()
-            break
-          case "client":
-          case "patient":
-          default:
-            dashboardData = await dashboardService.getClientDashboard()
-            break
-        }
-
-        setData(dashboardData)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard data"
-
-        if (
-          errorMessage.includes("Authentication required") ||
-          errorMessage.toLowerCase().includes("user not found") ||
-          errorMessage.toLowerCase().includes("account not found")
-        ) {
-          logout()
-          return
-        }
-
-        setError(errorMessage)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchDashboardData()
-  }, [user, isAuthenticated, normalizedRole, logout])
-
-  const refetch = async () => {
-    if (!isAuthenticated || !user) {
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      let dashboardData
-
+    const fetchOnce = async () => {
       switch (normalizedRole) {
         case "hospital":
-          dashboardData = await dashboardService.getHospitalDashboard()
-          break
+          return dashboardService.getHospitalDashboard();
         case "travel_agent":
         case "travel-agent":
-          dashboardData = await dashboardService.getTravelAgentDashboard()
-          break
+          return dashboardService.getTravelAgentDashboard();
         case "client":
         case "patient":
         default:
-          dashboardData = await dashboardService.getClientDashboard()
-          break
+          return dashboardService.getClientDashboard();
       }
+    };
 
-      setData(dashboardData)
+    const shouldTreatAsAuthError = (err: unknown) => {
+      const msg = (err instanceof Error ? err.message : String(err || ""))?.toLowerCase?.() || "";
+      const status = (err as any)?.status as number | undefined;
+      return (
+        status === 401 ||
+        status === 403 ||
+        msg.includes("authentication required") ||
+        msg.includes("unauthorized") ||
+        msg.includes("forbidden") ||
+        msg.includes("user not found") ||
+        msg.includes("account not found")
+      );
+    };
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+
+      let didRetry = false;
+
+      try {
+        const result = await fetchOnce();
+        if (!cancelled) setData(result);
+      } catch (err) {
+        if (!didRetry && shouldTreatAsAuthError(err)) {
+          didRetry = true;
+          try {
+            // Safe refresh: no-ops if backend doesn't support it
+            await refreshAuth();
+            const result = await fetchOnce();
+            if (!cancelled) setData(result);
+            return;
+          } catch (err2) {
+            if (!shouldTreatAsAuthError(err2)) {
+              if (!cancelled) setError(err2 instanceof Error ? err2.message : "Failed to load dashboard data");
+              if (!cancelled) setLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Final handling: real auth failure → logout and let guards handle redirect
+        if (shouldTreatAsAuthError(err)) {
+          await logout();
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isAuthenticated, normalizedRole, logout, refreshAuth]);
+
+  const refetch = async () => {
+    if (!isAuthenticated || !user) return;
+
+    setLoading(true);
+    setError(null);
+
+    const fetchOnce = async () => {
+      switch (normalizedRole) {
+        case "hospital":
+          return dashboardService.getHospitalDashboard();
+        case "travel_agent":
+        case "travel-agent":
+          return dashboardService.getTravelAgentDashboard();
+        case "client":
+        case "patient":
+        default:
+          return dashboardService.getClientDashboard();
+      }
+    };
+
+    const shouldTreatAsAuthError = (err: unknown) => {
+      const msg = (err instanceof Error ? err.message : String(err || ""))?.toLowerCase?.() || "";
+      const status = (err as any)?.status as number | undefined;
+      return (
+        status === 401 ||
+        status === 403 ||
+        msg.includes("authentication required") ||
+        msg.includes("unauthorized") ||
+        msg.includes("forbidden") ||
+        msg.includes("user not found") ||
+        msg.includes("account not found")
+      );
+    };
+
+    let didRetry = false;
+
+    try {
+      const result = await fetchOnce();
+      setData(result);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard data"
-
-      if (
-        errorMessage.includes("Authentication required") ||
-        errorMessage.toLowerCase().includes("user not found") ||
-        errorMessage.toLowerCase().includes("account not found")
-      ) {
-        logout()
-        return
+      if (!didRetry && shouldTreatAsAuthError(err)) {
+        didRetry = true;
+        try {
+          await refreshAuth(); // safe no-op if unsupported
+          const result = await fetchOnce();
+          setData(result);
+          return;
+        } catch (err2) {
+          if (shouldTreatAsAuthError(err2)) {
+            await logout();
+            return;
+          }
+          setError(err2 instanceof Error ? err2.message : "Failed to load dashboard data");
+        }
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to load dashboard data");
       }
-
-      setError(errorMessage)
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return {
     data,
     loading,
     error,
     refetch,
-    userRole: normalizedRole, // Return normalized role
-  }
+    userRole: normalizedRole,
+  };
 }
