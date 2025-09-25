@@ -111,15 +111,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const userData: User = {
-          id: payload.user_id || payload.sub || payload.id || "",
-          email: payload.email || "",
-          role: payload.role || payload.user_type || undefined,
-          name: payload.name || "",
-          emailVerified: payload.emailVerified ?? payload.email_verified ?? false,
-          createdAt: payload.createdAt || payload.created_at || "",
-          updatedAt: payload.updatedAt || payload.updated_at || "",
-          hospitalId: payload.hospitalId || payload.hospital_id,
-        };
+  id: payload.user_id || payload.sub || payload.id || "",
+  email: payload.email || "",
+  role: payload.role || payload.user_type || undefined,
+  name: payload.name || "",
+  emailVerified: payload.emailVerified ?? payload.email_verified ?? false,
+  createdAt: payload.createdAt || payload.created_at || "",
+  updatedAt: payload.updatedAt || payload.updated_at || "",
+  hospitalId:
+    payload.hospitalId ||
+    payload.hospital_id ||
+    payload.hospital?.id ||
+    undefined,
+};
+
         setUser(userData);
       } finally {
         setIsLoading(false);
@@ -163,6 +168,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             emailVerified: payload.emailVerified ?? payload.email_verified ?? false,
             createdAt: payload.createdAt || payload.created_at || "",
             updatedAt: payload.updatedAt || payload.updated_at || "",
+            hospitalId:
+    payload.hospitalId ||
+    payload.hospital_id ||
+    payload.hospital?.id ||
+    (response?.user?.hospitalId ??
+     response?.data?.user?.hospital_id ??
+     undefined),
           };
           setUser(userData);
         }

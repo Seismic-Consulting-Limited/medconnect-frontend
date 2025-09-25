@@ -1,20 +1,20 @@
-// lib/constants.ts
-
 export const HTTP_METHODS = {
   GET: "GET",
   POST: "POST",
   PUT: "PUT",
   DELETE: "DELETE",
   PATCH: "PATCH",
-} as const
+} as const;
 
 export const API_CONFIG = {
   // No trailing slash
-  BASE_URL: (process.env.NEXT_PUBLIC_API_BASE_URL || "https://dev.medkonent.com").replace(/\/+$/, ""),
+  BASE_URL: (
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://dev.medkonent.com"
+  ).replace(/\/+$/, ""),
   TIMEOUT: 30000,
-} as const
+} as const;
 
-export const API_VERSION_PREFIX = "/v1"
+export const API_VERSION_PREFIX = "/v1";
 
 export const API_ENDPOINTS = {
   AUTH: {
@@ -52,34 +52,59 @@ export const API_ENDPOINTS = {
 
   CLIENT: {
     APPOINTMENTS: `${API_VERSION_PREFIX}/patients/appointments`,
-    APPOINTMENT_DETAIL: (appointmentId: string) => `${API_VERSION_PREFIX}/patients/appointments/${appointmentId}`,
+    APPOINTMENT_DETAIL: (appointmentId: string) =>
+      `${API_VERSION_PREFIX}/patients/appointments/${appointmentId}`,
     MEDICAL_RECORDS: `${API_VERSION_PREFIX}/patients/medical-records`,
     ACTIVITIES: `${API_VERSION_PREFIX}/patients/activities`,
     STATS: `${API_VERSION_PREFIX}/patients/stats`,
   },
 
-  // Country/State metadata (these are NON-versioned per your backend)
+  // add-Hospital-specific )
+  HOSPITAL: {
+    MEDICAL_STAFF: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/medical-staff/add/`,
+    TREATMENTS: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/treatment/add/`,
+    FACILITIES: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/facilities/add/`,
+    SPECIALTIES: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/specialties/add/`,
+  },
+
+  TREATMENTS: {
+    SYSTEM: `${API_VERSION_PREFIX}/treatments/`,
+  },
+
+  // Shared metadata + lookups
   META: {
     COUNTRIES: `${API_VERSION_PREFIX}/countries`,
-    STATES: (countryId: string | number) => `${API_VERSION_PREFIX}/countries/${countryId}/states`,
-    SERVICES: (type: string) => `${API_VERSION_PREFIX}/services/${type ? `?type=${encodeURIComponent(type)}` : ""}`,
-    FACILITIES: `${API_VERSION_PREFIX}/facilities/`,
+    STATES: (countryId: string | number) =>
+      `${API_VERSION_PREFIX}/countries/${countryId}/states`,
+    SERVICES: (type: string) =>
+      `${API_VERSION_PREFIX}/services/${
+        type ? `?type=${encodeURIComponent(type)}` : ""
+      }`,
+    FACILITIES: `${API_VERSION_PREFIX}/facilities/`, // System-wide facilities
+    SPECIALTIES: `${API_VERSION_PREFIX}/specialties/`, // System-wide specialties
     LANGUAGES: `${API_VERSION_PREFIX}/languages/`,
     USER_TYPES: `${API_VERSION_PREFIX}/user-types/`,
     HOSPITALS: `${API_VERSION_PREFIX}/hospitals`,
-    HOSPITAL_DETAIL: (hospitalId: string) => `${API_VERSION_PREFIX}/hospitals/${hospitalId}`,
+    HOSPITAL_DETAIL: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/`,
     HOSPITAL_DOCUMENTS: `${API_VERSION_PREFIX}/hospitals/documents`,
     CHECK_APPROVAL_DOCUMENTS: `${API_VERSION_PREFIX}/hospitals/check-approval-documents`,
-    PROFILE_COMPLETION_RATE: `${API_VERSION_PREFIX}/hospitals/profile-completion-rate`,
+    HOSPITAL_PROFILE_COMPLETION_RATE: `${API_VERSION_PREFIX}/hospitals/profile-completion-rate`,
+    TRAVEL_AGENT_PROFILE_COMPLETION_RATE: `${API_VERSION_PREFIX}/travel-agents/profile-completion-rate`,
     TRAVEL_AGENTS: `${API_VERSION_PREFIX}/travel-agents`,
-    TRAVEL_AGENT_DETAIL: (agentId: string) => `${API_VERSION_PREFIX}/travel-agents/${agentId}`,
+    TRAVEL_AGENT_DETAIL: (agentId: string) =>
+      `${API_VERSION_PREFIX}/travel-agents/${agentId}`,
   },
-} as const
+} as const;
 
 export const buildApiUrl = (endpoint: string): string => {
-  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`
-  return `${API_CONFIG.BASE_URL}${path}`
-}
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${API_CONFIG.BASE_URL}${path}`;
+};
 
 export const AUTH_CONSTANTS = {
   TOKEN_KEY: "medconnect_token",
@@ -87,7 +112,7 @@ export const AUTH_CONSTANTS = {
   USER_KEY: "medconnect_user",
   TOKEN_EXPIRY: 15 * 60 * 1000, // 15 minutes
   REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days
-} as const
+} as const;
 
 export const FILE_UPLOAD_CONSTANTS = {
   ALLOWED_TYPES: ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
@@ -97,5 +122,4 @@ export const FILE_UPLOAD_CONSTANTS = {
     FILE_SIZE: "File size must be less than 10MB",
     FILE_TYPE: "Only PDF, JPG, and PNG files are allowed",
   },
-} as const
-
+} as const;

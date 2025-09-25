@@ -184,18 +184,25 @@ function persistAuthFromResponse(payload: AuthResponse) {
 
     if (user) {
       try {
-        const safeUser =
-          user && typeof user === "object"
-            ? {
-                id: user.id ?? user.sub ?? user.user_id,
-                email: user.email,
-                name: user.name ?? [user.first_name, user.last_name].filter(Boolean).join(" "),
-                role: user.role ?? user.user_type,
-                emailVerified: user.emailVerified ?? user.email_verified ?? false,
-                createdAt: user.createdAt ?? user.created_at ?? "",
-                updatedAt: user.updatedAt ?? user.updated_at ?? "",
-              }
-            : null;
+       const safeUser =
+  user && typeof user === "object"
+    ? {
+        id: user.id ?? user.sub ?? user.user_id,
+        email: user.email,
+        name: user.name ?? [user.first_name, user.last_name].filter(Boolean).join(" "),
+        role: user.role ?? user.user_type,
+        emailVerified: user.emailVerified ?? user.email_verified ?? false,
+        createdAt: user.createdAt ?? user.created_at ?? "",
+        updatedAt: user.updatedAt ?? user.updated_at ?? "",
+        // ✅ persist hospital id in the stored user
+        hospitalId:
+          user.hospitalId ??
+          user.hospital_id ??
+          user.hospital?.id ??
+          user.hospital?.uuid ??
+          undefined,
+      }
+    : null;
         if (safeUser) localStorage.setItem(AUTH_CONSTANTS.USER_KEY, JSON.stringify(safeUser));
       } catch {
         // ignore bad user shapes

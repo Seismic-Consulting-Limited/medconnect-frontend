@@ -1,39 +1,40 @@
-"use client"
+// app/travel-agents/page.tsx
+"use client";
 
-import type React from "react"
-import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle,
   ChevronDown,
   Globe,
   MapPin,
-  SearchIcon,
+  Search as SearchIcon, // <-- fix import
   Sliders,
   Star,
   Plane,
   X,
   BarChart2,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
-import { ResponsiveContainer } from "@/components/responsive-container"
-import { SoftGate } from "@/components/soft-gate"
-import { apiRequest } from "@/lib/utils/api-request"
-import { API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants"
-import type { TravelAgentDTO, TravelAgentUI } from "@/lib/types/travel-agent"
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { ResponsiveContainer } from "@/components/responsive-container";
+import { SoftGate } from "@/components/soft-gate";
+import { apiRequest } from "@/lib/utils/api-request";
+import { API_CONFIG, API_ENDPOINTS, HTTP_METHODS } from "@/lib/constants";
+import type { TravelAgentDTO, TravelAgentUI } from "@/lib/types/travel-agent";
 
-const TOP_DESTINATIONS_PRESET = ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Kano", "Enugu", "Benin City", "Abeokuta"]
+const TOP_DESTINATIONS_PRESET = ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Kano", "Enugu", "Benin City", "Abeokuta"];
 
 const TOP_SERVICES_PRESET = [
   "Flight Booking",
@@ -44,41 +45,42 @@ const TOP_SERVICES_PRESET = [
   "Tour Packages",
   "Car Rentals",
   "Medical Travel Coordination",
-]
+];
 
-// ---------- Types ----------
 type TravelAgentsListResponse = {
   data?:
     | {
-        results?: TravelAgentDTO[]
-        next?: string | null
-        previous?: string | null
+        results?: TravelAgentDTO[];
+        next?: string | null;
+        previous?: string | null;
+        page?: number;
+        next_page?: number | null;
       }
-    | TravelAgentDTO[]
-  next?: string | null
-  previous?: string | null
-  page?: number
-  next_page?: number | null
-  message?: string
-  detail?: string
-}
+    | TravelAgentDTO[];
+  results?: TravelAgentDTO[]; // some APIs return results at the root
+  next?: string | null;
+  previous?: string | null;
+  page?: number;
+  next_page?: number | null;
+  message?: string;
+  detail?: string;
+};
 
-// ---------- Mapping helpers ----------
+// ---------- helpers ----------
 function toArrayOfStrings<T>(v: Array<{ name: string } | string> | undefined): string[] {
-  if (!v) return []
-  return v.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean) as string[]
+  if (!v) return [];
+  return v.map((x) => (typeof x === "string" ? x : x?.name)).filter(Boolean) as string[];
 }
 
 function mapPriceTier(tier: TravelAgentDTO["price_tier"]): "$" | "$$" | "$$$" {
-  if (tier === 1 || tier === "$") return "$"
-  if (tier === 2 || tier === "$$") return "$$"
-  if (tier === 3 || tier === "$$$") return "$$$"
-  return "$$"
+  if (tier === 1 || tier === "$") return "$";
+  if (tier === 2 || tier === "$$") return "$$";
+  if (tier === 3 || tier === "$$$") return "$$$";
+  return "$$";
 }
 
 function mapTravelAgent(dto: TravelAgentDTO): TravelAgentUI {
-  const locationParts = [dto.location?.address_1, dto.location?.state?.name].filter(Boolean)
-
+  const locationParts = [dto.location?.address_1, dto.location?.state?.name].filter(Boolean);
   return {
     id: String(dto.id),
     name: dto.name,
@@ -105,165 +107,185 @@ function mapTravelAgent(dto: TravelAgentDTO): TravelAgentUI {
     registrationNumber: dto.registration_number,
     images: dto.images,
     internationalClients: dto.international_clients,
+  };
+}
+
+// Always use a trailing slash for list endpoints (common DRF setup)
+const LIST_ENDPOINT = API_ENDPOINTS.META.TRAVEL_AGENTS.endsWith("/")
+  ? API_ENDPOINTS.META.TRAVEL_AGENTS
+  : `${API_ENDPOINTS.META.TRAVEL_AGENTS}/`;
+
+// Normalize absolute/relative next URLs to a relative path so apiRequest doesn't double-prefix the host
+function toRelativePath(u: string): string {
+  try {
+    const parsed = new URL(u, API_CONFIG.BASE_URL);
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return u.startsWith("/") ? u : `/${u}`;
   }
 }
 
 export default function TravelAgentsPage() {
-  const [showGate, setShowGate] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedDestinations, setSelectedDestinations] = useState<string[]>([])
-  const [selectedServices, setSelectedServices] = useState<string[]>([])
-  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState<number[]>([1, 3])
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showGate, setShowGate] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<number[]>([1, 3]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  const [travelAgents, setTravelAgents] = useState<TravelAgentUI[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [travelAgents, setTravelAgents] = useState<TravelAgentUI[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Hardcoded Top Filters (initialize from presets)
-  const [topDestinations] = useState<string[]>(TOP_DESTINATIONS_PRESET.slice(0, 6))
-  const [topServices] = useState<string[]>(TOP_SERVICES_PRESET.slice(0, 6))
+  const [topDestinations] = useState<string[]>(TOP_DESTINATIONS_PRESET.slice(0, 6));
+  const [topServices] = useState<string[]>(TOP_SERVICES_PRESET.slice(0, 6));
 
-  // Pagination
-  const [nextUrl, setNextUrl] = useState<string | null>(null)
-  const [page, setPage] = useState<number>(1)
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
 
-  const [showComparison, setShowComparison] = useState(false)
-  const [agentsToCompare, setAgentsToCompare] = useState<string[]>([])
-  const [visibleAgents, setVisibleAgents] = useState(12)
+  const [showComparison, setShowComparison] = useState(false);
+  const [agentsToCompare, setAgentsToCompare] = useState<string[]>([]);
+  const [visibleAgents, setVisibleAgents] = useState(12);
 
   // --------- Fetch travel agents ----------
   const fetchTravelAgents = async (opts?: { url?: string; page?: number; append?: boolean }) => {
-    const url = opts?.url ?? `${API_ENDPOINTS.META.TRAVEL_AGENTS}?page=${opts?.page ?? page}`
-    setIsLoading(true)
-    setLoadError(null)
+    // Ensure trailing slash; then apply page if provided
+    const base = LIST_ENDPOINT;
+    const url = opts?.url ? toRelativePath(opts.url) : `${base}?page=${opts?.page ?? page}`;
+
+    setIsLoading(true);
+    setLoadError(null);
+
     try {
-      const res = await apiRequest<TravelAgentsListResponse>(url, { method: HTTP_METHODS.GET })
+      const res = await apiRequest<TravelAgentsListResponse>(url, { method: HTTP_METHODS.GET });
 
-      // Normalize shape
-      const results: TravelAgentDTO[] =
-        (Array.isArray(res?.data) ? (res?.data as TravelAgentDTO[]) : res?.data?.results) ?? ([] as TravelAgentDTO[])
+      // Accept several shapes:
+      // - { data: { results: [...] } }
+      // - { results: [...] }
+      // - { data: [...] }
+      const resultsBlock =
+        (Array.isArray(res?.data) ? res.data :
+         Array.isArray((res as any)?.results) ? (res as any).results :
+         (res?.data as any)?.results) ?? [];
 
-      const mapped = results.map(mapTravelAgent)
+      const results: TravelAgentDTO[] = resultsBlock as TravelAgentDTO[];
+      const mapped = results.map(mapTravelAgent);
 
-      // Fix: ensure visible count is based on the *new* array length
+      // update list + visible count
       setTravelAgents((prev) => {
-        const next = opts?.append ? [...prev, ...mapped] : mapped
-        setVisibleAgents((v) => (opts?.append ? Math.min(v + 12, next.length) : Math.min(12, next.length)))
-        return next
-      })
+        const next = opts?.append ? [...prev, ...mapped] : mapped;
+        setVisibleAgents((v) => (opts?.append ? Math.min(v + 12, next.length) : Math.min(12, next.length)));
+        return next;
+      });
 
-      // next URL detection
-      const nextFromData = (res as any)?.data?.next ?? (res as any)?.next ?? null
-      const nextPageFromData = (res as any)?.data?.next_page ?? (res as any)?.next_page ?? null
+      // Normalize 'next'
+      const nextRaw = (res as any)?.data?.next ?? (res as any)?.next ?? null;
+      const nextPage = (res as any)?.data?.next_page ?? (res as any)?.next_page ?? null;
 
-      if (nextFromData) {
-        setNextUrl(nextFromData as string)
-      } else if (nextPageFromData) {
-        setNextUrl(`${API_ENDPOINTS.META.TRAVEL_AGENTS}?page=${nextPageFromData}`)
+      if (typeof nextRaw === "string" && nextRaw) {
+        setNextUrl(toRelativePath(nextRaw));
+      } else if (nextPage) {
+        setNextUrl(`${base}?page=${nextPage}`);
       } else {
-        setNextUrl(null)
+        setNextUrl(null);
       }
     } catch (err: any) {
-      const m = err?.message || err?.detail || "Could not load travel agents. Please try again."
-      setLoadError(m)
+      const m = err?.message || err?.detail || "Could not load travel agents. Please try again.";
+      setLoadError(m);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Initial load
   useEffect(() => {
-    fetchTravelAgents({ page: 1, append: false })
+    fetchTravelAgents({ page: 1, append: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleLoadMore = async () => {
+    // Optional gate: keep as-is per your logic
     if (travelAgents.length >= 12) {
-      setShowGate(true)
-      return
+      setShowGate(true);
+      return;
     }
     if (nextUrl) {
-      const nextPageMatch = /[?&]page=(\d+)/.exec(nextUrl)
-      const nextP = nextPageMatch ? Number(nextPageMatch[1]) : undefined
-      await fetchTravelAgents({ url: nextUrl, page: nextP, append: true })
-      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length + 12))
+      const m = /[?&]page=(\d+)/.exec(nextUrl);
+      const nextP = m ? Number(m[1]) : undefined;
+      await fetchTravelAgents({ url: nextUrl, page: nextP, append: true });
+      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length + 12));
     } else {
-      // no server next -> just reveal more if already loaded
-      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length))
+      setVisibleAgents((v) => Math.min(v + 12, travelAgents.length));
     }
-  }
+  };
 
   // --------- Filters / search (client-side) ----------
   const filteredAgents = useMemo(() => {
-    const priceMapping = { $: 1, $$: 2, $$$: 3 } as const
+    const priceMapping = { $: 1, $$: 2, $$$: 3 } as const;
 
     return travelAgents.filter((agent) => {
+      const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
-        searchQuery === "" ||
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.destinations.some((d) => d.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        agent.services.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (agent.location && agent.location.toLowerCase().includes(searchQuery.toLowerCase()))
+        q === "" ||
+        agent.name.toLowerCase().includes(q) ||
+        agent.description.toLowerCase().includes(q) ||
+        agent.destinations.some((d) => d.toLowerCase().includes(q)) ||
+        agent.services.some((s) => s.toLowerCase().includes(q)) ||
+        (agent.location && agent.location.toLowerCase().includes(q));
 
       const matchesDestination =
-        selectedDestinations.length === 0 || agent.destinations.some((d) => selectedDestinations.includes(d))
+        selectedDestinations.length === 0 || agent.destinations.some((d) => selectedDestinations.includes(d));
 
-      const matchesService = selectedServices.length === 0 || agent.services.some((s) => selectedServices.includes(s))
+      const matchesService = selectedServices.length === 0 || agent.services.some((s) => selectedServices.includes(s));
 
       const matchesCertification =
         selectedCertifications.length === 0 ||
-        (agent.certifications && agent.certifications.some((cert) => selectedCertifications.includes(cert)))
+        (agent.certifications && agent.certifications.some((cert) => selectedCertifications.includes(cert)));
 
-      const agentPrice = priceMapping[agent.price]
-      const matchesPrice = agentPrice >= priceRange[0] && agentPrice <= priceRange[1]
+      const agentPrice = priceMapping[agent.price];
+      const matchesPrice = agentPrice >= priceRange[0] && agentPrice <= priceRange[1];
 
-      return matchesSearch && matchesDestination && matchesService && matchesCertification && matchesPrice
-    })
-  }, [travelAgents, searchQuery, selectedDestinations, selectedServices, selectedCertifications, priceRange])
+      return matchesSearch && matchesDestination && matchesService && matchesCertification && matchesPrice;
+    });
+  }, [travelAgents, searchQuery, selectedDestinations, selectedServices, selectedCertifications, priceRange]);
 
   // --------- UI handlers ----------
-  const handleSearch = () => {}
-
   const toggleDestination = (destination: string) => {
     setSelectedDestinations((prev) =>
       prev.includes(destination) ? prev.filter((d) => d !== destination) : [...prev, destination],
-    )
-  }
+    );
+  };
 
   const toggleService = (service: string) => {
-    setSelectedServices((prev) => (prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]))
-  }
+    setSelectedServices((prev) => (prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]));
+  };
 
   const toggleCertification = (certification: string) => {
     setSelectedCertifications((prev) =>
       prev.includes(certification) ? prev.filter((c) => c !== certification) : [...prev, certification],
-    )
-  }
+    );
+  };
 
   const resetFilters = () => {
-    setSearchQuery("")
-    setSelectedDestinations([])
-    setSelectedServices([])
-    setSelectedCertifications([])
-    setPriceRange([1, 3])
-  }
-
-  const handleImageSearch = (e: React.ChangeEvent<HTMLInputElement>) => {}
+    setSearchQuery("");
+    setSelectedDestinations([]);
+    setSelectedServices([]);
+    setSelectedCertifications([]);
+    setPriceRange([1, 3]);
+  };
 
   const toggleAgentComparison = (agentId: string) => {
     setAgentsToCompare((prev) => {
-      if (prev.includes(agentId)) return prev.filter((id) => id !== agentId)
-      if (prev.length >= 6) return prev
-      return [...prev, agentId]
-    })
-  }
+      if (prev.includes(agentId)) return prev.filter((id) => id !== agentId);
+      if (prev.length >= 6) return prev;
+      return [...prev, agentId];
+    });
+  };
 
   const removeFromComparison = (agentId: string) => {
-    setAgentsToCompare((prev) => prev.filter((id) => id !== agentId))
-  }
+    setAgentsToCompare((prev) => prev.filter((id) => id !== agentId));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -317,7 +339,6 @@ export default function TravelAgentsPage() {
                     </Button>
                   </div>
 
-                  {/* Advanced filters */}
                   {showAdvancedFilters && (
                     <div className="pt-4 border-t border-gray-200">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -472,8 +493,8 @@ export default function TravelAgentsPage() {
                     {loadError
                       ? "Unable to load travel agents"
                       : isLoading
-                        ? "Loading travel agents…"
-                        : `${filteredAgents.length} ${filteredAgents.length === 1 ? "result" : "results"} found`}
+                      ? "Loading travel agents…"
+                      : `${filteredAgents.length} ${filteredAgents.length === 1 ? "result" : "results"} found`}
                   </p>
                 )}
               </div>
@@ -629,7 +650,6 @@ export default function TravelAgentsPage() {
               </div>
             )}
 
-            {/* Load More button */}
             {!loadError && (nextUrl || visibleAgents < filteredAgents.length) && (
               <div className="mt-12 text-center">
                 <Button
@@ -645,11 +665,10 @@ export default function TravelAgentsPage() {
           </ResponsiveContainer>
         </section>
 
-        {/* CTA Section */}
         <section className="py-16 md:py-24 bg-primary text-white">
           <ResponsiveContainer>
             <div className="text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Are You a Travel Agent in Nigeria?</h2>
+              <h2 className="text-3xl md:4xl font-bold mb-4">Are You a Travel Agent in Nigeria?</h2>
               <p className="text-white/80 text-lg mb-8">
                 Join our platform to connect with international patients seeking medical care in Nigeria and expand your
                 reach in the medical tourism market.
@@ -668,5 +687,5 @@ export default function TravelAgentsPage() {
       </main>
       <SiteFooter />
     </div>
-  )
+  );
 }

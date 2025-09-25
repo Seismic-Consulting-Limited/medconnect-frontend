@@ -29,7 +29,7 @@ export function useRoleNavigation() {
       case "hospital":
         return [
           { label: "Dashboard", href: "/dashboard/hospital", icon: "Home" },
-          { label: "Doctors", href: "/dashboard/hospital/doctors", icon: "Stethoscope" },
+          { label: "Consultants", href: "/dashboard/hospital/consultants", icon: "Stethoscope" },
           { label: "Treatments", href: "/dashboard/hospital/treatments", icon: "Heart" },
           { label: "Services", href: "/dashboard/hospital/services", icon: "Settings" },
           { label: "Messages", href: "/dashboard/hospital/messages", icon: "MessageSquare" },

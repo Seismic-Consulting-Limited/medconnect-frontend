@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, ChevronRight, Plus, Calendar, Stethoscope, MessageSquare } from "lucide-react"
+import { Bell, ChevronRight, Plus, Calendar, Stethoscope, MessageSquare, Users } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { dashboardService, type HospitalDashboardData } from "@/lib/services/dashboard-service"
 import { VerificationStepOne } from "@/components/verification/verification-step-one"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { ProfileDropdown } from "@/components/profile-dropdown"
 
 function SidebarItem({
   label,
@@ -113,7 +112,11 @@ export default function HospitalDashboard() {
               <Bell className="h-5 w-5" />
             </Button>
 
-            <ProfileDropdown />
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <Users className="h-4 w-4" />
+              </div>
+            </Button>
           </div>
         </div>
       </div>
@@ -219,10 +222,15 @@ export default function HospitalDashboard() {
                     You haven't added any doctors to your hospital profile. Add doctors so patients can view and book
                     them.
                   </p>
-                  <Button variant="outline" className="gap-2 bg-transparent">
-                    <Plus className="h-4 w-4" />
-                    Add First Doctor
-                  </Button>
+{doctorCount === 0 && (
+  <Button
+    variant="outline"
+    className="gap-2 bg-transparent"
+    onClick={() => router.push("/dashboard/hospital/consultants/new")}
+  >
+    + Add First Consultant
+  </Button>
+)}
                 </div>
               </CardContent>
             </Card>

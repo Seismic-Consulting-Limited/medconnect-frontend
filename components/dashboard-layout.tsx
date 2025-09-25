@@ -1,4 +1,3 @@
-// components/dashboard-layout.tsx
 "use client";
 
 import * as React from "react";
@@ -34,22 +33,30 @@ export function DashboardLayout({
   const shouldFetchProfileCompletion =
     normalizedRole === "hospital" || normalizedRole === "travel_agent";
 
+  // Pick the correct endpoint per role
+  const completionEndpoint = useMemo(() => {
+    if (normalizedRole === "hospital") {
+      return API_ENDPOINTS.META.HOSPITAL_PROFILE_COMPLETION_RATE;
+    }
+    if (normalizedRole === "travel_agent") {
+      return API_ENDPOINTS.META.TRAVEL_AGENT_PROFILE_COMPLETION_RATE;
+    }
+    return null;
+  }, [normalizedRole]);
+
   useEffect(() => {
     let cancelled = false;
 
     const fetchProfileCompletion = async () => {
-      if (!isAuthenticated || !shouldFetchProfileCompletion) {
-        // Client/patient: keep whatever was passed (or default)
+      if (!isAuthenticated || !shouldFetchProfileCompletion || !completionEndpoint) {
+        // Client/patient: keep the value passed in (or default)
         return;
       }
 
       setLoadingPC(true);
       try {
-        // NOTE: your constants already pointed to hospitals endpoint in logs.
-        // If your backend uses a single endpoint for both roles, keep this.
-        // If you later split them, switch by role here.
         const res: any = await apiRequest(
-          API_ENDPOINTS.META.PROFILE_COMPLETION_RATE,
+          completionEndpoint,
           { method: HTTP_METHODS.GET },
           {
             auth: true,
@@ -59,7 +66,7 @@ export function DashboardLayout({
 
         if (cancelled) return;
 
-        // Accept multiple possible shapes: number or object
+        // Accept several shapes: number or object with completion value
         const value =
           typeof res === "number"
             ? res
@@ -68,13 +75,12 @@ export function DashboardLayout({
                res?.rate ??
                res?.percentage);
 
-        if (typeof value === "number" && !Number.isNaN(value)) {
+        if (typeof value === "number" && Number.isFinite(value)) {
           setProfileCompletion(Math.max(0, Math.min(100, value)));
         }
       } catch (err: any) {
-        // Ignore 403 (not applicable for this role or permissions)
+        // Ignore 403 (role not permitted or endpoint not applicable)
         if (err?.status !== 403) {
-          // Log other errors quietly; keep existing completion value
           console.error("Failed to fetch profile completion rate:", err);
         }
       } finally {
@@ -86,7 +92,7 @@ export function DashboardLayout({
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, shouldFetchProfileCompletion]);
+  }, [isAuthenticated, shouldFetchProfileCompletion, completionEndpoint]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,7 +107,7 @@ export function DashboardLayout({
               )}
             </div>
 
-            {/* Profile completion badge (shown for all roles, but only fetched for hospital/travel_agent) */}
+            {/* Profile completion badge (always shown; value fetched for hospital/agent only) */}
             <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
               <span className="font-medium">Profile completion</span>
               <span className="tabular-nums">
@@ -112,7 +118,7 @@ export function DashboardLayout({
         </div>
       </header>
 
-      {/* Page body (you pass sidebar + main from the children) */}
+      {/* Page body (you pass sidebar + main as children) */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
     </div>
   );

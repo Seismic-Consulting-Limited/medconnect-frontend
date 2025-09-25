@@ -62,7 +62,10 @@ export function DashboardSidebar() {
         </div>
         <div className="space-y-1">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-lg">
+            <div
+              key={i}
+              className="flex items-center gap-3 px-3 py-3 rounded-lg"
+            >
               <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
               <div className="h-4 bg-gray-200 rounded animate-pulse flex-1" />
             </div>
@@ -79,7 +82,8 @@ export function DashboardSidebar() {
   if (!userRole) return renderSkeleton();
 
   // 3) Role known → real nav; give TS an explicit type for items
-  const navigationItems = ((getNavigationItems?.() as unknown) ?? []) as NavItem[];
+  const navigationItems = ((getNavigationItems?.() as unknown) ??
+    []) as NavItem[];
 
   return (
     <aside className="bg-white border-r border-gray-200 w-64 h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
@@ -96,7 +100,10 @@ export function DashboardSidebar() {
             const IconComp =
               iconMap[(item.icon as keyof typeof iconMap) ?? "Home"] || Home;
             const active =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+              item.label === "Dashboard"
+                ? pathname === item.href // Dashboard only active on exact match
+                : pathname === item.href ||
+                  pathname.startsWith(item.href + "/"); // Other items can match sub-paths
             return (
               <SidebarItem
                 key={item.href}
@@ -112,8 +119,16 @@ export function DashboardSidebar() {
         <div className="flex-1" />
 
         <div className="space-y-3 mt-auto border-t pt-4">
-          <SidebarItem icon={<Settings className="h-4 w-4" />} label="Settings" href="/settings" />
-          <SidebarItem icon={<HelpCircle className="h-4 w-4" />} label="Help & Support" href="/dashboard/help" />
+          <SidebarItem
+            icon={<Settings className="h-4 w-4" />}
+            label="Settings"
+            href="/settings"
+          />
+          <SidebarItem
+            icon={<HelpCircle className="h-4 w-4" />}
+            label="Help & Support"
+            href="/dashboard/help"
+          />
         </div>
       </nav>
     </aside>
@@ -136,7 +151,9 @@ function SidebarItem({
       href={href}
       className={[
         "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-colors",
-        active ? "bg-primary/10 text-primary font-bold" : "hover:bg-gray-50 text-gray-700",
+        active
+          ? "bg-primary/10 text-primary font-bold"
+          : "hover:bg-gray-50 text-gray-700",
       ].join(" ")}
     >
       <div className="h-5 w-5 flex items-center justify-center">{icon}</div>

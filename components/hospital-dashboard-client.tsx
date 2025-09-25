@@ -189,7 +189,7 @@ export default function DashboardClient({ token }: { token: string }) {
         <aside className="bg-white border rounded-xl p-3 hidden lg:block">
           <nav className="space-y-1">
             <SidebarItem label="Dashboard" active />
-            <SidebarItem label="Doctors" />
+            <SidebarItem label="Consultants" />
             <SidebarItem label="Treatments" />
             <SidebarItem label="Services" />
             <SidebarItem label="Messages" />
