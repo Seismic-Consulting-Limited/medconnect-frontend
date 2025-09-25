@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { dashboardService } from "@/lib/services/dashboard-service"
+import { API_ENDPOINTS } from "@/lib/constants"
+import { apiRequest } from "@/lib/utils/api-request"
+import { authService } from "@/lib/auth"
 
 type Row = {
   id: string
@@ -68,29 +71,68 @@ export default function ConsultantsPage() {
       setLoading(true)
       setError(null)
       try {
-        const data = await dashboardService.getHospitalDashboard()
+        console.log("[v0] Starting consultants fetch...")
+        const dashboardData = await dashboardService.getHospitalDashboard()
+        console.log("[v0] Dashboard data received:", dashboardData)
         if (off) return
 
-        const mapped: Row[] =
-          (data?.doctors ?? []).map((d, idx) => ({
-            id: String(d.id ?? idx),
-            fullName: d.full_name ?? ([d.first_name, d.last_name].filter(Boolean).join(" ") || d.name || "—"),
-            specialty:
-              d.primary_specialty ?? (Array.isArray((d as any).specialties) ? (d as any).specialties?.[0] : undefined),
-            fee: (d as any)?.consultation_fee ?? (d as any)?.consultationFee,
-            status:
-              (d as any)?.profile_status === "archived"
-                ? "Profile Archived"
-                : (d as any)?.profile_status === "pending"
-                  ? "Pending Update"
-                  : "Profile Complete",
-            dateAdded: (d as any)?.created_at ?? (d as any)?.createdAt,
-            appointments: (d as any)?.appointments_count ?? (d as any)?.appointments ?? 0,
-            avatarUrl: (d as any)?.profile_image ?? null,
-          })) ?? []
+        const hospitalId = String((dashboardData as any)?.id ?? (dashboardData as any)?.hospital_id ?? "")
+        console.log("[v0] Hospital ID extracted:", hospitalId)
+        if (!hospitalId) {
+          throw new Error("Hospital ID not found")
+        }
 
+        const consultantsData = await apiRequest<{ data: any[] }>(
+          API_ENDPOINTS.HOSPITAL.GET_MEDICAL_STAFF(hospitalId),
+          { method: "GET" },
+          { auth: true, getToken: () => authService.getToken() },
+        )
+
+        console.log("[v0] Consultants API response:", consultantsData)
+
+        const mapped: Row[] =
+          (consultantsData?.data ?? []).map((d: any, idx: number) => {
+            console.log("[v0] Mapping consultant:", idx, d)
+            // Extract name from profile object
+            const firstName = d.profile?.first_name || ""
+            const lastName = d.profile?.last_name || ""
+            const otherName = d.profile?.other_name || ""
+            const fullName = [d.title, firstName, otherName, lastName].filter(Boolean).join(" ") || "—"
+
+            // Extract specialty - assuming it's in specialties array or primary_specialty
+            const specialty =
+              d.primary_specialty || (Array.isArray(d.specialties) && d.specialties.length > 0 ? d.specialties[0] : "—")
+
+            // Parse consultation fee
+            const fee = d.consultation_fee ? Number.parseFloat(d.consultation_fee) : undefined
+
+            // Determine status based on profile completeness
+            let status: "Profile Complete" | "Pending Update" | "Profile Archived" = "Profile Complete"
+            if (d.profile_status === "archived") {
+              status = "Profile Archived"
+            } else if (!firstName || !lastName || !specialty || !fee) {
+              status = "Pending Update"
+            }
+
+            const mappedRow = {
+              id: String(d.id ?? idx),
+              fullName,
+              specialty,
+              fee,
+              status,
+              dateAdded: d.created_at || d.date_joined,
+              appointments: d.appointments_count ?? 0,
+              avatarUrl: d.profile?.profile_image || d.profile?.avatar || null,
+            }
+            console.log("[v0] Mapped row:", mappedRow)
+            return mappedRow
+          }) ?? []
+
+        console.log("[v0] Final mapped array:", mapped)
+        console.log("[v0] Final mapped array length:", mapped.length)
         setRows(mapped)
       } catch (e: any) {
+        console.error("[v0] Error fetching consultants:", e)
         setError(e?.message || "Failed to load consultants.")
       } finally {
         if (!off) setLoading(false)

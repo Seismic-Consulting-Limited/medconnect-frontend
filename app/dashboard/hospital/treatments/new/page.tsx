@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, Plus } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Check, ChevronsUpDown, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
+
 import { apiRequest } from "@/lib/utils/api-request"
 import { API_ENDPOINTS } from "@/lib/constants"
 import { dashboardService } from "@/lib/services/dashboard-service"
@@ -31,15 +33,14 @@ export default function AddTreatmentPage() {
   const router = useRouter()
 
   const [systemTreatments, setSystemTreatments] = useState<SystemTreatment[]>([])
-  const [selectedTreatments, setSelectedTreatments] = useState<string[]>([])
+  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null)
+  const [treatmentDropdownOpen, setTreatmentDropdownOpen] = useState(false)
   const [showCustomTreatment, setShowCustomTreatment] = useState(false)
 
-  // Custom treatment form state
   const [customName, setCustomName] = useState("")
   const [customDescription, setCustomDescription] = useState("")
   const [customAbbreviation, setCustomAbbreviation] = useState("")
 
-  // Common fields for all treatments
   const [priceFrom, setPriceFrom] = useState("")
   const [priceTo, setPriceTo] = useState("")
   const [duration, setDuration] = useState("")
@@ -53,12 +54,14 @@ export default function AddTreatmentPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [hospitalId, setHospitalId] = useState<string | null>(null)
 
-  // Load hospital id and system treatments
+  const selectedTreatmentName = useMemo(() => {
+    return systemTreatments.find((t) => t.id === selectedTreatmentId)?.name || ""
+  }, [systemTreatments, selectedTreatmentId])
+
   useEffect(() => {
     let off = false
     ;(async () => {
       try {
-        // Load hospital info
         const data = await dashboardService.getHospitalDashboard()
         if (off) return
         const id = String((data as any)?.id ?? (data as any)?.hospital_id ?? "")
@@ -86,8 +89,8 @@ export default function AddTreatmentPage() {
   const validate = (): boolean => {
     const errs: FieldErrors = {}
 
-    if (selectedTreatments.length === 0 && !showCustomTreatment) {
-      errs.treatments = "Please select at least one treatment or add a custom treatment."
+    if (!selectedTreatmentId && !showCustomTreatment) {
+      errs.treatments = "Please select a treatment or add a custom treatment."
     }
 
     if (showCustomTreatment) {
@@ -125,16 +128,20 @@ export default function AddTreatmentPage() {
     if (!validate()) return
 
     const payload: TreatmentApiPayload = {
-      treatments: selectedTreatments.map((treatmentId) => ({
-        treatment: treatmentId,
-        price_range_from: Number(priceFrom),
-        price_range_to: Number(priceTo),
-        currency: "NGN",
-        duration_in_days: Number(duration),
-        hospital_stay_period_in_days: Number(hospitalStay),
-        recovery_period_in_days: Number(recoveryPeriod),
-        success_rate_percentage: Number(successRate),
-      })),
+      treatments: selectedTreatmentId
+        ? [
+            {
+              treatment: selectedTreatmentId,
+              price_range_from: Number(priceFrom),
+              price_range_to: Number(priceTo),
+              currency: "NGN",
+              duration_in_days: Number(duration),
+              hospital_stay_period_in_days: Number(hospitalStay),
+              recovery_period_in_days: Number(recoveryPeriod),
+              success_rate_percentage: Number(successRate),
+            },
+          ]
+        : [],
       extra_treatments: showCustomTreatment
         ? [
             {
@@ -175,7 +182,7 @@ export default function AddTreatmentPage() {
         },
       )
 
-      toast.success("Treatment(s) added successfully.")
+      toast.success("Treatment added successfully.")
       router.push("/dashboard/hospital/treatments")
     } catch (e: any) {
       const msg = e?.data?.message || e?.data?.detail || e?.message || "Could not add treatment."
@@ -187,9 +194,7 @@ export default function AddTreatmentPage() {
   }
 
   const toggleTreatmentSelection = (treatmentId: string) => {
-    setSelectedTreatments((prev) =>
-      prev.includes(treatmentId) ? prev.filter((id) => id !== treatmentId) : [...prev, treatmentId],
-    )
+    setSelectedTreatmentId((prev) => (prev === treatmentId ? null : treatmentId))
   }
 
   if (loading) {
@@ -210,7 +215,6 @@ export default function AddTreatmentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-6 py-4 ml-0 lg:ml-64 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -242,7 +246,7 @@ export default function AddTreatmentPage() {
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-lg font-medium">Select Treatments</Label>
+                      <Label className="text-lg font-medium">Select Treatment</Label>
                       <Button
                         type="button"
                         variant="outline"
@@ -255,31 +259,75 @@ export default function AddTreatmentPage() {
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto border rounded-lg p-4">
-                      {systemTreatments.map((treatment) => (
-                        <div
-                          key={treatment.id}
-                          className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50"
-                        >
-                          <Checkbox
-                            id={`treatment-${treatment.id}`}
-                            checked={selectedTreatments.includes(treatment.id)}
-                            onCheckedChange={() => toggleTreatmentSelection(treatment.id)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <label
-                              htmlFor={`treatment-${treatment.id}`}
-                              className="text-sm font-medium text-gray-900 cursor-pointer block"
-                            >
-                              {treatment.name}
-                              {treatment.abbreviation && (
-                                <span className="text-gray-500 ml-1">({treatment.abbreviation})</span>
+                    <div className="space-y-2">
+                      <Popover open={treatmentDropdownOpen} onOpenChange={setTreatmentDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={treatmentDropdownOpen}
+                            className={`w-full justify-between ${fieldErrors.treatments ? "border-red-500" : ""}`}
+                          >
+                            {selectedTreatmentId ? selectedTreatmentName : "Select treatment"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search treatments..." />
+                            <CommandList>
+                              {loading && (
+                                <div className="py-6 text-center text-sm text-muted-foreground">Loading…</div>
                               )}
-                            </label>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{treatment.description}</p>
-                          </div>
+                              {!loading && (
+                                <>
+                                  <CommandEmpty>No treatment found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {systemTreatments.map((treatment) => {
+                                      const selected = selectedTreatmentId === treatment.id
+                                      return (
+                                        <CommandItem
+                                          key={treatment.id}
+                                          value={treatment.name}
+                                          onSelect={() => {
+                                            setSelectedTreatmentId(treatment.id)
+                                            setTreatmentDropdownOpen(false)
+                                          }}
+                                        >
+                                          <Check className={`mr-2 h-4 w-4 ${selected ? "opacity-100" : "opacity-0"}`} />
+                                          <div className="flex-1">
+                                            <div className="font-medium">{treatment.name}</div>
+                                            {treatment.abbreviation && (
+                                              <div className="text-sm text-gray-500">({treatment.abbreviation})</div>
+                                            )}
+                                            <div className="text-xs text-gray-600 line-clamp-1">
+                                              {treatment.description}
+                                            </div>
+                                          </div>
+                                        </CommandItem>
+                                      )
+                                    })}
+                                  </CommandGroup>
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+
+                      {selectedTreatmentId && (
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          Selected: <span className="font-medium">{selectedTreatmentName}</span>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center rounded hover:bg-gray-100 p-1"
+                            onClick={() => setSelectedTreatmentId(null)}
+                            aria-label="Clear treatment"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
                         </div>
-                      ))}
+                      )}
                     </div>
 
                     {fieldErrors.treatments && <p className="text-xs text-red-600">{fieldErrors.treatments}</p>}
@@ -321,7 +369,6 @@ export default function AddTreatmentPage() {
                     </div>
                   )}
 
-                  {/* Price Range */}
                   <div className="space-y-1">
                     <Label className="text-sm font-medium">Price range *</Label>
                     <div className="grid grid-cols-2 gap-4">
@@ -352,7 +399,6 @@ export default function AddTreatmentPage() {
                     </div>
                   </div>
 
-                  {/* Duration, Recovery Period, Hospital Stay */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <Label className="text-sm font-medium">Duration (days) *</Label>
@@ -407,7 +453,6 @@ export default function AddTreatmentPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex justify-end gap-3 pt-4">
                     <Button variant="outline" className="bg-transparent" onClick={onCancel}>
                       Cancel
@@ -420,10 +465,10 @@ export default function AddTreatmentPage() {
                       {submitting ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Adding Treatment(s)...
+                          Adding Treatment...
                         </>
                       ) : (
-                        `Add Treatment${selectedTreatments.length > 1 || (selectedTreatments.length > 0 && showCustomTreatment) ? "s" : ""}`
+                        "Add Treatment"
                       )}
                     </Button>
                   </div>

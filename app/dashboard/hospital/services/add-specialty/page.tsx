@@ -17,28 +17,16 @@ import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { authService } from "@/lib/auth"
 import { dashboardService } from "@/lib/services/dashboard-service"
 
-const SPECIALTY_CATEGORIES = [
-  "Cardiology",
-  "Dermatology",
-  "Emergency Medicine",
-  "Endocrinology",
-  "Gastroenterology",
-  "General Medicine",
-  "Neurology",
-  "Oncology",
-  "Orthopedics",
-  "Pediatrics",
-  "Psychiatry",
-  "Radiology",
-  "Surgery",
-  "Urology",
-  "Other",
-]
-
 type FieldErrors = {
   name?: string
   category?: string
   otherCategory?: string
+}
+
+type SystemSpecialty = {
+  id: number
+  name: string
+  description?: string
 }
 
 export default function AddSpecialtyPage() {
@@ -51,6 +39,9 @@ export default function AddSpecialtyPage() {
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [hospitalId, setHospitalId] = useState<string | null>(null)
+
+  const [systemSpecialties, setSystemSpecialties] = useState<SystemSpecialty[]>([])
+  const [systemSpecialtiesLoading, setSystemSpecialtiesLoading] = useState(false)
 
   // Load hospital id
   useEffect(() => {
@@ -69,6 +60,28 @@ export default function AddSpecialtyPage() {
     return () => {
       off = true
     }
+  }, [])
+
+  useEffect(() => {
+    const fetchSystemSpecialties = async () => {
+      setSystemSpecialtiesLoading(true)
+      try {
+        const response = await apiRequest<{ data?: SystemSpecialty[] } | SystemSpecialty[]>(
+          API_ENDPOINTS.META.SPECIALTIES,
+          { method: "GET" },
+          { auth: true, getToken: () => authService.getToken() },
+        )
+
+        const specialtiesData = Array.isArray(response) ? response : response?.data || []
+        setSystemSpecialties(specialtiesData)
+      } catch (err: any) {
+        console.error("[v0] Error fetching system specialties:", err)
+      } finally {
+        setSystemSpecialtiesLoading(false)
+      }
+    }
+
+    fetchSystemSpecialties()
   }, [])
 
   const validate = (): boolean => {
@@ -103,7 +116,7 @@ export default function AddSpecialtyPage() {
     setSubmitting(true)
     try {
       await apiRequest(
-        API_ENDPOINTS.META.SPECIALTIES,
+        API_ENDPOINTS.HOSPITAL.SPECIALTIES(hospitalId),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,7 +164,7 @@ export default function AddSpecialtyPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-2xl font-semibold text-gray-900">Add Medical Specialty</h1>
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                 <Plus className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -171,25 +184,33 @@ export default function AddSpecialtyPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Dental Cleaning"
-                    className={`${fieldErrors.name ? "border-purple-500 border-2" : "border-gray-300"}`}
+                    className={`${fieldErrors.name ? "border-red-500 border-2" : "border-gray-300"}`}
                     aria-invalid={!!fieldErrors.name}
                   />
                   {fieldErrors.name && <p className="text-xs text-red-600">{fieldErrors.name}</p>}
                 </div>
 
-                {/* Service Category */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Service Category *</Label>
+                  <Label className="text-sm font-medium">Specialty Category *</Label>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className={`${fieldErrors.category ? "border-red-500" : ""}`}>
-                      <SelectValue placeholder="Other" />
+                      <SelectValue placeholder="Select a specialty category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {SPECIALTY_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
+                      {systemSpecialtiesLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Loading specialties...
                         </SelectItem>
-                      ))}
+                      ) : (
+                        <>
+                          {systemSpecialties.map((specialty) => (
+                            <SelectItem key={specialty.id} value={specialty.name}>
+                              {specialty.name}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="Other">Other</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   {fieldErrors.category && <p className="text-xs text-red-600">{fieldErrors.category}</p>}
@@ -215,7 +236,7 @@ export default function AddSpecialtyPage() {
                   <Button
                     onClick={onSubmit}
                     disabled={submitting || !hospitalId}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700"
+                    className="flex-1 bg-primary hover:bg-primary/90"
                   >
                     {submitting ? (
                       <>

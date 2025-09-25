@@ -59,16 +59,27 @@ export const API_ENDPOINTS = {
     STATS: `${API_VERSION_PREFIX}/patients/stats`,
   },
 
-  // add-Hospital-specific )
+  // Hospital-specific endpoints
   HOSPITAL: {
+    // Add endpoints (for adding new items)
     MEDICAL_STAFF: (hospitalId: string) =>
       `${API_VERSION_PREFIX}/hospitals/${hospitalId}/medical-staff/add/`,
     TREATMENTS: (hospitalId: string) =>
-      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/treatment/add/`,
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/treatments/add/`,
     FACILITIES: (hospitalId: string) =>
       `${API_VERSION_PREFIX}/hospitals/${hospitalId}/facilities/add/`,
     SPECIALTIES: (hospitalId: string) =>
       `${API_VERSION_PREFIX}/hospitals/${hospitalId}/specialties/add/`,
+
+    // Fetch endpoints (for getting existing items)
+    GET_TREATMENTS: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/treatments/`,
+    GET_FACILITIES: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/facilities/`,
+    GET_SPECIALTIES: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/specialties/`,
+    GET_MEDICAL_STAFF: (hospitalId: string) =>
+      `${API_VERSION_PREFIX}/hospitals/${hospitalId}/medical-staff/`,
   },
 
   TREATMENTS: {

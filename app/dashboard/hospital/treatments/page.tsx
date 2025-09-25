@@ -55,12 +55,67 @@ export default function TreatmentsPage() {
 
   const loadTreatments = async (hospitalId: string) => {
     try {
-      const response = await apiRequest<{ data: Treatment[] }>(
+      const response = await apiRequest<{ data: any[] }>(
         API_ENDPOINTS.HOSPITAL.GET_TREATMENTS(hospitalId),
         { method: "GET" },
         { auth: true, getToken: () => authService.getToken() },
       )
-      setTreatments(response.data || [])
+
+      console.log("[v0] Raw treatments API response:", response)
+
+      // Transform the API response to match our TypeScript types
+      const transformedTreatments: Treatment[] = (response.data || []).map((item: any) => {
+        // Parse duration strings to days
+        const parseDuration = (durationStr: string): number => {
+          if (!durationStr) return 0
+          const match = durationStr.match(/(\d+)\s*(day|week|month)s?/i)
+          if (!match) return 0
+
+          const value = Number.parseInt(match[1])
+          const unit = match[2].toLowerCase()
+
+          switch (unit) {
+            case "day":
+              return value
+            case "week":
+              return value * 7
+            case "month":
+              return value * 30
+            default:
+              return value
+          }
+        }
+
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description || "",
+          abbreviation: item.abbreviation,
+          price_range_from: item.price_range?.min || 0,
+          price_range_to: item.price_range?.max || 0,
+          currency: item.currency || "NGN",
+          duration_in_days: parseDuration(item.duration),
+          hospital_stay_period_in_days: parseDuration(item.hospital_stay_period),
+          recovery_period_in_days: parseDuration(item.recovery_period),
+          success_rate_percentage: Number.parseFloat(item.success_rate_percentage) || 0,
+          hospitalId: hospitalId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      })
+
+      const uniqueTreatments = transformedTreatments.filter(
+        (treatment, index, self) => index === self.findIndex((t) => t.id === treatment.id),
+      )
+
+      console.log("[v0] Transformed treatments:", transformedTreatments)
+      console.log("[v0] Unique treatments after deduplication:", uniqueTreatments)
+
+      if (transformedTreatments.length !== uniqueTreatments.length) {
+        console.log("[v0] Removed", transformedTreatments.length - uniqueTreatments.length, "duplicate treatments")
+      }
+
+      setTreatments(uniqueTreatments)
     } catch (e: any) {
       console.log("[v0] Failed to load treatments:", e)
       toast.error("Failed to load treatments")
@@ -192,7 +247,7 @@ export default function TreatmentsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredTreatments.map((treatment, index) => (
-                      <TableRow key={treatment.id}>
+                      <TableRow key={`${treatment.id}-${index}`}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">{treatment.name}</TableCell>
                         <TableCell className="max-w-xs truncate">{treatment.description}</TableCell>
