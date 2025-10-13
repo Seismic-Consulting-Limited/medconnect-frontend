@@ -3,6 +3,7 @@
 import TableHeading from '@/components/consultations/tableHeading'
 import PaymentTables from '@/components/payments/paymentTables'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { payments } from '@/constant/consultationData'
 import { Plus } from 'lucide-react'
 import Image from 'next/image'
@@ -23,8 +24,8 @@ const PaymentsPage = () => {
     ]
 
   return (
-    <div className='w-[1216px] p-5'>
-        <div className='p-5 border border-[#D7D7D7] bg-[#F7F7F7] rounded-[32px]'>
+    <div className='w-full p-5'>
+        <Card className='p-5'>
             <TableHeading
               title="Telemedicine Sessions"
               tabs={tabItems}
@@ -33,7 +34,7 @@ const PaymentsPage = () => {
               onSortChange={(value) => console.log('Sort By:', value)}
             />
             <PaymentTables />
-        </div>
+        </Card>
         {
             payments.length === 0 && (
                 <div className='text-center w-[428px] mx-auto space-y-5 mt-10'>

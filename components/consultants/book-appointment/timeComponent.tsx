@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import React, { useState } from 'react'
 import ScheduleSummary from './scheduleSummary'
+import { Card } from '@/components/ui/card'
 
 const TimeComponent = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -17,7 +18,7 @@ const TimeComponent = () => {
   ]
 
   return (
-    <div className="border-[0.5px] border-[#D7D7D7] rounded-[32px] w-[348px]">
+    <Card className="w-[348px]">
       {/* Header */}
       <div className="p-[20px] border-b border-[#D7D7D7]">
         <h2 className="text-[16px] font-semibold">Select Time</h2>
@@ -60,7 +61,7 @@ const TimeComponent = () => {
         {/* Action Button */}
         <ScheduleSummary active={active} type='booking' />
       </div>
-    </div>
+    </Card>
   )
 }
 

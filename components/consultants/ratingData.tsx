@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react'
 import React from 'react'
+import { Card } from '../ui/card'
 
 type RatingDataProps = {
   rating: number
@@ -13,7 +14,7 @@ const RatingData: React.FC<RatingDataProps> = ({ rating, totalReviews }) => {
   const totalStars = 5
 
   return (
-    <div className="w-full sm:w-[436px] p-[48px] text-center rounded-[32px] bg-[#F7F7F7] border border-[#D7D7D7] space-y-3">
+    <Card className="w-full sm:w-[436px] p-[48px] text-center space-y-3">
       {/* Rating Number */}
       <h2 className="text-[48px] font-bold">
         {rating.toFixed(1)}
@@ -40,7 +41,7 @@ const RatingData: React.FC<RatingDataProps> = ({ rating, totalReviews }) => {
       <p className="text-[16px] font-semibold text-[#A2A2A2]">
         ({totalReviews.toLocaleString()} Verified Ratings)
       </p>
-    </div>
+    </Card>
   )
 }
 

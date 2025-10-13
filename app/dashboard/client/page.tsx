@@ -6,6 +6,7 @@ import { Stethoscope, Activity, Heart } from "lucide-react"
 import AppointmentCard from "@/components/telemedicine/appointmentCard"
 import ActivityCard from "@/components/telemedicine/activity"
 import RecentBookings from "@/components/telemedicine/recentBookings"
+import { Card } from "@/components/ui/card"
 
 export const dashboardActions = [
   {
@@ -38,9 +39,9 @@ export default function ClientDashboard() {
   return (
     <ProtectedRoute requiredRole={["client", "patient"]}>
       {/* Top Section */}
-      <div className="flex flex-col lg:flex-row gap-6 mt-5 px-5">
+      <div className="flex flex-col lg:flex-row items-start gap-6 mt-5 px-5">
         {/* Left: Greeting & Actions */}
-        <div className="w-full lg:flex-1 p-5 rounded-[20px] border bg-white border-[#D7D7D7]">
+        <Card className="w-full lg:flex-1 p-5">
           <h2 className="text-primary font-light text-[18px]">Good Morning,</h2>
           <h1 className="font-extrabold text-[32px] sm:text-[40px] lg:text-[48px] text-text">
             Peter Parker
@@ -62,17 +63,15 @@ export default function ClientDashboard() {
               />
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Right: Appointments */}
-        <div className="w-full lg:w-[360px]">
-          <div className="rounded-[20px] border bg-white border-[#D7D7D7]">
+        <Card className="w-full lg:w-[360px]">
             <div className="border-b px-5 py-4">
               <h2 className="text-[18px] font-semibold">Upcoming Appointments</h2>
             </div>
             <AppointmentCard />
-          </div>
-        </div>
+        </Card>
       </div>
 
       {/* Bottom Section */}

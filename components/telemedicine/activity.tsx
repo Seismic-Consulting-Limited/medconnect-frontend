@@ -3,6 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { ArrowRight, Calendar } from "lucide-react"
+import { Card } from "../ui/card"
 
 type Activity = {
   id: string
@@ -34,7 +35,7 @@ const activities: Activity[] = [
 
 const ActivityCard = () => {
   return (
-    <div className="w-full bg-white rounded-[20px] shadow-sm border border-[#E6E6E6] lg:w-[500px]">
+    <Card className="w-full lg:w-[500px]">
       {/* Header */}
       <div className="flex items-center justify-between py-[12px] px-[16px] h-[61px] border-b">
         <div className="flex items-center gap-3 text-text">
@@ -66,7 +67,7 @@ const ActivityCard = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }
 

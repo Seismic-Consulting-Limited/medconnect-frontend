@@ -1,3 +1,4 @@
+import { Card } from '@/components/ui/card'
 import { Clock, Globe } from 'lucide-react'
 import Image from 'next/image'
 import React from 'react'
@@ -5,7 +6,7 @@ import React from 'react'
 const ProfileData = () => {
     const languages = ['English', 'Yoruba', 'Hausa']
   return (
-    <div className='w-[348px] bg-[#F7F7F7] space-y-5 border-[#D7D7D7] border-[1px] rounded-[32px] p-[24px]'>
+    <Card className='w-[348px] space-y-5 p-[24px]'>
             <div className='space-y-2'>
               <Image src={'/fb4996dd2f3bece621cfd3cf3a8f5361a14ddc31.jpg'} alt={''} width={100} height={100} className='w-[300px] h-[222px] object-cover' />
               <h2 className='font-semibold text-[24px]'>Dr. Zainab Aliyu</h2>
@@ -36,7 +37,7 @@ const ProfileData = () => {
                 / Consultation</span>
               </div>
             </div>
-          </div>
+    </Card>
   )
 }
 

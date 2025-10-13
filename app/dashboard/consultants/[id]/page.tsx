@@ -8,6 +8,7 @@ import RatingDistribution from '@/components/consultants/ratingDistribution'
 import ReviewCard from '@/components/hospital/hospitalDetails/reviewCard'
 import SectionHeader from '@/components/shared/SectionHeader'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { reviews } from '@/constant/hospitalData'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -30,14 +31,14 @@ const ConsultantDetailsPage = () => {
         <div className='p-5 flex gap-5'>
             <div className='w-[720px] text-center space-y-5'>
                 <ProfileData />
-                <div className='p-[24px] rounded-[32px] bg-[#F7F7F7] border-[0.5px] border-[#D7D7D7] space-y-3 text-left'>
+                <Card className='p-[24px] space-y-3 text-left'>
                     <h2 className='text-[18px] font-semibold'>About</h2>
                     <p className='text-[16px] font-light'>
                         Dr. Zainab Aliyu is an accomplished neurosurgeon with expertise in treating disorders of the brain, spine, and nervous system. 
                         She is known for her precision in performing complex surgical procedures and her patient-centred approach to care. With years 
                         of clinical and surgical experience, Dr. Aliyu has supported both local and international patients, delivering world-class outcomes in neurosurgery.
                     </p>
-                </div>
+                </Card>
             </div>
             <div className='w-[472px] space-y-5'>
                 <EducationalData />

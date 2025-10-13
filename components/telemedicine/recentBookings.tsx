@@ -2,6 +2,7 @@ import { ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
+import { Card } from "../ui/card";
 
 const bookings = [
   {
@@ -44,7 +45,7 @@ const statusColors: Record<string, string> = {
 
 const RecentBookings = () => {
   return (
-    <div className="bg-white rounded-[20px] shadow-sm border border-[#E6E6E6] overflow-hidden xl:w-full lg:w-[844px] lg:max-h-[449px]">
+    <Card className="overflow-hidden xl:w-full lg:w-[844px] lg:max-h-[449px]">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between py-[12px] px-[16px] h-auto md:h-[61px] border-b gap-3">
         <div className="flex items-center gap-3 text-text">
@@ -164,7 +165,7 @@ const RecentBookings = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

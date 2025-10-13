@@ -9,6 +9,7 @@ import SessionTable from '@/components/consultations/sessionTable'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { sessions } from '@/constant/consultationData'
+import { Card } from '@/components/ui/card'
 
 const ConsultationsPage = () => {
   // Sample data for cards
@@ -53,8 +54,8 @@ const ConsultationsPage = () => {
   ]
 
   return (
-    <div className='w-[1216px] p-5 space-y-5'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'>
+    <div className='w-full p-5 space-y-5'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'>
             {dashboardData.map((card) => (
                 <DashboardCard
                 key={card.id}
@@ -67,7 +68,7 @@ const ConsultationsPage = () => {
             ))}
         </div>
 
-        <div className='p-5 border border-[#D7D7D7] bg-[#F7F7F7] rounded-[32px]'>
+        <Card className='p-5'>
             <TableHeading
               title="Telemedicine Sessions"
               tabs={tabItems}
@@ -76,7 +77,7 @@ const ConsultationsPage = () => {
               onSortChange={(value) => console.log('Sort By:', value)}
             />
             <SessionTable />
-        </div>
+        </Card>
 
         {
           sessions.length === 0 && (

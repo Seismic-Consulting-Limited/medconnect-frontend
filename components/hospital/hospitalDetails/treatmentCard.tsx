@@ -1,6 +1,7 @@
 import { Clock, Hospital, Stethoscope } from 'lucide-react'
 import React from 'react'
 import TreatmentInfoItem from './treatmentInfoItem'
+import { Card } from '@/components/ui/card'
 
 type Treatment = {
   name: string
@@ -13,7 +14,7 @@ type Treatment = {
 
 const TreatmentCard = ({ treatment }: { treatment: Treatment }) => {
   return (
-    <div className="bg-[#F7F7F7] border border-[#E2E2E2] rounded-[16px] hover:shadow-md transition-all duration-300">
+    <Card>
       {/* --- Top Section --- */}
       <div className="py-[20px] px-[16px] space-y-2">
         <h2 className="text-[18px] font-semibold">{treatment.name}</h2>
@@ -52,7 +53,7 @@ const TreatmentCard = ({ treatment }: { treatment: Treatment }) => {
           value={treatment.facility}
         />
       </div>
-    </div>
+    </Card>
   )
 }
 

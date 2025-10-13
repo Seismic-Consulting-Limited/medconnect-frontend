@@ -1,6 +1,7 @@
 import { GraduationCap } from 'lucide-react'
 import React from 'react'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 
 // Example data (you can later fetch this dynamically)
 const educationData = [
@@ -20,7 +21,7 @@ const educationData = [
 
 const EducationalData = () => {
   return (
-    <div className="p-[24px] rounded-[32px] bg-[#F7F7F7] border-[0.5px] border-[#D7D7D7] space-y-3 text-left">
+    <Card className="p-[24px] space-y-3 text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-[16px] font-semibold">Education</h3>
@@ -43,7 +44,7 @@ const EducationalData = () => {
           </div>
         </div>
       ))}
-    </div>
+    </Card>
   )
 }
 

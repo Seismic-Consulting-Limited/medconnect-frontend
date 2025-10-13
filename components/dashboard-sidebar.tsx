@@ -146,8 +146,8 @@ export function DashboardSidebar() {
   ];
 
   const footerLinks: NavItem[] = [
-    { label: "Settings", href: "/settings", icon: "Settings" },
-    { label: "Help & Support", href: "/dashboard/help", icon: "HelpCircle" },
+    { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
+    { label: "Help & Support", href: "/dashboard/help-support", icon: "HelpCircle" },
   ];
 
   return (

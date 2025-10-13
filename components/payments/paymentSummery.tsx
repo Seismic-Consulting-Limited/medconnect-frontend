@@ -10,6 +10,7 @@ import {
 import { Banknote, Calendar1, Clock, CloudUpload, DownloadCloud, File, Hash, Receipt, Stethoscope, Video } from 'lucide-react'
 import BookingInfoRow from '../consultants/book-appointment/InfoRow'
 import { Button } from '../ui/button'
+import Link from 'next/link'
 
 interface PaymentSummaryProps {
   open: boolean
@@ -148,7 +149,7 @@ const PaymentSummary = ({ open, onOpenChange, payment }: PaymentSummaryProps) =>
                 Download Reciept
             </Button>
             <Button variant={'outline'} className='py-[12px] px-[20px] h-[47px] text-[14px]'>
-                Report Transaction
+              <Link href={'payments/report/sdcmsld'}>Report Transaction</Link>         
             </Button>
         </div>
       </SheetContent>

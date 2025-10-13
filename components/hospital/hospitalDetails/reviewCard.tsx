@@ -3,6 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { Star } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 
 interface ReviewCardProps {
   name: string
@@ -22,7 +23,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   image,
 }) => {
   return (
-    <div className="w-[348px] bg-white shadow border border-[#D7D7D7]/70 p-6 rounded-[24px] space-y-3">
+    <Card className="w-[348px]  p-6 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -41,7 +42,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
         <div className="flex items-center gap-2 text-[18px]">
           <span>{rating.toFixed(1)}</span>
-          <Star className="w-[20px] h-[20px] text-[#F79009]" />
+          <Star fill={'#F79009'} className="w-[20px] h-[20px] text-[#F79009]" />
         </div>
       </div>
 
@@ -52,7 +53,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           {comment}
         </p>
       </div>
-    </div>
+    </Card>
   )
 }
 

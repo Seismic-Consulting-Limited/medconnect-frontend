@@ -1,4 +1,5 @@
 'use client';
+import { Card } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
@@ -93,7 +94,7 @@ const DatePicker = () => {
   ];
 
   return (
-    <div className="border-[0.5px] border-[#D7D7D7] rounded-[32px] w-[472px]">
+    <Card className="w-[472px]">
       {/* Header */}
       <div className="p-[20px] border-b border-[#D7D7D7]">
         <h2 className="text-[16px] font-semibold">Select Date</h2>
@@ -147,7 +148,7 @@ const DatePicker = () => {
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 };
 

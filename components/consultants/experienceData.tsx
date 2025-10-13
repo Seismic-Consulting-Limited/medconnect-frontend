@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 
 // Example experience data (can be fetched or imported later)
 const experiences = [
@@ -22,7 +23,7 @@ const experiences = [
 
 const ExperienceData = () => {
   return (
-    <div className="p-[24px] rounded-[32px] bg-[#F7F7F7] border border-[#D7D7D7] space-y-3 text-left">
+    <Card className="p-[24px] space-y-3 text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-[16px] font-semibold">Experiences</h3>
@@ -44,7 +45,7 @@ const ExperienceData = () => {
           </div>
         </div>
       ))}
-    </div>
+    </Card>
   )
 }
 

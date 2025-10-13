@@ -1,5 +1,6 @@
 // components/consultations/dashboardCard.tsx
 import React from 'react'
+import { Card } from '../ui/card'
 
 interface DashboardCardProps {
   title: string
@@ -17,7 +18,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   bgColor = '#007AFF',
 }) => {
   return (
-    <div className='flex flex-col justify-center w-full h-[196px] border border-[#D7D7D7] bg-[#F7F7F7] rounded-[32px]'>
+    <Card className='flex flex-col justify-center w-full h-[196px]'>
       <div className='flex items-center gap-3 px-[16px]'>
         <div
           className='w-[40px] h-[40px] flex items-center justify-center rounded-full'
@@ -31,7 +32,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         <h1 className='text-[48px] font-semibold'>{value}</h1>
         <p className='text-[16px] font-light text-[#717171]'>{description}</p>
       </div>
-    </div>
+    </Card>
   )
 }
 

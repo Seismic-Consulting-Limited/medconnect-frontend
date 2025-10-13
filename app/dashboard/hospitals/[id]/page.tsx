@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import Consultants from '@/components/hospital/hospitalDetails/consultants'
 import Facilities from '@/components/hospital/hospitalDetails/facilities'
+import { Card } from '@/components/ui/card'
 
 const tabs = [
     {
@@ -54,7 +55,7 @@ const HospitalDetailsPage = () => {
                     <span
                         className="py-[12px] px-[20px] flex items-center gap-2 w-fit bg-[#EDEDED] text-[14px] font-light text-text border border-[#D7D7D7] rounded-full"
                     >
-                        <Star className='w-[20px] h-[20px]' color='#F79009' />
+                        <Star fill={'#F79009'} className='w-[20px] h-[20px]' color='#F79009' />
                         4.9 (1.2k reviews)
                     </span>
                     <span
@@ -102,8 +103,8 @@ const HospitalDetailsPage = () => {
                     }
                 </div>
             </div>
-            <div className='w-[496px]'>
-                <div className='border-[1px] border-[#D7D7D7] rounded-[15px]'>
+            <Card className='w-[496px]'>
+                <div className=''>
                     <div className='p-[16px] border-b'>
                         <h2 className='text-[16px] font-semibold'>Contact This Hospital</h2>
                     </div>
@@ -122,7 +123,7 @@ const HospitalDetailsPage = () => {
                         </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     </div>
   )

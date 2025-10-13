@@ -2,6 +2,7 @@ import React from 'react'
 import { Clock, Globe, GraduationCap, Hospital,  Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link';
+import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 type Consultant = {
   id: number;
@@ -31,28 +32,25 @@ const ConsultantsCard = ({ consultant }: { consultant: Consultant }) => {
   } = consultant
 
   return (
-    <div className="bg-white text-center rounded-[16px] border border-[#D7D7D7] shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="text-center">
       {/* Top */}
-      <div className="py-5 space-y-2">
-        <Image
-          src={image}
-          alt={name}
-          width={96}
-          height={96}
-          className="rounded-full object-cover mx-auto"
-        />
-        <div className="space-y-1">
-          <Link href={`/dashboard/consultants/${id}`} className="text-[18px] font-semibold">{name}</Link>
-          <p className="text-[15px] font-light text-[#A2A2A2]">{specialty}</p>
-
+        <CardHeader>
+          <Image
+            src={image}
+            alt={name}
+            width={96}
+            height={96}
+            className="rounded-full object-cover mx-auto"
+          />
+          <CardTitle><Link href={`/dashboard/consultants/${id}`} className="text-[18px] font-semibold">{name}</Link></CardTitle>
+          <CardDescription><p className="text-[15px] font-light text-[#A2A2A2]">{specialty}</p></CardDescription>
           <div className="flex items-center mx-auto gap-2 text-[18px] py-2 px-4 bg-[#F4F4F4] w-fit rounded-full border border-[#C0C0C0]">
-            <Star className="w-[18px] h-[18px] text-[#F79009]" />
+            <Star fill={'#F79009'} className="w-[18px] h-[18px] text-[#F79009]" />
             <span className="text-[12px]">
               {rating} <span className="text-[#717171]">({reviews} Reviews)</span>
             </span>
           </div>
-        </div>
-      </div>
+      </CardHeader>
 
       {/* Bottom */}
       <div className="py-5 px-4 text-left space-y-3 border-t text-[#333]">
@@ -61,7 +59,7 @@ const ConsultantsCard = ({ consultant }: { consultant: Consultant }) => {
         <InfoRow icon={<GraduationCap className='w-[20px] h-[20px]' />} label="Qualification" value={qualification} />
         <InfoRow icon={<Clock className='w-[20px] h-[20px]' />} label="Experience" value={experience} />
       </div>
-    </div>
+    </Card>
   )
 }
 

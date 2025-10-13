@@ -11,11 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Card } from '../ui/card'
 
 
 const SideFilter = () => {
   return (
-    <div className='w-[400px] border-[0.5px] border-[#D7D7D7] rounded-[16px]'>
+    <Card className='w-[400px]'>
         <div className="flex items-center justify-between border-b p-[14px]">
           <h3 className="text-[16px] font-semibold">
             Filter Options
@@ -92,7 +93,7 @@ const SideFilter = () => {
             </div>
             <Button className='h-[47px] w-full text-sm flex items-center justify-center gap-2'>Apply Filter</Button>
         </div>
-    </div>
+    </Card>
   )
 }
 

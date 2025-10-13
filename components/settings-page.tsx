@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import ChangePasswordModal from "./settings/changePasswordModal"
+import DeactivateAccountModal from "./settings/deactivateAccountModal"
 
 export function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -13,10 +13,8 @@ export function SettingsPage() {
   const [activityNotifications, setActivityNotifications] = useState(true)
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <DashboardSidebar />
-
-      <div className="flex-1 ml-0 lg:ml-64">
+    <div className="flex min-h-screen">
+      <div className="flex-1">
         <div className="p-6 pt-12">
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Security Settings */}
@@ -31,9 +29,7 @@ export function SettingsPage() {
                     <h3 className="font-medium text-gray-900 mb-2">Change your password</h3>
                     <p className="text-sm text-gray-600">Set a unique password for better protection.</p>
                   </div>
-                  <Button variant="outline" className="border-gray-300 bg-transparent shrink-0">
-                    Change Password
-                  </Button>
+                  <ChangePasswordModal />
                 </div>
 
                 <div className="flex items-start justify-between py-4">
@@ -41,12 +37,7 @@ export function SettingsPage() {
                     <h3 className="font-medium text-gray-900 mb-2">Deactivate Account</h3>
                     <p className="text-sm text-gray-600">All operations on this account will be discontinued.</p>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent shrink-0"
-                  >
-                    Deactivate Account
-                  </Button>
+                  <DeactivateAccountModal />
                 </div>
               </CardContent>
             </Card>
@@ -115,6 +106,7 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+
     </div>
   )
 }

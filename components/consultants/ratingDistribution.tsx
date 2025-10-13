@@ -1,5 +1,6 @@
 import React from "react";
 import { Star } from "lucide-react";
+import { Card } from "../ui/card";
 
 const RatingDistribution = () => {
   const ratings = [
@@ -11,7 +12,7 @@ const RatingDistribution = () => {
   ];
 
   return (
-    <div className="w-[755px] bg-[#F7F7F7] p-6 rounded-[32px] border border-[#D7D7D7] space-y-6">
+    <Card className="w-[755px] p-6 space-y-6">
       {ratings.map((rating) => (
         <div key={rating.stars} className="flex items-center gap-4">
           {/* Star label */}
@@ -33,7 +34,7 @@ const RatingDistribution = () => {
           </span>
         </div>
       ))}
-    </div>
+    </Card>
   );
 };
 

@@ -6,6 +6,7 @@ import { BadgeCheck, MapPin, Plus, Star } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Card, CardFooter, CardTitle } from '../ui/card'
 
 interface HospitalCardProps {
   id: number;
@@ -30,7 +31,7 @@ const HospitalCard: React.FC<HospitalCardProps> = ({
 }) => {
     const router = useRouter()
   return (
-    <div className="w-full bg-[#F7F7F7] border border-[#E0CCF6] rounded-2xl p-2 shadow hover:shadow-sm transition-all duration-300">
+    <Card className="p-2 h-fit">
       {/* 🏥 Hospital Image */}
       <div className="relative w-full h-[220px] rounded-xl overflow-hidden">
         <Image
@@ -53,9 +54,11 @@ const HospitalCard: React.FC<HospitalCardProps> = ({
       {/* 🏥 Info Section */}
       <div className="px-2 py-4 space-y-3">
         {/* Name */}
-        <Link href={`/dashboard/hospitals/${id}`} className="font-semibold text-base text-[#222] truncate">
-          {name}
-        </Link>
+        <CardTitle>
+          <Link href={`/dashboard/hospitals/${id}`} className="font-semibold text-base text-[#222] truncate">
+            {name}
+          </Link>
+        </CardTitle>
 
         {/* Specialties */}
         <div className="flex flex-wrap gap-2">
@@ -87,20 +90,19 @@ const HospitalCard: React.FC<HospitalCardProps> = ({
           )}
         </div>
 
-        {/* Location & Rating */}
-        <div className="flex items-center justify-between text-[#717171] mt-2">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            <span className="text-[12px] font-medium">{location}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 text-[#F79009]" />
-            <span className="text-[12px] font-medium">{rating}</span>
-            <span className="text-[12px] text-[#C0C0C0]">({reviews})</span>
-          </div>
-        </div>
+          <CardFooter className="flex items-center justify-between text-[#717171] mt-2 px-0">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span className="text-[12px] font-medium">{location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Star fill={'#F79009'} className="w-4 h-4 text-[#F79009]" />
+              <span className="text-[12px] font-medium">{rating}</span>
+              <span className="text-[12px] text-[#C0C0C0]">({reviews})</span>
+            </div>
+          </CardFooter>
       </div>
-    </div>
+    </Card>
   )
 }
 
