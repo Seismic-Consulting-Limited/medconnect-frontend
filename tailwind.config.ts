@@ -73,6 +73,9 @@ const config = {
           900: "#642A99",
           950: "#521A86",
         },
+        text: {
+          DEFAULT: '#313131'
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

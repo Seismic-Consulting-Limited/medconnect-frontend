@@ -1,10 +1,8 @@
-// components/dashboard-sidebar.tsx
 "use client";
 
-import type React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   Home,
   Calendar,
@@ -17,9 +15,14 @@ import {
   Users,
   Heart,
   Package,
+  Hospital,
+  LayoutGrid,
+  Video,
+  CreditCard
 } from "lucide-react";
 import { useRoleNavigation } from "@/hooks/use-role-navigation";
 
+// Map icon names to actual components
 const iconMap = {
   Home,
   Calendar,
@@ -32,110 +35,24 @@ const iconMap = {
   Users,
   Heart,
   Package,
+  LayoutGrid,
+  Hospital,
+  Video,
+  CreditCard
 };
 
-type NavItem = {
+export type NavItem = {
   label: string;
   href: string;
-  icon: keyof typeof iconMap | string; // allow string; we’ll fallback to Home if unknown
+  icon?: keyof typeof iconMap;
 };
 
-export function DashboardSidebar() {
-  const pathname = usePathname();
-  const { getNavigationItems, userRole } = useRoleNavigation();
+export type SidebarSectionProps = {
+  title?: string;
+  items: NavItem[];
+};
 
-  // Hydration-safe: render skeleton until mounted
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  const renderSkeleton = () => (
-    <aside
-      className="bg-white border-r border-gray-200 w-64 h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block"
-      suppressHydrationWarning
-    >
-      <nav className="flex flex-col h-full">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <div className="h-4 w-4 bg-primary rounded-sm" />
-          </div>
-          <span className="font-bold text-xl text-primary">MedConnect</span>
-        </div>
-        <div className="space-y-1">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 px-3 py-3 rounded-lg"
-            >
-              <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse flex-1" />
-            </div>
-          ))}
-        </div>
-      </nav>
-    </aside>
-  );
-
-  // 1) Before mount → skeleton (matches SSR)
-  if (!mounted) return renderSkeleton();
-
-  // 2) After mount but role still unknown → still skeleton
-  if (!userRole) return renderSkeleton();
-
-  // 3) Role known → real nav; give TS an explicit type for items
-  const navigationItems = ((getNavigationItems?.() as unknown) ??
-    []) as NavItem[];
-
-  return (
-    <aside className="bg-white border-r border-gray-200 w-64 h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
-      <nav className="flex flex-col h-full">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <div className="h-4 w-4 bg-primary rounded-sm" />
-          </div>
-          <span className="font-bold text-xl text-primary">MedConnect</span>
-        </div>
-
-        <div className="space-y-1">
-          {navigationItems.map((item) => {
-            const IconComp =
-              iconMap[(item.icon as keyof typeof iconMap) ?? "Home"] || Home;
-            const active =
-              item.label === "Dashboard"
-                ? pathname === item.href // Dashboard only active on exact match
-                : pathname === item.href ||
-                  pathname.startsWith(item.href + "/"); // Other items can match sub-paths
-            return (
-              <SidebarItem
-                key={item.href}
-                icon={<IconComp className="h-4 w-4" />}
-                label={item.label}
-                href={item.href}
-                active={active}
-              />
-            );
-          })}
-        </div>
-
-        <div className="flex-1" />
-
-        <div className="space-y-3 mt-auto border-t pt-4">
-          <SidebarItem
-            icon={<Settings className="h-4 w-4" />}
-            label="Settings"
-            href="/settings"
-          />
-          <SidebarItem
-            icon={<HelpCircle className="h-4 w-4" />}
-            label="Help & Support"
-            href="/dashboard/help"
-          />
-        </div>
-      </nav>
-    </aside>
-  );
-}
-
-function SidebarItem({
+export function SidebarItem({
   icon,
   label,
   href,
@@ -152,12 +69,109 @@ function SidebarItem({
       className={[
         "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-colors",
         active
-          ? "bg-primary/10 text-primary font-bold"
-          : "hover:bg-gray-50 text-gray-700",
+          ? "bg-primary text-white font-bold"
+          : "hover:bg-gray-50 text-[#313131]",
       ].join(" ")}
     >
-      <div className="h-5 w-5 flex items-center justify-center">{icon}</div>
-      <span>{label}</span>
+      <div className="h-[24px] w-[24px] flex items-center justify-center">{icon}</div>
+      <span className="text-[16px] font-light">{label}</span>
     </Link>
+  );
+}
+
+export function SidebarSection({ items }: SidebarSectionProps) {
+  const pathname = usePathname();
+  return (
+    <div className="space-y-1">
+      {items.map((item) => {
+        const IconComp = iconMap[item.icon ?? "Home"];
+        const active =
+          pathname === item.href || pathname.startsWith(item.href + "/");
+
+          console.log('active', active);
+          console.log('path name', pathname)
+
+        return (
+          <SidebarItem
+            key={item.href}
+            icon={<IconComp className="h-5 w-5" />}
+            label={item.label}
+            href={item.href}
+            active={active}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export function DashboardSidebar() {
+  const pathname = usePathname();
+  const { getNavigationItems, userRole } = useRoleNavigation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || !userRole) {
+    return (
+      <aside className="border-r border-gray-200 w-[248px] h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
+        <nav className="flex flex-col h-full animate-pulse">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-8 w-8 bg-gray-200 rounded-lg" />
+            <div className="h-6 bg-gray-200 rounded w-24" />
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-3 py-3 rounded-lg"
+            >
+              <div className="h-5 w-5 bg-gray-200 rounded" />
+              <div className="h-4 w-32 bg-gray-200 rounded" />
+            </div>
+          ))}
+        </nav>
+      </aside>
+    );
+  }
+
+  const navigationItems = (getNavigationItems?.() ?? []) as NavItem[];
+
+  const generalLinks: NavItem[] = [
+    { label: "Dashboard", href: "/dashboard/client", icon: "LayoutGrid" },
+    { label: "Hospitals", href: "/dashboard/hospitals", icon: "Hospital" },
+    { label: "Consultants", href: "/dashboard/consultants", icon: "Stethoscope" },
+    { label: "Travel Planning", href: "/travel", icon: "Plane" },
+    { label: "Consultations", href: "/dashboard/consultations", icon: "Video" },
+    { label: "Payments", href: "/dashboard/payments", icon: "CreditCard" },
+  ];
+
+  const footerLinks: NavItem[] = [
+    { label: "Settings", href: "/settings", icon: "Settings" },
+    { label: "Help & Support", href: "/dashboard/help", icon: "HelpCircle" },
+  ];
+
+  return (
+    <aside className="bg-white border-r border-gray-200 w-[248px] h-screen p-4  overflow-y-auto z-10 hidden lg:block">
+      <nav className="flex flex-col h-full">
+        {/* Brand */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="h-4 w-4 bg-primary rounded-sm" />
+          </div>
+          <span className="font-bold text-xl text-primary">MedConnect</span>
+        </div>
+
+        {/* Dynamic role-based nav */}
+        <SidebarSection items={navigationItems} />
+
+        {/* Static general links */}
+        <SidebarSection items={generalLinks} />
+
+        {/* Footer */}
+        <div className="mt-auto border-t pt-4">
+          <SidebarSection items={footerLinks} />
+        </div>
+      </nav>
+    </aside>
   );
 }

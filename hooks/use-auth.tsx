@@ -92,6 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // try cached user first
         const cached = authService.getCurrentUser();
+        console.log('user', cached)
         if (cached) {
           setUser(cached);
           return;
