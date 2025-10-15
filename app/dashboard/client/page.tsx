@@ -4,9 +4,9 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { ActionCard } from "@/components/telemedicine/ActionCard"
 import { Stethoscope, Activity, Heart } from "lucide-react"
 import AppointmentCard from "@/components/telemedicine/appointmentCard"
-import ActivityCard from "@/components/telemedicine/activity"
 import RecentBookings from "@/components/telemedicine/recentBookings"
 import { Card } from "@/components/ui/card"
+import ActivityContainer from "@/components/telemedicine/activity"
 
 export const dashboardActions = [
   {
@@ -76,7 +76,7 @@ export default function ClientDashboard() {
 
       {/* Bottom Section */}
       <div className="flex flex-col lg:flex-row gap-6 mt-5 px-5">
-        <ActivityCard />
+        <ActivityContainer />
         <RecentBookings />
       </div>
     </ProtectedRoute>

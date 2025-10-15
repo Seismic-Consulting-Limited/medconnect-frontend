@@ -1,9 +1,8 @@
 'use client'
-import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import React, { useState } from 'react'
-import ScheduleSummary from './scheduleSummary'
 import { Card } from '@/components/ui/card'
+import BookingSummery from './bookingSummery'
 
 const TimeComponent = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -59,7 +58,7 @@ const TimeComponent = () => {
         </div>
 
         {/* Action Button */}
-        <ScheduleSummary active={active} type='booking' />
+        <BookingSummery />
       </div>
     </Card>
   )

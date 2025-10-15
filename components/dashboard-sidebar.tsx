@@ -18,7 +18,10 @@ import {
   Hospital,
   LayoutGrid,
   Video,
-  CreditCard
+  CreditCard,
+  Cross,
+  Building,
+  MessageSquareMore
 } from "lucide-react";
 import { useRoleNavigation } from "@/hooks/use-role-navigation";
 
@@ -38,7 +41,10 @@ const iconMap = {
   LayoutGrid,
   Hospital,
   Video,
-  CreditCard
+  CreditCard,
+  Cross,
+  Building,
+  MessageSquareMore
 };
 
 export type NavItem = {
@@ -81,15 +87,18 @@ export function SidebarItem({
 
 export function SidebarSection({ items }: SidebarSectionProps) {
   const pathname = usePathname();
+
   return (
     <div className="space-y-1">
       {items.map((item) => {
         const IconComp = iconMap[item.icon ?? "Home"];
-        const active =
-          pathname === item.href || pathname.startsWith(item.href + "/");
 
-          console.log('active', active);
-          console.log('path name', pathname)
+        // ✅ Improved logic to prevent /dashboard from always being active
+      const active =
+        pathname === item.href ||
+        (pathname.startsWith(item.href + "/") &&
+          item.href.split("/").length >= pathname.split("/").length - 1);
+
 
         return (
           <SidebarItem
@@ -105,10 +114,12 @@ export function SidebarSection({ items }: SidebarSectionProps) {
   );
 }
 
+
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { getNavigationItems, userRole } = useRoleNavigation();
   const [mounted, setMounted] = useState(false);
+
 
   useEffect(() => setMounted(true), []);
 
@@ -133,18 +144,29 @@ export function DashboardSidebar() {
       </aside>
     );
   }
+  const role: any = 'hospital'
 
   const navigationItems = (getNavigationItems?.() ?? []) as NavItem[];
 
-  const generalLinks: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard/client", icon: "LayoutGrid" },
-    { label: "Hospitals", href: "/dashboard/hospitals", icon: "Hospital" },
-    { label: "Consultants", href: "/dashboard/consultants", icon: "Stethoscope" },
-    { label: "Travel Planning", href: "/travel", icon: "Plane" },
-    { label: "Consultations", href: "/dashboard/consultations", icon: "Video" },
-    { label: "Payments", href: "/dashboard/payments", icon: "CreditCard" },
+  const clientLinks: NavItem[] = [
+    { label: "Dashboard", href: "/dashboard/client/", icon: "LayoutGrid" },
+    { label: "Hospitals", href: "/dashboard/client/hospitals", icon: "Hospital" },
+    { label: "Consultants", href: "/dashboard/client/consultants", icon: "Stethoscope" },
+    { label: "Travel Planning", href: "/client/travel", icon: "Plane" },
+    { label: "Consultations", href: "/dashboard/client/consultations", icon: "Video" },
+    { label: "Payments", href: "/dashboard/client/payments", icon: "CreditCard" },
   ];
 
+  const hospitalLinks: NavItem[] = [
+    { label: "Dashboard", href: "/dashboard/hospital/", icon: "LayoutGrid" },
+    { label: "Treatment", href: "/dashboard/hospital/treatment", icon: "Cross" },
+    { label: "Consultants", href: "/dashboard/hospital/consultants", icon: "Stethoscope" },
+    { label: "Services", href: "/dashboard/hospital/services", icon: "Building" },
+    { label: "Messages", href: "/dashboard/hospital/messages", icon: "MessageSquareMore" },
+  ];
+
+  const activeNav = role === 'client' ? clientLinks : hospitalLinks
+ 
   const footerLinks: NavItem[] = [
     { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
     { label: "Help & Support", href: "/dashboard/help-support", icon: "HelpCircle" },
@@ -165,7 +187,7 @@ export function DashboardSidebar() {
         <SidebarSection items={navigationItems} />
 
         {/* Static general links */}
-        <SidebarSection items={generalLinks} />
+        <SidebarSection items={activeNav} />
 
         {/* Footer */}
         <div className="mt-auto border-t pt-4">

@@ -2,7 +2,7 @@ import React from 'react'
 import { Clock, Globe, GraduationCap, Hospital,  Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link';
-import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 type Consultant = {
   id: number;
@@ -52,13 +52,12 @@ const ConsultantsCard = ({ consultant }: { consultant: Consultant }) => {
           </div>
       </CardHeader>
 
-      {/* Bottom */}
-      <div className="py-5 px-4 text-left space-y-3 border-t text-[#333]">
+      <CardContent className='space-y-3 border-t py-5'>
         <InfoRow icon={<Hospital className='w-[20px] h-[20px]' />} label="Affiliation" value={hospital} />
         <InfoRow icon={<Globe className='w-[20px] h-[20px]' />} label="Language" value={language} />
         <InfoRow icon={<GraduationCap className='w-[20px] h-[20px]' />} label="Qualification" value={qualification} />
         <InfoRow icon={<Clock className='w-[20px] h-[20px]' />} label="Experience" value={experience} />
-      </div>
+      </CardContent>
     </Card>
   )
 }

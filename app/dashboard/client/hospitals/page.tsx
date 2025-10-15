@@ -109,7 +109,7 @@ const HospitalsPage = () => {
 
       <div className='p-5'>
         <Filters />
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-start gap-5'>
           {hospitals.map((hospital, index) => (
             <HospitalCard key={index} {...hospital} />
           ))}

@@ -26,20 +26,35 @@ const PaymentTables = () => {
   const currentSessions = payments.slice(indexOfFirst, indexOfLast)
   const totalPages = Math.ceil(payments.length / ITEMS_PER_PAGE)
 
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-        case 'Confirmed':
-            return 'text-[#079455] border-[0.5px] border-[#079455] bg-[#DCFAE6]'
-        case 'Pending':
-            return 'text-[#DC6803] border-[0.5px] border-[#DC6803] bg-[#FEF0C7]'
-        case 'Failed':
-            return 'text-[#D92D20] border-[0.5px] border-[#B42318] bg-[#FEE4E2]'
-        case 'Refunded':
-            return 'text-[#155EEF] border-[0.5px] border-[#155EEF] bg-[#E0EAFF]'
-        default:
-            return ''
-        }
-    }
+const getStatusStyle = (status: string) => {
+  const normalizedStatus = status.trim().toLowerCase()
+
+  switch (normalizedStatus) {
+    case "ongoing":
+      return "text-[#079455] border border-[#079455] bg-[#dcfae6]"
+    case "in 15 mins":
+      return "text-[#7e22ce] border border-[#7e22ce] bg-[#e4cff7]"
+    case "upcoming":
+      return "text-[#b54708] border border-[#b54708] bg-[#fef0c7]"
+    case "completed":
+      return "text-[#155eef] border border-[#155eef] bg-[#d1e0ff]"
+    case "canceled":
+      return "text-[#d92d20] border border-[#d92d20] bg-[#fee4e2]"
+    case "booking":
+      return "text-[#007aff] border border-[#007aff] bg-[#e0f7ff]"
+    case "confirmed":
+      return "text-[#079455] border border-[#079455] bg-[#dcfae6]"
+    case "pending":
+      return "text-[#b54708] border border-[#b54708] bg-[#fef0c7]"
+    case "failed":
+      return "text-[#d92d20] border border-[#d92d20] bg-[#fee4e2]"
+    case "refunded":
+      return "text-[#155eef] border border-[#155eef] bg-[#d1e0ff]"
+    default:
+      return "text-[#555] border border-[#ccc] bg-[#eee]"
+  }
+}
+
 
   const getButtonLabel = (status: string) => {
     switch (status) {

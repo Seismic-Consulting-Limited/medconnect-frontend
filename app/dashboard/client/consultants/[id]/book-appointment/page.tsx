@@ -1,7 +1,6 @@
 import DatePicker from '@/components/consultants/book-appointment/datePicker'
 import ProfileData from '@/components/consultants/book-appointment/profileData'
 import TimeComponent from '@/components/consultants/book-appointment/timeComponent'
-import { Button } from '@/components/ui/button'
 import { ArrowLeft, Upload } from 'lucide-react'
 import React from 'react'
 
