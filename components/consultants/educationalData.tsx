@@ -2,6 +2,7 @@ import { GraduationCap } from 'lucide-react'
 import React from 'react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
+import Image from 'next/image'
 
 // Example data (you can later fetch this dynamically)
 const educationData = [
@@ -44,6 +45,11 @@ const EducationalData = () => {
           </div>
         </div>
       ))}
+      {/* <div className='text-center'>
+        <Image src={'/656ace3343108ba489409295e4052a077b9fb31a.png'} alt={''} width={100} height={100} className='mx-auto' />
+        <p className='text-[14px] font-light text-[#717171]'>This Consultant has not written their profile summary yet. Patients will see more value when Consultants share their expertise and experience.</p>
+        <Button variant={'outline'} className='px-[24px] py-[16px] rounded-[16px] text-[16px] h-[58px] font-light'>Notify Consultant to Update Profile</Button>
+      </div> */}
     </Card>
   )
 }

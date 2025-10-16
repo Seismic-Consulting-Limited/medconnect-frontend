@@ -1,4 +1,5 @@
 import { Session } from "@/types/data.type";
+import { Archive, CheckCircle2, Clock4, Users } from "lucide-react";
 
 export const sessions: Session[] = [
   {
@@ -105,3 +106,34 @@ export const sessions: Session[] = [
       status: 'Refunded',
     },
   ]
+
+  export const consultantStats = [
+    {
+      title: "Consultants",
+      count: 4,
+      description: "Total registered consultants",
+      iconBg: "#7E22CE",
+      icon: <Users color="white" />,
+    },
+    {
+      title: "Profile Completed",
+      count: 3,
+      description: "Have updated their profiles",
+      iconBg: "#30B0C7",
+      icon: <CheckCircle2 color="white" />,
+    },
+    {
+      title: "Pending Updates",
+      count: 1,
+      description: "Yet to update their profiles",
+      iconBg: "#F59E0B",
+      icon: <Clock4 color="white" />,
+    },
+    {
+      title: "Archived Consultants",
+      count: 2,
+      description: "Consultants data that are archived",
+      iconBg: "#717171",
+      icon: <Archive color="white" />,
+    },
+  ];
