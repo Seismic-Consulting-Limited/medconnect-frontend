@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Label } from '@/components/ui/label'
 
-const EditSpecialtyModal = () => {
+const EditFacilityModal = () => {
   return (
     <Dialog>
         <DialogTrigger>
@@ -32,7 +32,7 @@ const EditSpecialtyModal = () => {
         </DialogTrigger>
         <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Specialty</DialogTitle>
+              <DialogTitle>Edit Facility</DialogTitle>
               <DialogDescription>
                   This action cannot be undone. This will permanently delete your account
                   and remove your data from our servers.
@@ -41,11 +41,11 @@ const EditSpecialtyModal = () => {
 
             <div className='space-y-5'>
               <div className='space-y-3'>
-                <Label>Name of Specialty *</Label>
+                <Label>Name of Facility *</Label>
                 <Input />
               </div>
               <div className='space-y-3'>
-                <Label>Specialty Category *</Label>
+                <Label>Facility Category *</Label>
                 <Select>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Theme" />
@@ -67,4 +67,4 @@ const EditSpecialtyModal = () => {
   )
 }
 
-export default EditSpecialtyModal
+export default EditFacilityModal

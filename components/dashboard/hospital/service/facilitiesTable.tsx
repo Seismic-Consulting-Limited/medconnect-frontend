@@ -14,6 +14,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import EditFacilityModal from "./editFacilitiesModal";
 
 const FacilitiesTable = () => {
     const [selected, setSelected] = useState<number[]>([])
@@ -77,13 +78,7 @@ const FacilitiesTable = () => {
                     <TableCell>{facility.name}</TableCell>
                     <TableCell>{facility.category}</TableCell>
                     <TableCell className="text-right space-x-5">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-[13px] font-light"
-                        >
-                            Edit
-                        </Button>
+                        <EditFacilityModal />
                         <Button
                             variant="outline"
                             size="sm"
