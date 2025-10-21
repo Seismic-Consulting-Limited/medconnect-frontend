@@ -1,0 +1,27 @@
+<!-- welcome_email.html -->
+{% include "email_layout.html" with content=welcome_content only %}
+{% block welcome_content %}
+  <p style="font-size: 16px; color: #333; line-height: 24px; font-weight: 600;">
+    {{intro}}
+  </p>
+  <p style="font-size: 14px; color: #555; margin-top: 12px; line-height: 22px;">
+    {{message}}
+  </p>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <a
+      href="{{ctaUrl}}"
+      style="
+        background-color: #7E22CE;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 600;
+      "
+    >
+      {{ctaText}}
+    </a>
+  </div>
+{% endblock %}

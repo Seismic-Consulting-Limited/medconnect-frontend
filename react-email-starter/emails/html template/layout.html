@@ -1,0 +1,154 @@
+<!-- email_layout.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{preview}}</title>
+  </head>
+  <body
+    style="
+      background-color: #f9f9f9;
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <div style="padding: 0 16px;">
+      <div
+        style="
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 32px 24px;
+          margin: 0 auto;
+          max-width: 600px;
+        "
+      >
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              font-weight: 900;
+              font-size: 25px;
+              color: #7e22ce;
+              margin-top: 30px;
+            "
+          >
+            <img
+              src="https://yourdomain.com/assets/heart-pulse.svg"
+              width="32"
+              height="32"
+              alt="logo"
+              style="vertical-align: middle;"
+            />
+            MedKonnect
+          </div>
+        </div>
+
+        <!-- Hero -->
+        <div
+          style="
+            background-image: url('https://yourdomain.com/assets/bg.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 10px;
+            height: 140px;
+            width: 90%;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div
+            style="
+              background-color: rgba(126, 34, 206, 0.6);
+              border-radius: 10px;
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0 20px;
+            "
+          >
+            <div style="color: #fff;">
+              <p
+                style="
+                  font-size: 16px;
+                  color: #f2e8ff;
+                  margin: 0 0 5px 0;
+                "
+              >
+                Hello,
+              </p>
+              <p
+                style="
+                  font-size: 22px;
+                  font-weight: 700;
+                  color: #fff;
+                  margin: 0;
+                "
+              >
+                {{displayName}} 👋
+              </p>
+            </div>
+            <img
+              src="https://yourdomain.com/assets/hospital.png"
+              alt="Healthcare Illustration"
+              width="170"
+              height="170"
+              style="border-radius: 8px;"
+            />
+          </div>
+        </div>
+
+        <!-- Dynamic Content -->
+        <div style="text-align: left; margin-top: 20px; width: 90%; margin: 0 auto;">
+          {{content}}
+        </div>
+
+        <!-- Footer -->
+        <div
+          style="
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: center;
+            width: 90%;
+            margin: 40px auto 0 auto;
+          "
+        >
+          <p style="font-size: 13px; color: #999; line-height: 18px; margin: 0 0 10px 0;">
+            Need help? Visit our
+            <a
+              href="https://help.medkonnect.com"
+              target="_blank"
+              style="font-size: 13px; color: #7E22CE; text-decoration: underline;"
+              >Help Center</a
+            >
+            or contact
+            <a
+              href="mailto:support@medkonnect.com"
+              style="font-size: 13px; color: #7E22CE; text-decoration: underline;"
+              >support@medkonnect.com</a
+            >.
+          </p>
+          <p style="font-size: 13px; color: #777; margin: 0;">
+            MedKonnect &copy; {{year}} | Secure Healthcare Connections
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

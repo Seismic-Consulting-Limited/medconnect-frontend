@@ -1,0 +1,50 @@
+<!-- activate_account_email.html -->
+{% include "email_layout.html" with content=activate_content only %}
+{% block activate_content %}
+  <p style="font-size: 15px; color: #333; line-height: 22px; margin-bottom: 12px;">
+    You’ve been added to <b>{{hospitalName}}</b> on <b>MedKonnect</b>, our secure healthcare platform that connects patients with doctors.
+  </p>
+
+  <p style="font-size: 14px; color: #555; line-height: 22px; margin-bottom: 12px;">
+    To get started, set up your account.
+  </p>
+
+  <p style="font-size: 15px; font-weight: 600; color: #222; margin-top: 16px;">Next Steps</p>
+  <ul style="margin: 8px 0 16px 22px; color: #555; font-size: 14px; line-height: 22px;">
+    <li>Click the button below to access your account.</li>
+    <li>Use the temporary password below.</li>
+    <li>Create a new password after logging in.</li>
+  </ul>
+
+  <div
+    style="
+      background-color: #EDEDED;
+      color: #7E22CE;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 10px 18px;
+      border-radius: 20px;
+      text-align: center;
+      margin-top: 8px;
+    "
+  >
+    {{tempPassword}}
+  </div>
+
+  <div style="text-align: center; margin-top: 22px;">
+    <a
+      href="{{ctaUrl}}"
+      style="
+        background-color: #7E22CE;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+        display: inline-block;
+      "
+      >Activate My Account</a
+    >
+  </div>
+{% endblock %}

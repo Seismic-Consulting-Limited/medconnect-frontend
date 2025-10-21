@@ -1,0 +1,35 @@
+<!-- otp_email.html -->
+{% include "email_layout.html" with content=otp_content only %}
+{% block otp_content %}
+  <div style="text-align: center; margin-top: 20px;">
+    <p style="font-size: 15px; color: #333; margin-bottom: 16px;">
+      Hi {{userName}}, here’s your One-Time Password (OTP):
+    </p>
+
+    <div
+      style="
+        font-size: 32px;
+        font-weight: bold;
+        color: #7E22CE;
+        letter-spacing: 6px;
+        background-color: #EDEDED;
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 8px;
+        border: 0.5px solid #C0C0C0;
+        margin-bottom: 20px;
+      "
+    >
+      {{otpCode}}
+    </div>
+
+    <p style="font-size: 14px; color: #555; line-height: 22px; margin-top: 8px;">
+      Please enter this code to verify your account. It will expire in
+      {{expiryMinutes}} minutes.
+    </p>
+
+    <p style="font-size: 13px; color: #888; margin-top: 16px; font-style: italic;">
+      If you didn’t request this code, you can safely ignore this message.
+    </p>
+  </div>
+{% endblock %}
