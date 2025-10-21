@@ -1,248 +1,201 @@
-// app/user/auth/signup/client/page.tsx
-"use client"
+"use client";
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { Eye, EyeOff, Loader2, User, Mail, Lock } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/hooks/use-auth"
-import { toast } from "sonner"
+import React, { useState } from "react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { signupSchema } from "@/validator/clientAuth.validator";
+import { toast } from "sonner";
+import { registerPatientService } from "@/service/client.service";
 
 export default function ClientSignupPage() {
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [agreeToTerms, setAgreeToTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { signup, isAuthenticated } = useAuth()
-  const router = useRouter()
+  const router = useRouter();
 
-  // If already logged in and user lands here, bounce to dashboard (history-safe)
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/dashboard")
-    }
-  }, [isAuthenticated, router])
-
-  // Basic password checks; align with backend rules as needed
-  const validatePassword = (pwd: string) => {
-    const hasUppercase = /[A-Z]/.test(pwd)
-    const hasLowercase = /[a-z]/.test(pwd)
-    const hasMinLength = pwd.length >= 6
-    const hasNumber = /\d/.test(pwd)
-    return { hasUppercase, hasLowercase, hasMinLength, hasNumber }
-  }
-  const passwordValidation = validatePassword(password)
-  const isPasswordValid =
-    passwordValidation.hasUppercase &&
-    passwordValidation.hasLowercase &&
-    passwordValidation.hasMinLength &&
-    passwordValidation.hasNumber
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields")
-      return
-    }
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match")
-      return
-    }
-    if (!isPasswordValid) {
-      toast.error("Password must meet all requirements")
-      return
-    }
-    if (!agreeToTerms) {
-      toast.error("Please agree to the Terms of Service and Privacy Policy")
-      return
+    const formData = {
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+      agreeToTerms,
+      role: "client",
+    };
+
+    // ✅ Validate with Joi
+    const { error, value } = signupSchema.validate(formData, { abortEarly: false });
+    if (error) {
+      error.details.forEach((err) => toast.error(err.message));
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const payload: any = await signup(firstName, lastName, email, password, "client")
 
-      const successMsg =
-        (payload && (payload.message || payload.detail)) ||
-        "Account created. Please check your email for verification."
-      toast.success(String(successMsg))
+      const response = await registerPatientService({
+        first_name: value.firstName,
+        last_name: value.lastName,
+        email: value.email,
+        password: value.password,
+        role: value.role,
+        terms_of_service_agreement_checked: value.agreeToTerms
+      });
 
-      const needsOtp =
-        Boolean(payload?.requires_verification) ||
-        Boolean(payload?.requiresVerification) ||
-        payload?.next === "verify" ||
-        payload?.status === "pending_verification" ||
-        Boolean(payload?.otp_required)
+      if(response?.status === 'success') {
+        toast.success(response?.message);
 
-      const hasAuth = Boolean(payload?.token || payload?.refreshToken || payload?.user)
-      const lower = email.toLowerCase()
+        sessionStorage.setItem("pending_email", value.email.toLowerCase());
+        router.replace("/user/auth/verify");
 
-      if (needsOtp || !hasAuth) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("pending_email", lower)
-        }
-        // Use replace so /signup is not left in history
-        router.replace("/user/auth/verify")
-      } else {
-        // Fully authenticated — go to dashboard and remove signup from history
-        router.replace("/dashboard")
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.")
+      // const needsOtp = Boolean(
+      //   payload?.requires_verification ||
+      //   payload?.requiresVerification ||
+      //   payload?.next === "verify" ||
+      //   payload?.otp_required
+      // );
+
+      // if (needsOtp) {
+      //   sessionStorage.setItem("pending_email", value.email.toLowerCase());
+      //   router.replace("/user/auth/verify");
+      // } else {
+      //   router.replace("/dashboard");
+      // }
+    } catch (error: any) {
+      const is_Not_Verified = error?.response?.data?.error?.label === 'unverified_user'
+      if(is_Not_Verified) {
+        sessionStorage.setItem("pending_email", email.toLowerCase());
+        router.replace("/user/auth/verify");
+      }
+      toast.error(error?.response?.data?.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-[480px]">
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-3 text-center">
-            <CardTitle className="text-3xl font-bold text-foreground">Client Sign Up</CardTitle>
+            <CardTitle className="text-3xl font-bold text-foreground">
+              Client Sign Up
+            </CardTitle>
             <p className="text-muted-foreground">Create your patient account</p>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* First & Last Name */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-foreground">First Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="firstName"
-                      placeholder="Stephen"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="pl-10 h-12 border-border"
-                      required
-                    />
-                  </div>
+                  <Label>First Name</Label>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Stephen"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-foreground">Last Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="lastName"
-                      placeholder="Strange"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="pl-10 h-12 border-border"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Label>Last Name</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="dr-strange@marvel.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 border-border"
-                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Strange"
                   />
                 </div>
               </div>
 
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="dr-strange@marvel.com"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <Label>Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 h-12 border-border"
-                    required
+                    placeholder="••••••••"
+                    className="pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword((s) => !s)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
+              {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</Label>
+                <Label>Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 pr-10 h-12 border-border"
-                    required
+                    placeholder="••••••••"
+                    className="pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword((s) => !s)}
-                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
-              {password && (
-                <div className="text-sm space-y-1">
-                  <p className="text-primary">
-                    Passwords must include{" "}
-                    <span className={passwordValidation.hasUppercase ? "text-primary" : "text-destructive"}>uppercase</span>{" "}
-                    and{" "}
-                    <span className={passwordValidation.hasLowercase ? "text-primary" : "text-destructive"}>lowercase</span>{" "}
-                    letters, contain{" "}
-                    <span className={passwordValidation.hasNumber ? "text-primary" : "text-destructive"}>a number</span>, and be{" "}
-                    <span className={passwordValidation.hasMinLength ? "text-primary" : "text-destructive"}>at least 6 characters</span>.
-                  </p>
-                </div>
-              )}
-
+              {/* Terms */}
               <div className="flex items-start space-x-3 pt-2">
                 <Checkbox
-                  id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(!!checked)}
-                  className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-white"
                 />
-                <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+                <label className="text-sm text-muted-foreground leading-relaxed">
                   I agree to the{" "}
-                  <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a>{" "}
+                  <a href="#" className="text-primary hover:underline font-medium">
+                    Terms of Service
+                  </a>{" "}
                   and{" "}
-                  <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
+                  <a href="#" className="text-primary hover:underline font-medium">
+                    Privacy Policy
+                  </a>
                 </label>
               </div>
 
@@ -251,17 +204,26 @@ export default function ClientSignupPage() {
                 className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium"
                 disabled={isLoading}
               >
-                {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Account...</>) : ("Continue")}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Continue"
+                )}
               </Button>
 
               <div className="text-center text-sm text-muted-foreground pt-2">
                 Already have an account?{" "}
-                <Link href="/user/auth/login" className="text-primary hover:underline font-medium">Login</Link>
+                <Link href="/user/auth/login" className="text-primary hover:underline font-medium">
+                  Login
+                </Link>
               </div>
             </form>
           </CardContent>
         </Card>
       </div>
     </main>
-  )
+  );
 }

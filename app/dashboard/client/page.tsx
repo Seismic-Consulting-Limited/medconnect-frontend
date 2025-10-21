@@ -37,7 +37,7 @@ export const dashboardActions = [
 
 export default function ClientDashboard() {
   return (
-    <ProtectedRoute requiredRole={["client", "patient"]}>
+    <div>
       {/* Top Section */}
       <div className="flex flex-col lg:flex-row items-start gap-6 mt-5 px-5">
         {/* Left: Greeting & Actions */}
@@ -79,6 +79,6 @@ export default function ClientDashboard() {
         <ActivityContainer />
         <RecentBookings />
       </div>
-    </ProtectedRoute>
+    </div>
   )
 }

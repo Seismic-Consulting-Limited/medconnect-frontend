@@ -2,9 +2,22 @@
 import { DashboardSidebar } from '@/components/dashboard-sidebar'
 import MobileSidebar from '@/components/ResponsiveSidebar'
 import PageHeader from '@/components/shared/pageHeader'
-import React, { ReactNode } from 'react'
+import { patientDashboardService } from '@/service/dashboard.service'
+import React, { ReactNode, useEffect } from 'react'
 
 const ClientLayout = ({ children }: { children: ReactNode }) => {
+  // useEffect(() => {
+  //   const fetchDashboard = async () => {
+  //     try {
+  //       const response = await patientDashboardService()
+  //     } catch(error) {
+  //       console.log();
+  //     } finally {
+
+  //     }
+  //   }
+  //   fetchDashboard()
+  // }, [])
   return (
     <div className="lg:flex items-start bg-gray-50 min-h-screen">
       {/* Sidebar Section */}

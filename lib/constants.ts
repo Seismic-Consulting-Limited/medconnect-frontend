@@ -9,7 +9,7 @@ export const HTTP_METHODS = {
 export const API_CONFIG = {
   // No trailing slash
   BASE_URL: (
-    process.env.NEXT_PUBLIC_API_BASE_URL || "https://dev.medkonent.com"
+    process.env.NEXT_PUBLIC_API_BASE_URL || ""
   ).replace(/\/+$/, ""),
   TIMEOUT: 30000,
 } as const;

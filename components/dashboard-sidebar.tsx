@@ -21,11 +21,11 @@ import {
   CreditCard,
   Cross,
   Building,
-  MessageSquareMore
+  MessageSquareMore,
 } from "lucide-react";
+import { useRoleStore } from "@/store/role";
 import { useRoleNavigation } from "@/hooks/use-role-navigation";
 
-// Map icon names to actual components
 const iconMap = {
   Home,
   Calendar,
@@ -44,7 +44,7 @@ const iconMap = {
   CreditCard,
   Cross,
   Building,
-  MessageSquareMore
+  MessageSquareMore,
 };
 
 export type NavItem = {
@@ -53,12 +53,7 @@ export type NavItem = {
   icon?: keyof typeof iconMap;
 };
 
-export type SidebarSectionProps = {
-  title?: string;
-  items: NavItem[];
-};
-
-export function SidebarItem({
+export const SidebarItem = ({
   icon,
   label,
   href,
@@ -68,37 +63,34 @@ export function SidebarItem({
   label: string;
   href: string;
   active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={[
-        "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-colors",
-        active
-          ? "bg-primary text-white font-bold"
-          : "hover:bg-gray-50 text-[#313131]",
-      ].join(" ")}
-    >
-      <div className="h-[24px] w-[24px] flex items-center justify-center">{icon}</div>
-      <span className="text-[16px] font-light">{label}</span>
-    </Link>
-  );
-}
+}) => (
+  <Link
+    href={href}
+    className={[
+      "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+      active
+        ? "bg-primary text-white font-bold"
+        : "hover:bg-gray-50 text-[#313131]",
+    ].join(" ")}
+  >
+    <div className="h-[24px] w-[24px] flex items-center justify-center">
+      {icon}
+    </div>
+    <span className="text-[16px] font-light">{label}</span>
+  </Link>
+);
 
-export function SidebarSection({ items }: SidebarSectionProps) {
+export const SidebarSection = ({ items }: { items: NavItem[] }) => {
   const pathname = usePathname();
 
   return (
     <div className="space-y-1">
       {items.map((item) => {
         const IconComp = iconMap[item.icon ?? "Home"];
-
-        // ✅ Improved logic to prevent /dashboard from always being active
-      const active =
-        pathname === item.href ||
-        (pathname.startsWith(item.href + "/") &&
-          item.href.split("/").length >= pathname.split("/").length - 1);
-
+        const active =
+          pathname === item.href ||
+          (pathname.startsWith(item.href + "/") &&
+            item.href.split("/").length >= pathname.split("/").length - 1);
 
         return (
           <SidebarItem
@@ -112,26 +104,30 @@ export function SidebarSection({ items }: SidebarSectionProps) {
       })}
     </div>
   );
-}
+};
 
-
-export function DashboardSidebar() {
-  const pathname = usePathname();
-  const { getNavigationItems, userRole } = useRoleNavigation();
+export const DashboardSidebar = () => {
+  const { role } = useRoleStore();
+  const { getNavigationItems } = useRoleNavigation();
   const [mounted, setMounted] = useState(false);
-
+  console.log(role)
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted || !userRole) {
+  const footerLinks: NavItem[] = [
+    { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
+    { label: "Help & Support", href: "/dashboard/help-support", icon: "HelpCircle" },
+  ];
+
+  if (!mounted || !role) {
     return (
-      <aside className="border-r border-gray-200 w-[248px] h-screen p-4 fixed left-0 top-0 overflow-y-auto z-10 hidden lg:block">
+      <aside className="border-r border-gray-200 w-[248px] h-screen p-4 overflow-y-auto z-10 hidden lg:block">
         <nav className="flex flex-col h-full animate-pulse">
           <div className="flex items-center gap-3 mb-8">
             <div className="h-8 w-8 bg-gray-200 rounded-lg" />
             <div className="h-6 bg-gray-200 rounded w-24" />
           </div>
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[...Array(5)].map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-3 px-3 py-3 rounded-lg"
@@ -144,36 +140,11 @@ export function DashboardSidebar() {
       </aside>
     );
   }
-  const role: any = 'hospital'
 
-  const navigationItems = (getNavigationItems?.() ?? []) as NavItem[];
-
-  const clientLinks: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard/client/", icon: "LayoutGrid" },
-    { label: "Hospitals", href: "/dashboard/client/hospitals", icon: "Hospital" },
-    { label: "Consultants", href: "/dashboard/client/consultants", icon: "Stethoscope" },
-    { label: "Travel Planning", href: "/client/travel", icon: "Plane" },
-    { label: "Consultations", href: "/dashboard/client/consultations", icon: "Video" },
-    { label: "Payments", href: "/dashboard/client/payments", icon: "CreditCard" },
-  ];
-
-  const hospitalLinks: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard/hospital/", icon: "LayoutGrid" },
-    { label: "Treatment", href: "/dashboard/hospital/treatment", icon: "Cross" },
-    { label: "Consultants", href: "/dashboard/hospital/consultants", icon: "Stethoscope" },
-    { label: "Services", href: "/dashboard/hospital/services", icon: "Building" },
-    { label: "Messages", href: "/dashboard/hospital/messages", icon: "MessageSquareMore" },
-  ];
-
-  const activeNav = role === 'client' ? clientLinks : hospitalLinks
- 
-  const footerLinks: NavItem[] = [
-    { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
-    { label: "Help & Support", href: "/dashboard/help-support", icon: "HelpCircle" },
-  ];
+  const activeNav = getNavigationItems();
 
   return (
-    <aside className="bg-white border-r border-gray-200 w-[248px] h-screen p-4  overflow-y-auto z-10 hidden lg:block">
+    <aside className="bg-white border-r border-gray-200 w-[248px] h-screen p-4 overflow-y-auto z-10 hidden lg:block">
       <nav className="flex flex-col h-full">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-8">
@@ -183,11 +154,8 @@ export function DashboardSidebar() {
           <span className="font-bold text-xl text-primary">MedConnect</span>
         </div>
 
-        {/* Dynamic role-based nav */}
-        <SidebarSection items={navigationItems} />
-
-        {/* Static general links */}
-        <SidebarSection items={activeNav} />
+        {/* Role-based navigation */}
+        <SidebarSection items={activeNav as any} />
 
         {/* Footer */}
         <div className="mt-auto border-t pt-4">
@@ -196,4 +164,4 @@ export function DashboardSidebar() {
       </nav>
     </aside>
   );
-}
+};

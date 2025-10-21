@@ -1,14 +1,13 @@
 "use client";
 
-import { useAuth } from "./use-auth";
+import { useRoleStore } from "@/store/role";
 
 export function useRoleNavigation() {
-  const { userRole } = useAuth();
-  const role = userRole?.toLowerCase();
+  const { role } = useRoleStore();
 
   const getDashboardPath = (r?: string | null | undefined) => {
     const effective = (r || role || "").toLowerCase();
-    if (!effective) return "/dashboard"; // ← avoid defaulting to client when unknown
+    if (!effective) return "/dashboard";
     switch (effective) {
       case "hospital":
         return "/dashboard/hospital";
@@ -24,16 +23,17 @@ export function useRoleNavigation() {
   };
 
   const getNavigationItems = () => {
-    if (!role) return []; // ← don’t build client nav when role is unknown
-    switch (role) {
+    if (!role) return [];
+
+    switch (role.toLowerCase()) {
       case "hospital":
         return [
-          { label: "Dashboard", href: "/dashboard/hospital", icon: "Home" },
+          { label: "Dashboard", href: "/dashboard/hospital", icon: "LayoutGrid" },
+          { label: "Treatment", href: "/dashboard/hospital/treatment", icon: "Cross" },
           { label: "Consultants", href: "/dashboard/hospital/consultants", icon: "Stethoscope" },
-          { label: "Treatments", href: "/dashboard/hospital/treatments", icon: "Heart" },
-          { label: "Services", href: "/dashboard/hospital/services", icon: "Settings" },
-          { label: "Messages", href: "/dashboard/hospital/messages", icon: "MessageSquare" },
-        ]
+          { label: "Services", href: "/dashboard/hospital/services", icon: "Building" },
+          { label: "Messages", href: "/dashboard/hospital/messages", icon: "MessageSquareMore" },
+        ];
 
       case "travel_agent":
       case "travel-agent":
@@ -43,27 +43,24 @@ export function useRoleNavigation() {
           { label: "Clients", href: "/dashboard/travel-agent/clients", icon: "Users" },
           { label: "Packages", href: "/dashboard/travel-agent/packages", icon: "Package" },
           { label: "Messages", href: "/dashboard/travel-agent/messages", icon: "MessageSquare" },
-        ]
+        ];
 
       case "client":
       case "patient":
-        return [
-          /* client items… */
-        ];
       default:
-         return [
-          { label: "Dashboard", href: "/dashboard/client", icon: "Home" },
-          { label: "Appointments", href: "/dashboard/client/appointments", icon: "Calendar" },
-          { label: "Medical Records", href: "/dashboard/client/records", icon: "FileText" },
-          { label: "Find Doctors", href: "/dashboard/client/doctors", icon: "Stethoscope" },
-          { label: "Medical Travel", href: "/dashboard/client/travel", icon: "Plane" },
-          { label: "Messages", href: "/dashboard/client/messages", icon: "MessageSquare" },
+        return [
+          { label: "Dashboard", href: "/dashboard/client", icon: "LayoutGrid" },
+          { label: "Hospitals", href: "/dashboard/client/hospitals", icon: "Hospital" },
+          { label: "Consultants", href: "/dashboard/client/consultants", icon: "Stethoscope" },
+          { label: "Travel Planning", href: "/dashboard/client/travel", icon: "Plane" },
+          { label: "Consultations", href: "/dashboard/client/consultations", icon: "Video" },
+          { label: "Payments", href: "/dashboard/client/payments", icon: "CreditCard" },
         ];
     }
   };
 
   const isAuthorizedForRoute = (route: string) => {
-    if (!role) return false; // until we know, block (sidebar skeleton is shown)
+    if (!role) return false;
     if (route.startsWith("/dashboard/hospital")) return role === "hospital";
     if (route.startsWith("/dashboard/travel-agent"))
       return role === "travel_agent" || role === "travel-agent";
