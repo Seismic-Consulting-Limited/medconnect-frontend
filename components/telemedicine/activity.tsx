@@ -37,7 +37,7 @@ const activities: Activity[] = [
 
 const ActivityContainer = () => {
   return (
-    <Card className="w-full lg:w-[500px]">
+    <Card className="w-full lg:w-1/3">
       {/* Header */}
       <div className="flex items-center justify-between py-[12px] px-[16px] h-[61px] border-b">
         <div className="flex items-center gap-3 text-text">

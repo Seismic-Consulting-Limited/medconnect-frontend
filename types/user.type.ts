@@ -12,7 +12,7 @@ export interface User {
 export interface ResetPasswordConfirmation {
   uid: string;
   token: string;
-  new_password: string;
+  password: string;
 }
 
 

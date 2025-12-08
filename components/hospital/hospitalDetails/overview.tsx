@@ -14,7 +14,7 @@ import ReviewCard from './reviewCard'
 import { accreditations, reviews, specialties } from '@/constant/hospitalData'
 import SectionHeader from '@/components/shared/SectionHeader'
 
-const Overview = () => {
+const Overview = ({hospitalDetails}: any) => {
     const handleSortChange = (value: string) => {
         console.log('Sort by:', value)
         // Add sorting logic here later
@@ -24,16 +24,7 @@ const Overview = () => {
     <div className="py-10 space-y-10">
       {/* --- Hospital Description --- */}
       <p className="text-[18px] font-light leading-relaxed text-[#333]">
-        Lagos University Teaching Hospital (LUTH) is one of Nigeria’s foremost
-        tertiary healthcare institutions, located in Lagos. As a leading teaching
-        hospital, it is renowned for providing comprehensive medical services across
-        a wide range of specialties while also serving as a centre for medical
-        education, research, and training. LUTH is particularly recognized for its
-        strengths in internal medicine, surgery, oncology, paediatrics, and maternal
-        health. Equipped with experienced professionals and essential medical
-        facilities, the hospital caters to both routine and complex cases,
-        supporting patients locally and internationally with affordable,
-        quality-driven care.
+        {hospitalDetails?.description}
       </p>
 
       {/* --- Quick Info Section --- */}
@@ -58,40 +49,50 @@ const Overview = () => {
 
       {/* --- Accreditations --- */}
       <section className="space-y-5">
-        <h3 className="text-[18px] font-semibold">Accreditations</h3>
-        <div className="flex flex-wrap gap-3">
-          {accreditations.map((a, i) => (
-            <span
-              key={i}
-              className="py-[6px] px-[12px] bg-[#F6FEF9] text-[14px] font-light text-[#079455] border border-[#DCFAE6] rounded-full uppercase"
-            >
-              {a}
-            </span>
-          ))}
-        </div>
+        {
+          hospitalDetails?.accreditations?.length > 0 && (
+            <div>
+              <h3 className="text-[18px] font-semibold">Accreditations</h3>
+              <div className="flex flex-wrap gap-3 mt-3">
+                {hospitalDetails?.accreditations?.map((a: any, i: number) => (
+                  <span
+                    key={i}
+                    className="py-[6px] px-[12px] bg-[#F6FEF9] text-[14px] font-light text-[#079455] border border-[#DCFAE6] rounded-full uppercase"
+                  >
+                    {a.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        }
       </section>
 
       {/* --- Medical Specialties --- */}
       <section className="space-y-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[18px] font-semibold">
-            Medical Specialties{' '}
-            <span className="font-light text-[#A2A2A2]">
-              (Showing 1–15 of 43)
-            </span>
-          </h3>
-          <Button variant="outline" className="bg-transparent font-light">
-            See All <ArrowRight className="w-5 h-5 ml-1" />
-          </Button>
-        </div>
+        {hospitalDetails?.specialties?.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[18px] font-semibold">
+                Medical Specialties{' '}
+                <span className="font-light text-[#A2A2A2]">
+                  (Showing 1–15 of 43)
+                </span>
+              </h3>
+              <Button variant="outline" className="bg-transparent font-light">
+                See All <ArrowRight className="w-5 h-5 ml-1" />
+              </Button>
+            </div>
 
-        <div className="grid grid-cols-3 gap-y-5">
-          {specialties.map((label, i) => (
-            <span key={i} className="flex items-center gap-3 text-[16px]">
-              <Check className="w-5 h-5 text-green-600" /> {label}
-            </span>
-          ))}
-        </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-5 mt-3">
+                  {hospitalDetails.specialties?.map((label: any, i: number) => (
+                    <span key={i} className="flex items-center gap-3 text-[16px]">
+                      <Check className="w-5 h-5 text-green-600" /> {label?.name}
+                    </span>
+                  ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* --- Reviews Section --- */}

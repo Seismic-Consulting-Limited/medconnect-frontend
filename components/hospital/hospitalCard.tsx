@@ -7,36 +7,19 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card'
+import { HospitalListDTO } from '@/types/hospital.type'
 
-interface HospitalCardProps {
-  id: number;
-  name: string
-  location: string
-  specialties: string[]
-  accreditations: string[]
-  rating: number
-  reviews: number
-  image: string
-}
 
-const HospitalCard: React.FC<HospitalCardProps> = ({
-  id,
-  name,
-  location,
-  specialties,
-  accreditations,
-  rating,
-  reviews,
-  image,
-}) => {
+const HospitalCard: React.FC<HospitalListDTO> = ({ hospitals }: any) => {
+  console.log(hospitals)
     const router = useRouter()
   return (
     <Card className=''>
       <CardHeader className="relative w-full pb-0 rounded-xl overflow-hidden">
         {/* 🏥 Hospital Image */}
           <Image
-            src={image}
-            alt={`Image of ${name}`}
+            src={hospitals?.profile_image}
+            alt={`Image of ${hospitals?.name}`}
             width={100}
             height={100}
             className="w-full object-cover h-[220px]"
@@ -53,19 +36,19 @@ const HospitalCard: React.FC<HospitalCardProps> = ({
       <CardContent className='space-y-3 py-5'>
         {/* Name */}
         <CardTitle>
-          <Link href={`/dashboard/client/hospitals/${id}`} className="font-semibold text-base text-[#222] truncate">
-            {name}
+          <Link href={`/dashboard/client/hospitals/${hospitals?.id}`} className="font-semibold text-base text-[#222] truncate">
+            {hospitals?.name}
           </Link>
         </CardTitle>
 
         {/* Specialties */}
         <div className="flex flex-wrap gap-2">
-          {specialties.map((specialty, i) => (
+          {hospitals?.specialties?.map((specialty: any, i: number) => (
             <span
               key={i}
               className="py-[4px] px-[10px] bg-[#F2F2F2] text-[10px] uppercase text-[#555] border border-[#D7D7D7] rounded-full"
             >
-              {specialty}
+              {specialty?.name}
             </span>
           ))}
         </div>
@@ -73,29 +56,29 @@ const HospitalCard: React.FC<HospitalCardProps> = ({
         {/* Accreditations */}
         <div className="flex items-center gap-2 flex-wrap">
           <BadgeCheck className="w-4 h-4 text-[#17B26A]" />
-          {accreditations.slice(0, 3).map((acc, i) => (
+          {hospitals?.accreditations?.slice(0, 3).map((acc: any, i: number) => (
             <span
               key={i}
               className="py-[4px] px-[10px] bg-[#F6FEF9] text-[10px] uppercase text-[#079455] border border-[#DCFAE6] rounded-full"
             >
-              {acc}
+              {acc.name}
             </span>
           ))}
-          {accreditations.length > 3 && (
+          {hospitals?.accreditations?.length > 3 && (
             <span className="py-[4px] px-[10px] bg-[#F6FEF9] text-[10px] uppercase text-[#079455] border border-[#DCFAE6] rounded-full">
-              +{accreditations.length - 3}
+              +{hospitals.accreditations.length - 3}
             </span>
           )}
         </div>
         <CardFooter className="flex items-center justify-between h-fit text-[#717171] px-0 py-0">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span className="text-[12px] font-medium">{location}</span>
+              <span className="text-[12px] font-medium line-clamp-1">{hospitals?.location?.address_1}</span>
             </div>
             <div className="flex items-center gap-1">
               <Star fill={'#F79009'} className="w-4 h-4 text-[#F79009]" />
-              <span className="text-[12px] font-medium">{rating}</span>
-              <span className="text-[12px] text-[#C0C0C0]">({reviews})</span>
+              <span className="text-[12px] font-medium">{hospitals?.rating}</span>
+              <span className="text-[12px] text-[#C0C0C0]">(20)</span>
             </div>
         </CardFooter>
       </CardContent>

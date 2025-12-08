@@ -201,7 +201,7 @@ const helpTopics = [
   return (
     <div className="p-5 flex flex-col lg:flex-row gap-5">
       {/* Contact Section */}
-      <div className="w-full lg:w-[35%] space-y-5">
+      <div className="w-full lg:w-1/3 space-y-5">
         <div className="space-y-2">
           <h2 className="font-bold text-[48px]">Contact Us</h2>
           <p className="text-[#717171] text-[18px] font-light">

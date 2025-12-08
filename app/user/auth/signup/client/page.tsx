@@ -66,19 +66,6 @@ export default function ClientSignupPage() {
         router.replace("/user/auth/verify");
 
       }
-      // const needsOtp = Boolean(
-      //   payload?.requires_verification ||
-      //   payload?.requiresVerification ||
-      //   payload?.next === "verify" ||
-      //   payload?.otp_required
-      // );
-
-      // if (needsOtp) {
-      //   sessionStorage.setItem("pending_email", value.email.toLowerCase());
-      //   router.replace("/user/auth/verify");
-      // } else {
-      //   router.replace("/dashboard");
-      // }
     } catch (error: any) {
       const is_Not_Verified = error?.response?.data?.error?.label === 'unverified_user'
       if(is_Not_Verified) {

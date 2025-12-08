@@ -9,6 +9,8 @@ import Link from "next/link"
 import { Loader2, Mail, CheckCircle2, RotateCcw } from "lucide-react"
 import { authService } from "@/lib/auth"
 import { useToast } from "@/components/ui/use-toast"
+import { requestOtpSchema } from "@/validator/clientAuth.validator"
+import { toast } from "sonner"
 
 function maskEmail(email: string) {
   const [user, domain] = email.split("@")
@@ -20,7 +22,6 @@ function maskEmail(email: string) {
 }
 
 export default function PasswordResetRequestPage() {
-  const { toast } = useToast()
 
   const [email, setEmail] = useState("")
   const [isSending, setIsSending] = useState(false)
@@ -44,23 +45,23 @@ export default function PasswordResetRequestPage() {
   }
 
   const handleSend = async () => {
-    if (!email) return
+    const {error: validationError} = requestOtpSchema.validate({email});
+
+    if(validationError) {
+      const message = validationError.details.map((d) => d.message);
+      toast.error(message);
+    }
     setIsSending(true)
     setServerMsg("")
     try {
       const res = await authService.resetPasswordInit(email.toLowerCase())
-      const msg = res?.message ?? res?.detail ?? ""
-      setSent(true)
-      setServerMsg(String(msg))
-      toast({
-        title: "Email sent",
-        description: String(msg || `If an account exists for ${email}, we’ve sent reset instructions.`),
-        duration: 5000,
-      })
-      startCooldown(30)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : ""
-      toast({ title: "Request failed", description: message, variant: "destructive", duration: 5000 })
+      const msg = res?.message;
+      toast.success(msg)
+      setSent(true);
+      setServerMsg(String(msg));
+      startCooldown(30);
+    } catch (err: any) {
+      toast.error(err.message)
     } finally {
       setIsSending(false)
     }

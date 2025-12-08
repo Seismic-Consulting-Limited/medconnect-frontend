@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react"
-import { authService } from "@/lib/auth"
-import { useToast } from "@/components/ui/use-toast"
+import { resetPasswordSchema } from "@/validator/clientAuth.validator"
+import { toast } from "sonner"
+import { resetPasswordConfirmationService } from "@/service/auth.service"
 
 export default function ResetNewPasswordPage() {
   const params = useSearchParams()
   const router = useRouter()
-  const { toast } = useToast()
 
   const uid = params.get("uid") || ""
   const token = params.get("token") || ""
@@ -24,7 +24,6 @@ export default function ResetNewPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState("")
 
   // Prevent opening directly without codes
   useEffect(() => {
@@ -36,27 +35,21 @@ export default function ResetNewPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    if (!password || !confirm) {
-      setError("Please fill in both fields")
-      return
-    }
-    if (password !== confirm) {
-      setError("Passwords do not match")
-      return
+
+    const {error: validationError} = resetPasswordSchema.validate({ uid, token, password, confirm });
+    if(validationError) {
+      const message = validationError.details.map((d) => d.message);
+      toast.success(message)
+      return;
     }
 
     setIsSubmitting(true)
     try {
-      const res = await authService.resetPasswordConfirm(uid, token, password)
-      const msg = res?.message ?? res?.detail ?? "Password updated successfully."
-      toast({ title: "Success", description: String(msg), duration: 5000 })
-      // Optionally, redirect to login after a short wait
+      const res = await resetPasswordConfirmationService({uid, token, password})
+      toast.success(res.message);
       setTimeout(() => router.push("/user/auth/login"), 600)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not update password."
-      setError(message)
-      toast({ title: "Update failed", description: message, variant: "destructive", duration: 5000 })
+    } catch (error: any) {
+      toast(error?.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -73,11 +66,6 @@ export default function ResetNewPasswordPage() {
 
           <CardContent className="space-y-5">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                  {error}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-foreground">

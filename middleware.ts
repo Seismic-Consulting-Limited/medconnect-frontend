@@ -13,10 +13,16 @@ const PUBLIC_ROUTES = new Set([
   "/user/auth/reset",
 ]);
 
+const UNIVERSAL_DASHBOARD_ROUTES = [
+  "/dashboard/settings",
+  "/dashboard/help-support",
+];
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("accessToken")?.value;
 
+  // Allow system assets and APIs
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -26,15 +32,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public routes
   if (PUBLIC_ROUTES.has(pathname)) {
-    // logged-in users shouldn't access auth pages
     if (token && pathname.startsWith("/user/auth")) {
       try {
         const decoded = decodeToken(token);
-        const role = decoded?.role || decoded?.user_type || "patient";
-        return NextResponse.redirect(
-          new URL(getDashboardPath(role), req.url)
-        );
+
+        // ❌ TEMPORARILY DISABLED — role logic not yet available
+        // const role = decoded?.role || decoded?.user_type || "patient";
+        // return NextResponse.redirect(new URL(getDashboardPath(role), req.url));
+
+        // ✅ TEMP FIX: redirect all logged-in users to client dashboard for now
+        return NextResponse.redirect(new URL("/dashboard/client", req.url));
       } catch {
         return NextResponse.next();
       }
@@ -43,6 +52,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const isDashboard = pathname.startsWith("/dashboard");
+
   if (isDashboard) {
     if (!token) {
       const loginUrl = req.nextUrl.clone();
@@ -53,21 +63,18 @@ export async function middleware(req: NextRequest) {
 
     try {
       const decoded = decodeToken(token);
-      if (decoded?.exp! && decoded?.exp! * 1000 < Date.now()) {
+      if (decoded?.exp && decoded.exp * 1000 < Date.now()) {
         const url = req.nextUrl.clone();
         url.pathname = "/user/auth/login";
         url.searchParams.set("expired", "true");
         return NextResponse.redirect(url);
       }
 
-      const role = decoded?.role || decoded?.user_type || "patient";
-      const dashboardPath = getDashboardPath(role);
+      // ❌ TEMPORARILY DISABLED — role logic not yet available
+      // const role = decoded?.role || decoded?.user_type || "patient";
+      // const dashboardPath = getDashboardPath(role);
 
-      // protect cross-role access
-      if (!pathname.startsWith(dashboardPath)) {
-        return NextResponse.redirect(new URL(dashboardPath, req.url));
-      }
-
+      // ✅ TEMP FIX: just allow access to any dashboard for now
       return NextResponse.next();
     } catch (err) {
       console.error("🔴 Middleware decode error:", err);

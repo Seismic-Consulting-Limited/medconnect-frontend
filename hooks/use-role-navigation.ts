@@ -25,6 +25,8 @@ export function useRoleNavigation() {
   const getNavigationItems = () => {
     if (!role) return [];
 
+    console.log('role',role.toLowerCase())
+
     switch (role.toLowerCase()) {
       case "hospital":
         return [

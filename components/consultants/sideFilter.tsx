@@ -16,7 +16,7 @@ import { Card } from '../ui/card'
 
 const SideFilter = () => {
   return (
-    <Card className='w-[400px]'>
+    <Card className='lg:w-1/3 mb-5'>
         <div className="flex items-center justify-between border-b p-[14px]">
           <h3 className="text-[16px] font-semibold">
             Filter Options

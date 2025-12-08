@@ -15,6 +15,7 @@ import { loginService } from "@/service/auth.service";
 import { setAccessToken, setRefreshToken } from "@/utils/token";
 import { toast } from "sonner";
 import { useRoleStore } from "@/store/role";
+import { loginSchema } from "@/validator/clientAuth.validator";
 
 export default function PasswordLoginForm() {
   const router = useRouter();
@@ -22,15 +23,21 @@ export default function PasswordLoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { setRole } = useRoleStore();
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in all fields");
+
+    const {error: validationError} = loginSchema.validate(
+      {email, password},
+      {abortEarly: false}
+    )
+
+    if(validationError) {
+      const messages = validationError.details.map((d) => d.message);
+      toast.error(messages);
       return;
     }
 
@@ -64,8 +71,6 @@ export default function PasswordLoginForm() {
 
   return (
     <form onSubmit={handlePasswordLogin} className="space-y-4">
-      {error && <p className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg">{error}</p>}
-
       <div className="space-y-2">
         <Label>Email</Label>
         <div className="relative">
@@ -76,7 +81,6 @@ export default function PasswordLoginForm() {
             className="pl-10 h-12"
             type="email"
             placeholder="you@example.com"
-            required
           />
         </div>
       </div>
@@ -91,7 +95,6 @@ export default function PasswordLoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="pl-10 pr-10 h-12"
-            required
           />
           <Button
             type="button"

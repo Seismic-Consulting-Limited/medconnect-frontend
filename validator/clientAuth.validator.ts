@@ -49,3 +49,54 @@ export const loginSchema = Joi.object({
     "string.empty": "Password is required",
   }),
 });
+
+// ✅ Request OTP Validator (email only)
+export const requestOtpSchema = Joi.object({
+  email: Joi.string().email({ tlds: false }).required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
+});
+
+// ✅ Verify OTP Validator (email + otp)
+export const verifyOtpSchema = Joi.object({
+  email: Joi.string().email({ tlds: false }).required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
+  otp: Joi.string()
+    .pattern(/^[0-9]{6}$/, "6-digit OTP")
+    .required()
+    .messages({
+      "string.empty": "OTP is required",
+      "string.pattern.name": "OTP must be a 6-digit number",
+    }),
+});
+
+export const resetPasswordSchema = Joi.object({
+  uid: Joi.string().required().messages({
+    "string.empty": "Invalid request. UID is required.",
+    "any.required": "UID is required.",
+  }),
+  token: Joi.string().required().messages({
+    "string.empty": "Invalid request. Token is required.",
+    "any.required": "Token is required.",
+  }),
+  password: Joi.string()
+    .min(8)
+    .pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/)
+    .required()
+    .messages({
+      "string.empty": "Password is required.",
+      "string.min": "Password must be at least 8 characters long.",
+      "string.pattern.base":
+        "Password must contain uppercase, lowercase, and a number.",
+    }),
+  confirm: Joi.any()
+    .valid(Joi.ref("password"))
+    .required()
+    .messages({
+      "any.only": "Passwords do not match.",
+      "any.required": "Please confirm your password.",
+    }),
+});

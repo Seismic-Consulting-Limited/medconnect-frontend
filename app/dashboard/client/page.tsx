@@ -66,7 +66,7 @@ export default function ClientDashboard() {
         </Card>
 
         {/* Right: Appointments */}
-        <Card className="w-full lg:w-[360px]">
+        <Card className="w-full lg:w-1/4">
             <div className="border-b px-5 py-4">
               <h2 className="text-[18px] font-semibold">Upcoming Appointments</h2>
             </div>

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { setAccessToken, setRefreshToken } from "@/utils/token";
 import { useRouter } from "next/navigation";
 import { useRoleStore } from "@/store/role";
+import { requestOtpSchema } from "@/validator/clientAuth.validator";
 
 export default function OtpLoginForm() {
     const router = useRouter()
@@ -76,6 +77,15 @@ export default function OtpLoginForm() {
     }
 
     const requestOtp = async () => {
+        const {error: validationError} = requestOtpSchema.validate(
+          {email},
+          {abortEarly: false}
+        )
+        if(validationError) {
+          const message = validationError?.details.map((d) => d.message);
+          toast.error(message);
+        }
+
         setIsRequestingOtp(true);
         try {
           const response = await loginViaOtpService(email);
@@ -93,6 +103,14 @@ export default function OtpLoginForm() {
 
     const resendOtp = async () => {
       setIsResending(true)
+              const {error: validationError} = requestOtpSchema.validate(
+          {email},
+          {abortEarly: false}
+        )
+        if(validationError) {
+          const message = validationError?.details.map((d) => d.message);
+          toast.error(message);
+        }
         try {
           const response = await resendOtpService(email);
           if(response.data) {

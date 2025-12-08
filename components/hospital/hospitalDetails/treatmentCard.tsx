@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card'
 type Treatment = {
   name: string
   description: string
-  priceRange: string
+  price_range: any
   duration: string
-  recovery: string
-  facility: string
+  recovery_period: string
+  hospital_stay_period: string
 }
 
 const TreatmentCard = ({ treatment }: { treatment: Treatment }) => {
@@ -22,7 +22,7 @@ const TreatmentCard = ({ treatment }: { treatment: Treatment }) => {
           {treatment.description}
         </p>
         <span className="text-[#7E22CE] text-[16px] font-semibold">
-          {treatment.priceRange}
+          {treatment.price_range?.currency} {treatment.price_range?.min} - {treatment.price_range?.max}
         </span>
       </div>
 
@@ -42,15 +42,15 @@ const TreatmentCard = ({ treatment }: { treatment: Treatment }) => {
           borderColor="#ABEFC6"
           bgColor="#ECFDF3"
           label="Recovery"
-          value={treatment.recovery}
+          value={treatment.recovery_period}
         />
         <TreatmentInfoItem
           icon={Hospital}
           iconColor="#155EEF"
           borderColor="#84ADFF"
           bgColor="#EFF4FF"
-          label="Facility"
-          value={treatment.facility}
+          label="Stay Period"
+          value={treatment.hospital_stay_period}
         />
       </div>
     </Card>
